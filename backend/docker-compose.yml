@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.3.0  # 최신 안정 버전 (2025년 기준)
+    container_name: mysql-container
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ssafy          # 루트 비밀번호
+      MYSQL_DATABASE: liar_game_db         # 기본 생성할 DB
+      MYSQL_USER: a604                     # 사용자 이름
+      MYSQL_PASSWORD: skdaks               # 사용자 비밀번호(낭만)
+    volumes:
+      - mysql-data:/var/lib/mysql          # DB 데이터 볼륨
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - backend-net
+
+volumes:
+  mysql-data:
+
+networks:
+  backend-net:
+    driver: bridge
