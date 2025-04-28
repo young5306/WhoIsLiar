@@ -76,6 +76,7 @@ public class AuthService {
 
 	/** 스케줄러: 만료 세션 일괄 정리 (10분마다) */
 	@Scheduled(fixedDelay = 10 * 60 * 1000)
+	@Transactional
 	public void cleanupStaleSessions() {
 		LocalDateTime cutoff = LocalDateTime.now().minus(sessionTimeout);
 		repo.deleteByLastActiveAtBefore(cutoff);

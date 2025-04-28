@@ -18,6 +18,8 @@ import com.ssafy.backend.auth.dto.LoginResponseDto;
 import com.ssafy.backend.auth.dto.NicknameCheckResponseDto;
 import com.ssafy.backend.auth.service.AuthService;
 import com.ssafy.backend.common.ApiResponse;
+import com.ssafy.backend.common.CustomException;
+import com.ssafy.backend.common.ResponseCode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,23 +51,9 @@ public class AuthController {
 		this.auth = auth;
 	}
 
-	/** 닉네임 사용 가능 여부 확인 */
-	@Operation(summary = "닉네임 중복 검사", description = "주어진 닉네임 사용 가능 여부 반환")
-	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공",
-			content = @Content(mediaType = "application/json",
-				schema = @Schema(implementation = NicknameCheckResponseDto.class))),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청",
-			content = @Content)
-	})
-	@GetMapping("/check-nickname")
-	public ResponseEntity<ApiResponse<NicknameCheckResponseDto>> check(@Parameter(description = "확인할 닉네임", required = true) @RequestParam String nickname) {
-		boolean available = auth.isNicknameAvailable(nickname);
-		return ok(new NicknameCheckResponseDto(available));
-	}
-
 	/** 로그인 (닉네임만) */
-	@Operation(summary = "로그인", description = "닉네임으로 로그인하고 세션 토큰을 발급합니다.")
+	@Operation(summary = "로그인 및 닉네임 중복 검사",
+		description = "닉네임이 사용 중이면 available=false, 사용 가능하면 세션 발급 및 available=true 반환")
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공",
 			content = @Content(mediaType = "application/json",
@@ -78,6 +66,10 @@ public class AuthController {
 	@PostMapping("/login")
 	public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Parameter(description = "로그인 요청 정보", required = true) @Valid @RequestBody LoginRequestDto req,
 		HttpServletResponse response) {
+		boolean available = auth.isNicknameAvailable(req.nickname());
+		if (!available) {
+			throw new CustomException(ResponseCode.CONFLICT);
+		}
 		String token = auth.login(req);
 		// HttpOnly 쿠키로 토큰 발급
 		ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
@@ -88,7 +80,9 @@ public class AuthController {
 			.maxAge(7 * 24 * 60 * 60) // 7일
 			.build();
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-		return ok(new LoginResponseDto(token));
+		// 3) 응답 바디에 토큰 + 닉네임 같이 담아서 반환
+		LoginResponseDto body = new LoginResponseDto(token, req.nickname(),true);
+		return ok(body);
 	}
 
 	/** 로그아웃 */
