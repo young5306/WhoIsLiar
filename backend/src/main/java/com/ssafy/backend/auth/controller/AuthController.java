@@ -1,5 +1,6 @@
 package com.ssafy.backend.auth.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,12 @@ public class AuthController {
 
 	private final AuthService auth;
 
+	@Value("${cookie.secure}")
+	private boolean cookieSecure;
+
+	@Value("${cookie.samesite}")
+	private String sameSite;
+
 	public AuthController(AuthService auth) {
 		this.auth = auth;
 	}
@@ -75,8 +82,8 @@ public class AuthController {
 		// HttpOnly 쿠키로 토큰 발급
 		ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
 			.httpOnly(true)
-			.secure(true)
-			.sameSite("Lax")
+			.secure(cookieSecure)
+			.sameSite(sameSite)
 			.path("/")
 			.maxAge(7 * 24 * 60 * 60) // 7일
 			.build();

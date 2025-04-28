@@ -14,3 +14,6 @@ spring:
     level:
       root: INFO
       com.ssafy.backend: WARN
+cookie:
+  secure: true
+  samesite: None
