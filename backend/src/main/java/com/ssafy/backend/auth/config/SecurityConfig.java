@@ -2,6 +2,7 @@ package com.ssafy.backend.auth.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -56,7 +57,7 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.GET,  "/auth/check-nickname").permitAll()
 
 				// 2) Swagger/UI, Actuator 등은 공개
-				.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
+				.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api/test")
 				.permitAll()
 
 				// 3) 그 외 모든 요청(= /auth/me, /auth/logout 포함)은 인증 필요
