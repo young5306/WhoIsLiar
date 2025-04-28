@@ -1,9 +1,4 @@
 const tmp = () => {
-  return (
-    <div>
-      <h1>Temporary Component</h1>
-      <p>This is a temporary component.</p>
-    </div>
-  );
+  return <div></div>;
 };
 export default tmp;
