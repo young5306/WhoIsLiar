@@ -89,7 +89,7 @@ const RuleBookPage = () => {
             {current.title}
           </h2>
           {current.content.map((line, idx) => (
-            <p key={idx} className="headline-medium whitespace-pre-line">
+            <p key={idx} className="headline-large whitespace-pre-line">
               {line}
             </p>
           ))}

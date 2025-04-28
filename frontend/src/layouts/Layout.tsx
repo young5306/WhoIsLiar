@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
   {
     '/': {
-      imageUrl: '/bgImages/mainBg.svg',
+      imageUrl: '/bgImages/mainBg3.svg',
       backgroundColor: 'bg-[#08050F]',
     },
     '/rule-book': {
@@ -11,7 +11,7 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
       backgroundColor: 'bg-[#2F1914]',
     },
     '/login': {
-      imageUrl: '/bgImages/loginBg.svg',
+      imageUrl: '/bgImages/loginBg3.svg',
       backgroundColor: 'bg-[#090A11]',
     },
     // '/room-list': { imageUrl: '/bgImages/bg4.svg', backgroundColor: 'bg-white' },
