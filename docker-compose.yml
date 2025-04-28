@@ -1,0 +1,111 @@
+services:  # 각 컨테이너에 대한 설정 정의
+
+  backend:
+    build:
+      context: ./backend  # context 위치에 있는 Dockerfile을 가지고 도커 빌드를 진행하겠다
+      dockerfile: Dockerfile  # Dockerfile에 있는 내용을 바탕으로 도커 이미지를 만듬
+    
+    container_name: backend  # 컨테이너 이름 지정
+    restart: always  # 컨테이너가 종료될 경우 자동 재시작 
+    ports:
+      - "8080:8080"  # 호스트의 8080 포트를 도커 컨테이너의 8080 포트에 매핑
+    depends_on:  # 다른 서비스가 실행된 후 실행됨
+      mysql:
+        condition: service_healthy  # MySQL이 정상적으로 실행된 후 backend 실행 MYSQL이 먼저 켜지지 않으면 스프링부트는 DB에 연결할 수 없다고 꺼짐
+      redis:
+        condition: service_healthy  # redis는 메인데이터베이스가 아니라 캐싱용이기 때문에 상관없으나 일단 스프링부트보다 먼저 켜지게 설정함
+    env_file:
+      - .env  # 환경 변수 파일 로드
+    networks:
+      - app-network  # 같은 네트워크(app-network)에 연결 (컨테이너 간 통신 가능) 같은 네트워크에 없으면 직접적인 통신 불가능하고 외부 IP를 통해서 연결
+    healthcheck:  # 컨테이너가 정상적으로 실행되는지 확인
+      test: ["CMD", "sh", "-c", "curl -f http://backend:8080/api/health || exit 1"]  # cmd 창에 sh -c "curl -f http://backend:8080/api/health" 를 입력한다고 생각하면 됨
+      interval: 5s  # 5초마다 헬스체크 수행
+      timeout: 5s  # 5초 동안 응답이 없으면 실패 처리
+      retries: 5  # 5번 재시도 후 컨테이너가 응답하지 않으면 비정상 상태로 판단
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile  
+    # image: g1767g/
+    container_name: frontend  
+    restart: always  
+    env_file:
+      - .env  
+    depends_on:
+      backend:
+        condition: service_healthy 
+    networks:
+      - app-network 
+
+  mysql:
+    image: mysql:8  
+    container_name: mysql
+    restart: always  
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} 
+      MYSQL_DATABASE: ${MYSQL_DATABASE}  
+      MYSQL_USER: ${MYSQL_USER}  
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD} 
+    env_file:
+      - .env  
+    ports:
+      - "3306:3306"  
+    networks:
+      - app-network 
+    volumes:
+      - mysql_data:/var/lib/mysql  
+    healthcheck:  
+      test: ["CMD", "mysqladmin", "ping", "-h", "mysql"]  
+      interval: 5s 
+      timeout: 5s  
+      retries: 5  
+
+  redis:
+    image: redis:latest  
+    container_name: redis
+    restart: always  
+    env_file:
+      - .env 
+    ports:
+      - "6379:6379" 
+    networks:
+      - app-network 
+    volumes:
+      - redis_data:/data 
+    healthcheck:  
+      test: ["CMD", "redis-cli", "ping"] 
+      interval: 5s 
+      timeout: 5s  
+      retries: 5  
+
+  nginx:
+    image: nginx:latest  
+    container_name: nginx
+    restart: always  
+    ports:
+      - "80:80"  # HTTP 트래픽을 수신
+      - "443:443"  # HTTPS 트래픽을 위한 포트 추가
+    volumes:  
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # 프로젝트 루트에 있는 nginx.conf 파일을 컨테이너 내 /etc/nginx/nginx.conf에 적용
+      - /etc/letsencrypt:/etc/letsencrypt # SSL 인증서 마운트
+    depends_on:
+      backend:
+        condition: service_healthy  
+    networks:
+      - app-network 
+    healthcheck:  
+      test: ["CMD", "nginx", "-t"] 
+      interval: 10s  
+      timeout: 10s  
+      retries: 3  
+
+
+  app-network:
+    driver: bridge  
+
+
+volumes:
+  mysql_data:  
+  redis_data:  
