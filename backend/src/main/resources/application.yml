@@ -1,1 +1,23 @@
-spring.application.name=backend
+spring:
+  config:
+    import:
+      - optional:file:./.env
+      - optional:file:./.env.${spring.profiles.active}[.properties]
+  application:
+    name: backend
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha

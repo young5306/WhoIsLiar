@@ -1,0 +1,11 @@
+NotBlank:
+  auth:
+    dto:
+      LoginRequestDto:
+        nickname: 닉네임을 입력해주세요.
+
+Size:
+  auth:
+    dto:
+      MemberDto:
+        username:  사용자 이름은 {min}자 이상, {max}자 이하로 입력해야 합니다.
