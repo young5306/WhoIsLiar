@@ -20,5 +20,5 @@ cookie:
 
 cors:
   allowed-origins:
-    - http://k12a604.p.ssafy.io
+    - https://k12a604.p.ssafy.io
     - http://localhost:5173
