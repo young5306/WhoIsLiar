@@ -10,6 +10,9 @@ import lombok.Builder;
 @Schema(description = "방 생성 요청 DTO")
 public record RoomCreateRequest(
 
+	@Schema(description = "호스트 닉네임", example = "그림자은영")
+	String hostNickname,
+
 	@Schema(description = "방 모드", example = "VIDEO")
 	Mode mode,
 

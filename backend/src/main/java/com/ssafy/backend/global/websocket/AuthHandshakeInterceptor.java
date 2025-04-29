@@ -30,6 +30,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 			return false;
 		}
 
+		// 쿠키 속 토큰 확인
 		HttpServletRequest httpRequest = servletRequest.getServletRequest();
 		Cookie[] cookies = httpRequest.getCookies();
 
@@ -57,8 +58,29 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 			return false;
 		}
 
-		log.info("Handshake successful for token from cookie: {}", AUTH_TOKEN);
+		// 쿼리 스트링에서 roomCode 파라미터 읽기
+		String roomCode = null;
+		String query = request.getURI().getQuery(); // 예: token=xxx&roomCode=asdf1234
+		if (query != null) {
+			for (String param : query.split("&")) {
+				String[] keyValue = param.split("=");
+				if (keyValue.length == 2 && "roomCode".equals(keyValue[0])) {
+					roomCode = keyValue[1];
+					break;
+				}
+			}
+		}
+
+		if (roomCode == null || roomCode.isEmpty()) {
+			log.warn("Room code not found in query params");
+			return false;
+		}
+
+		log.info("Handshake successful - token: {}, roomCode: {}", AUTH_TOKEN, roomCode);
+
 		attributes.put("token", AUTH_TOKEN);
+		attributes.put("roomCode", roomCode);
+
 		return true;
 	}
 
