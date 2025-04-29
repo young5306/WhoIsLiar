@@ -20,4 +20,4 @@ cookie:
 
 cors:
   allowed-origins:
-    - https://your-production-domain.com
+    - http://k12a604.p.ssafy.io
