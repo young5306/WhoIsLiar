@@ -3,20 +3,20 @@ import { createRoom } from '../../services/api/RoomService';
 import { useRoomStore } from '../../stores/useRoomStore';
 
 const WaitingRoomPage = () => {
-  const categories = [
-    { label: '랜덤', id: 'random' },
-    { label: '물건', id: 'object' },
-    { label: '인물', id: 'person' },
-    { label: '음식', id: 'food' },
-    { label: '나라', id: 'country' },
-    { label: '스포츠', id: 'sports' },
-    { label: '직업', id: 'job' },
-    { label: '동물', id: 'animal', highlight: true },
-    { label: '노래', id: 'song' },
-    { label: '장소', id: 'place' },
-    { label: '영화/드라마', id: 'movie' },
-    { label: '브랜드', id: 'brand' },
-  ];
+  // const categories = [
+  //   { label: '랜덤', id: 'random' },
+  //   { label: '물건', id: 'object' },
+  //   { label: '인물', id: 'person' },
+  //   { label: '음식', id: 'food' },
+  //   { label: '나라', id: 'country' },
+  //   { label: '스포츠', id: 'sports' },
+  //   { label: '직업', id: 'job' },
+  //   { label: '동물', id: 'animal', highlight: true },
+  //   { label: '노래', id: 'song' },
+  //   { label: '장소', id: 'place' },
+  //   { label: '영화/드라마', id: 'movie' },
+  //   { label: '브랜드', id: 'brand' },
+  // ];
 
   const { setRoomCode } = useRoomStore();
   // {
@@ -250,7 +250,7 @@ const WaitingRoomPage = () => {
 
           <div className="bg-gray-200 rounded-xl p-6">
             <div className="grid grid-cols-4 gap-x-12 gap-y-6">
-              {categories.map((category, index) => (
+              {/* {categories.map((category, index) => (
                 <div
                   key={category.id}
                   className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] ${
@@ -261,7 +261,7 @@ const WaitingRoomPage = () => {
                 >
                   {category.label}
                 </div>
-              ))}
+              ))} */}
             </div>
           </div>
         </div>
