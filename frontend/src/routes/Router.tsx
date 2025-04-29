@@ -4,6 +4,8 @@ import MainPage from '../pages/main/MainPage';
 import RuleBookPage from '../pages/main/RuleBookPage';
 import LoginPage from '../pages/main/LoginPage';
 
+import GameVid from '../pages/game/GameVid';
+
 const Router = () => {
   return (
     <Routes>
@@ -14,6 +16,9 @@ const Router = () => {
         {/* <Route path="/room-list" element={<RoomListPage />} />
         <Route path="/waiting" element={<WaitingPage />} />
         <Route path="/game" element={<GamePage />} /> */}
+
+        {/* openvidu */}
+        <Route path="/game-vid" element={<GameVid />} />
       </Route>
     </Routes>
   );
