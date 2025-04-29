@@ -1,4 +1,4 @@
-package com.ssafy.backend.auth.entity;
+package com.ssafy.backend.domain.auth.entity;
 
 import java.time.LocalDateTime;
 

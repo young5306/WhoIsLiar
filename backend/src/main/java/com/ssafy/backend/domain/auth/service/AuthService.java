@@ -1,4 +1,4 @@
-package com.ssafy.backend.auth.service;
+package com.ssafy.backend.domain.auth.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -9,11 +9,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import com.ssafy.backend.auth.dto.LoginRequestDto;
-import com.ssafy.backend.auth.entity.SessionEntity;
-import com.ssafy.backend.auth.repository.SessionRepository;
-import com.ssafy.backend.common.CustomException;
-import com.ssafy.backend.common.ResponseCode;
+import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
+import com.ssafy.backend.domain.auth.entity.SessionEntity;
+import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.global.exception.CustomException;
+import com.ssafy.backend.global.common.ResponseCode;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;

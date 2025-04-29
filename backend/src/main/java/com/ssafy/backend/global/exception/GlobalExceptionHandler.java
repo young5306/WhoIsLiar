@@ -1,4 +1,4 @@
-package com.ssafy.backend.common;
+package com.ssafy.backend.global.exception;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +10,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.ssafy.backend.global.common.ApiResponse;
+import com.ssafy.backend.global.common.ResponseCode;
 
 import jakarta.servlet.http.HttpServletRequest;
 

@@ -1,4 +1,6 @@
-package com.ssafy.backend.auth.controller;
+package com.ssafy.backend.domain.auth.controller;
+
+import static com.ssafy.backend.global.common.ResponseUtil.*;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -10,16 +12,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ssafy.backend.auth.dto.LoginRequestDto;
-import com.ssafy.backend.auth.dto.LoginResponseDto;
-import com.ssafy.backend.auth.dto.NicknameCheckResponseDto;
-import com.ssafy.backend.auth.service.AuthService;
-import com.ssafy.backend.common.ApiResponse;
-import com.ssafy.backend.common.CustomException;
-import com.ssafy.backend.common.ResponseCode;
+import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
+import com.ssafy.backend.domain.auth.dto.LoginResponseDto;
+import com.ssafy.backend.domain.auth.service.AuthService;
+import com.ssafy.backend.global.common.ApiResponse;
+import com.ssafy.backend.global.exception.CustomException;
+import com.ssafy.backend.global.common.ResponseCode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,8 +29,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-
-import static com.ssafy.backend.common.ResponseUtil.*;
 
 import java.util.Map;
 

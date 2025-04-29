@@ -1,4 +1,6 @@
-package com.ssafy.backend.common;
+package com.ssafy.backend.global.exception;
+
+import com.ssafy.backend.global.common.ResponseCode;
 
 /**
  * 커스텀 예외 클래스

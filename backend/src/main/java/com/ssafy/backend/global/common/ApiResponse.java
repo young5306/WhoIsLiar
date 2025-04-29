@@ -1,4 +1,4 @@
-package com.ssafy.backend.common;
+package com.ssafy.backend.global.common;
 
 import lombok.Getter;
 import lombok.Setter;

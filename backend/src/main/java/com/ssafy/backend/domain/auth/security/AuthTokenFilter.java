@@ -1,4 +1,4 @@
-package com.ssafy.backend.auth.security;
+package com.ssafy.backend.domain.auth.security;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,8 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.ssafy.backend.auth.entity.SessionEntity;
-import com.ssafy.backend.auth.service.AuthService;
+import com.ssafy.backend.domain.auth.entity.SessionEntity;
+import com.ssafy.backend.domain.auth.service.AuthService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,4 +1,4 @@
-package com.ssafy.backend.common;
+package com.ssafy.backend.global.common;
 
 import org.springframework.http.ResponseEntity;
 

@@ -1,4 +1,4 @@
-package com.ssafy.backend.auth.dto;
+package com.ssafy.backend.domain.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

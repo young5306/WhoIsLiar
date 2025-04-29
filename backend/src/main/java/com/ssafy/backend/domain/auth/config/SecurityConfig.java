@@ -1,8 +1,7 @@
-package com.ssafy.backend.auth.config;
+package com.ssafy.backend.domain.auth.config;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,10 +16,10 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ssafy.backend.auth.security.AuthTokenFilter;
-import com.ssafy.backend.auth.service.AuthService;
-import com.ssafy.backend.common.ApiResponse;
-import com.ssafy.backend.common.ResponseCode;
+import com.ssafy.backend.domain.auth.security.AuthTokenFilter;
+import com.ssafy.backend.domain.auth.service.AuthService;
+import com.ssafy.backend.global.common.ApiResponse;
+import com.ssafy.backend.global.common.ResponseCode;
 
 import jakarta.servlet.http.HttpServletResponse;
 
