@@ -13,6 +13,7 @@ public class ApiPrefixConfig implements WebMvcConfigurer {
 		configurer.addPathPrefix(
 			"/api",
 			HandlerTypePredicate.forAnnotation(RestController.class)
+				.and(HandlerTypePredicate.forBasePackage("com.ssafy.backend"))
 		);
 	}
 }
