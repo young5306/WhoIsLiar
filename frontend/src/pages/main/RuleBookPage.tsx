@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // 아이콘 라이브러리 사용 (lucide-react 설치 필요)
 
 const ruleBookData = [
@@ -60,7 +60,7 @@ const ruleBookData = [
 
 const RuleBookPage = () => {
   const [pageIndex, setPageIndex] = useState(0);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handlePrev = () => {
     if (pageIndex > 0) {
@@ -74,9 +74,9 @@ const RuleBookPage = () => {
     }
   };
 
-  const handleBack = () => {
-    navigate('/'); // 이전 페이지로 이동
-  };
+  // const handleBack = () => {
+  //   navigate('/'); // 이전 페이지로 이동
+  // };
 
   const current = ruleBookData[pageIndex];
 
