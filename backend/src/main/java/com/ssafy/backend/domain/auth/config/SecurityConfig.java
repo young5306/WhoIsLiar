@@ -64,7 +64,7 @@ public class SecurityConfig {
 				.requestMatchers("/ws/**").permitAll()
 
 				// 2) Swagger/UI, Actuator 등은 공개
-				.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api/test")
+				.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api/test2")
 				.permitAll()
 
 				// 3) 그 외 모든 요청(= /auth/me, /auth/logout 포함)은 인증 필요
