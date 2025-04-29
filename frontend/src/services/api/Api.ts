@@ -2,8 +2,6 @@ import axios, { AxiosInstance } from 'axios';
 
 export const BASE_URL = import.meta.env.VITE_APP_API_URL;
 
-axios.defaults.withCredentials = false; // 전역 설정은 일단 냅두고
-
 const setupInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     (config) => {
@@ -20,7 +18,7 @@ export const createAxiosInstance = (): AxiosInstance => {
     baseURL: BASE_URL,
     timeout: 30000,
     headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
+    withCredentials: true, // 쿠키를 항상 보내도록 설정
   });
 
   setupInterceptors(instance);

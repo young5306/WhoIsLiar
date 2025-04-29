@@ -1,10 +1,24 @@
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import { BrowserRouter } from 'react-router-dom';
-import Router from './routes/Router.tsx';
+import Router from './routes/Router';
+import { WebSocketProvider } from './contexts/WebSocketProvider';
+import { useRoomStore } from './stores/useRoomStore';
 
-createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
-    <Router />
-  </BrowserRouter>
-);
+const Root = () => {
+  const { roomCode } = useRoomStore(); // Zustand로 가져오기
+
+  return (
+    <BrowserRouter>
+      {roomCode ? (
+        <WebSocketProvider roomCode={roomCode}>
+          <Router />
+        </WebSocketProvider>
+      ) : (
+        <Router />
+      )}
+    </BrowserRouter>
+  );
+};
+
+createRoot(document.getElementById('root')!).render(<Root />);
