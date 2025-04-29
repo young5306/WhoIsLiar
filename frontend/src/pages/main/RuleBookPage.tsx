@@ -74,9 +74,9 @@ const RuleBookPage = () => {
     }
   };
 
-  const handleBack = () => {
-    navigate('/'); // 이전 페이지로 이동
-  };
+  // const handleBack = () => {
+  //   navigate('/'); // 이전 페이지로 이동
+  // };
 
   const current = ruleBookData[pageIndex];
 
