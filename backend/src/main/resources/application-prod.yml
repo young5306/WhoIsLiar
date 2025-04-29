@@ -22,3 +22,7 @@ cors:
   allowed-origins:
     - https://k12a604.p.ssafy.io
     - http://localhost:5173
+
+openvidu:
+  url:    https://k12a604.p.ssafy.io:4443
+  secret: YOUR_PROD_SECRET

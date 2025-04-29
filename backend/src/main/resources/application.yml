@@ -37,3 +37,6 @@ management:
   endpoint:
     prometheus:
       enabled: true
+openvidu:
+  url:
+  secret:
