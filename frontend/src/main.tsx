@@ -8,7 +8,7 @@ import { WebSocketProvider } from './contexts/WebSocketProvider';
 const Root = () => {
   // const { roomCode } = useRoomStore(); // Zustand로 가져오기
   // console.log('roomCode', roomCode); // Zustand로 가져오기
-  const roomCode = '9zXIpW'; // 임시로 하드코딩
+  const roomCode = 'Fdawge'; // 임시로 하드코딩
   return (
     <BrowserRouter>
       {roomCode ? (

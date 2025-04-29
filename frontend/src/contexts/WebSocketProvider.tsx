@@ -1,5 +1,5 @@
 // contexts/WebSocketProvider.tsx
-import { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import { createStompClient } from '../websocket/stompClient';
 
@@ -18,6 +18,9 @@ export const WebSocketProvider = ({
   children: React.ReactNode;
 }) => {
   const clientRef = useRef<Client | null>(null);
+  const pendingSubscriptions = useRef<
+    { endpoint: string; callback: (body: any) => void }[]
+  >([]);
 
   useEffect(() => {
     const client = createStompClient(roomCode);
@@ -25,22 +28,38 @@ export const WebSocketProvider = ({
 
     client.onConnect = () => {
       console.log('🟢 WebSocket 연결 성공');
+
+      // 연결 후에 구독 대기 리스트 처리
+      pendingSubscriptions.current.forEach(({ endpoint, callback }) => {
+        client.subscribe(endpoint, (message) => {
+          const body = JSON.parse(message.body);
+          callback(body);
+        });
+      });
+      pendingSubscriptions.current = []; // 대기 리스트 초기화
     };
+
     client.onStompError = (frame) => {
       console.error('❌ STOMP 오류:', frame);
     };
 
     client.activate();
+
     return () => {
       client.deactivate();
     };
   }, [roomCode]);
 
   const subscribe = (endpoint: string, callback: (body: any) => void) => {
-    clientRef.current?.subscribe(endpoint, (message) => {
-      const body = JSON.parse(message.body);
-      callback(body);
-    });
+    if (clientRef.current?.connected) {
+      clientRef.current.subscribe(endpoint, (message) => {
+        const body = JSON.parse(message.body);
+        callback(body);
+      });
+    } else {
+      // 연결되지 않았으면 대기열에 추가
+      pendingSubscriptions.current.push({ endpoint, callback });
+    }
   };
 
   const send = (destination: string, payload: any) => {

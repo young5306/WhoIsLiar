@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import GameButton from '../../components/common/GameButton';
+import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { createRoom } from '../../services/api/RoomService';
 import { useRoomStore } from '../../stores/useRoomStore';
 
@@ -22,7 +24,7 @@ const WaitingRoomPage = () => {
 
   const handleCreateRoom = async () => {
     const param = {
-      hostNickname: '웹소켓테스트',
+      hostNickname: 'test',
       mode: 'VIDEO',
       roomName: '아무나 들어오세요',
       password: '1234',
@@ -36,6 +38,23 @@ const WaitingRoomPage = () => {
       // 방 생성 실패 처리
     }
   };
+
+  const { send } = useWebSocketContext();
+  const roomCode = 'Fdawge'; // 임시로 하드코딩
+
+  useEffect(() => {
+    if (!roomCode) return;
+
+    // 서버에 입장 메시지 전송
+    send(`/ws/roomCode=${roomCode}`, {
+      type: 'ENTER',
+    });
+
+    // 입장/채팅 등 수신 구독 예시
+    // subscribe(`/topic/rooms/${roomCode}`, (msg) => {
+    //   console.log('📥 서버에서 수신:', msg);
+    // });
+  }, [roomCode]);
 
   return (
     <div className="w-screen h-screen flex overflow-hidden p-20 py-10">
