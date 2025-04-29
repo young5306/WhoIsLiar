@@ -11,4 +11,5 @@ public interface SessionRepository extends JpaRepository<SessionEntity, Long> {
 	Optional<SessionEntity> findByNickname(String nickname);
 	Optional<SessionEntity> findByToken(String token);
 	void deleteByLastActiveAtBefore(LocalDateTime cutoff);
+	boolean existsByToken(String token);
 }
