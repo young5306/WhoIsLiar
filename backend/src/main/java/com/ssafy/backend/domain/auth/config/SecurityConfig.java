@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.auth.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,6 +28,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @EnableWebSecurity
 public class SecurityConfig {
 	private final AuthService authService;
+
+	@Value("${cors.allowed-origins}")
+	private List<String> allowedOrigins;
 
 	public SecurityConfig(AuthService authService) {
 		this.authService = authService;
@@ -94,7 +98,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration cfg = new CorsConfiguration();
-		cfg.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:3000"));   // 프론트엔드 도메인
+		cfg.setAllowedOrigins(allowedOrigins);
 		cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 		cfg.setAllowCredentials(true);
 		cfg.setAllowedHeaders(List.of("*"));
