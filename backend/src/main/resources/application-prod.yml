@@ -18,6 +18,6 @@ cookie:
   secure: true
   samesite: None
 
-#cors:
-#  allowed-origins:
-#    - https://your-production-domain.com
+cors:
+  allowed-origins:
+    - https://your-production-domain.com
