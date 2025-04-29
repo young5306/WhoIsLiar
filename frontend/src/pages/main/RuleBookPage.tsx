@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // 아이콘 라이브러리 사용 (lucide-react 설치 필요)
 
 const ruleBookData = [
