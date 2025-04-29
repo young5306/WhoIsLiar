@@ -1,67 +1,30 @@
-// import axios, { AxiosInstance } from 'axios';
-// import { useAuthStore } from '@/stores/useAuthStore'; // 스토어 import 필요
+import axios, { AxiosInstance } from 'axios';
 
-// export const BASE_URL = import.meta.env.VITE_APP_API_URL;
-// export const SOCKET_URL = import.meta.env.VITE_APP_SOCKET_URL;
+export const BASE_URL = import.meta.env.VITE_APP_API_URL;
 
-// axios.defaults.withCredentials = false;
-// axios.defaults.headers.common['Content-Type'] = 'application/json';
+axios.defaults.withCredentials = false; // 전역 설정은 일단 냅두고
 
-// const setupInterceptors = (instance: AxiosInstance) => {
-//   instance.interceptors.request.use(
-//     (config) => {
-//       const { accessToken } = useAuthStore.getState();
-//       if (accessToken) {
-//         config.headers.Authorization = `Bearer ${accessToken}`;
-//         config.withCredentials = true;
-//       }
-//       return config;
-//     },
-//     (error) => Promise.reject(error)
-//   );
+const setupInterceptors = (instance: AxiosInstance) => {
+  instance.interceptors.request.use(
+    (config) => {
+      config.withCredentials = true; // 쿠키를 항상 보내야 하니까 이것만 유지
 
-//   instance.interceptors.response.use(
-//     (response) => response,
-//     async (error) => {
-//       if (error.response?.status === 401) {
-//         useAuthStore.getState().clearAccessToken();
-//         console.error('인증 실패: 로그아웃 처리됨');
-//       }
-//       return Promise.reject(error);
-//     }
-//   );
-// };
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+};
 
-// export const createAxiosInstance = (): AxiosInstance => {
-//   const instance = axios.create({
-//     baseURL: BASE_URL,
-//     timeout: 30000,
-//     headers: { 'Content-Type': 'application/json' },
-//   });
+export const createAxiosInstance = (): AxiosInstance => {
+  const instance = axios.create({
+    baseURL: BASE_URL,
+    timeout: 30000,
+    headers: { 'Content-Type': 'application/json' },
+    withCredentials: true,
+  });
 
-//   setupInterceptors(instance);
-//   return instance;
-// };
+  setupInterceptors(instance);
+  return instance;
+};
 
-// export const api = createAxiosInstance();
-
-// // 🧩 추가: WebSocket 연결 함수
-// export const connectWebSocket = (): WebSocket | null => {
-//   const { accessToken } = useAuthStore.getState();
-//   if (!accessToken) {
-//     console.error('Access Token이 없습니다. 웹소켓 연결 실패');
-//     return null;
-//   }
-
-//   const socket = new WebSocket(`${SOCKET_URL}?token=${accessToken}`);
-
-//   socket.onopen = () => {
-//     console.log('WebSocket 연결 완료');
-//   };
-
-//   socket.onerror = (error) => {
-//     console.error('WebSocket 연결 오류', error);
-//   };
-
-//   return socket;
-// };
+export const api = createAxiosInstance();
