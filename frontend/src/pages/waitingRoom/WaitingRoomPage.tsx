@@ -1,131 +1,297 @@
+import GameButton from '../../components/common/GameButton';
+import { createRoom } from '../../services/api/RoomService';
+import { useRoomStore } from '../../stores/useRoomStore';
+
 const WaitingRoomPage = () => {
+  const categories = [
+    { label: '랜덤', id: 'random' },
+    { label: '물건', id: 'object' },
+    { label: '인물', id: 'person' },
+    { label: '음식', id: 'food' },
+    { label: '나라', id: 'country' },
+    { label: '스포츠', id: 'sports' },
+    { label: '직업', id: 'job' },
+    { label: '동물', id: 'animal', highlight: true },
+    { label: '노래', id: 'song' },
+    { label: '장소', id: 'place' },
+    { label: '영화/드라마', id: 'movie' },
+    { label: '브랜드', id: 'brand' },
+  ];
+
+  const { setRoomCode } = useRoomStore();
+  // {
+  //   "hostNickname": "그림자은영",
+  //   "mode": "VIDEO",                      // 'VIDEO' or 'BLIND'
+  //   "roomName": "아무나 들어오세요",
+  //   "password": "1234",                   // 숫자 4자리
+  //   "roundCount": 3                       // 3, 4, 5
+  // }
+
+  const handleCreateRoom = async () => {
+    const param = {
+      hostNickname: '',
+      mode: 'VIDEO',
+      roomName: '아무나 들어오세요',
+      password: '1234',
+      roundCount: 3,
+    };
+    const response = await createRoom(param);
+    if (response.status === 200) {
+      // 방 생성 성공
+      const roomCode = response.data.roomCode;
+      setRoomCode(roomCode); // Zustand store에 방 코드 저장
+    } else {
+      // 방 생성 실패 처리
+    }
+  };
+
   return (
-    <div className="">
-      <div className="left-[229px] top-[144px] absolute justify-start text-rose-600 text-4xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        플레이어
+    <div className="w-screen h-screen flex overflow-hidden p-20 py-10">
+      {/* Left section */}
+      <div className="flex-1 flex flex-col px-20">
+        {/* Header */}
+        <div className="text-white headline-large" onClick={handleCreateRoom}>
+          방만들기 임시 버튼
+        </div>
+        <div className="flex items-center mb-6">
+          <div className="text-white headline-large">게임방 제목</div>
+          <div className="text-white body-medium ml-3">
+            Code : 1234 587 8912
+          </div>
+        </div>
+
+        {/* Player count */}
+        <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/people-fill.svg"
+              alt="people-fill"
+              width={36}
+              height={36}
+              className="text-rose-600"
+            />
+            <div className="text-primary-600 headline-large">플레이어</div>
+          </div>
+          <div className="text-primary-600 headline-large ml-4">5/6</div>
+        </div>
+
+        {/* Player and analysis section */}
+        <div className="flex mb-10 gap-6">
+          {/* Player profile */}
+          <div className="flex flex-col">
+            <div className="w-72 h-60 rounded-2xl overflow-hidden bg-gray-800 mb-2">
+              <img
+                src="/placeholder.svg?height=241&width=287"
+                alt="Player"
+                width={287}
+                height={241}
+                className="object-cover"
+              />
+            </div>
+            <div className="text-black text-base font-['FUNFLOW_SURVIVOR_KR'] bg-white px-2 py-1 rounded w-fit">
+              김싸피
+            </div>
+
+            {/* Camera and mic controls */}
+            <div className="flex justify-center gap-4 mt-2">
+              <button className="bg-gray-700/80 rounded-full p-2">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    width="24"
+                    height="24"
+                    rx="12"
+                    fill="#4B4B4B"
+                    fillOpacity="0.8"
+                  />
+                  <path
+                    d="M15 10L15 14"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12 13L12 14"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M9 11L9 14"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+              <button className="bg-gray-700/80 rounded-full p-2">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    width="24"
+                    height="24"
+                    rx="12"
+                    fill="#4B4B4B"
+                    fillOpacity="0.8"
+                  />
+                  <path
+                    d="M12 14C13.1046 14 14 13.1046 14 12V8C14 6.89543 13.1046 6 12 6C10.8954 6 10 6.89543 10 8V12C10 13.1046 10.8954 14 12 14Z"
+                    stroke="white"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M12 16V18"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Emotion analysis box */}
+          <div className="w-40 h-80 bg-red-950 rounded-2xl border-2 border-primary-600 flex flex-col items-center justify-center">
+            <div className="w-32 mb-4">
+              <svg viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M0,20 Q25,5 50,20 T100,20"
+                  stroke="#FF2D55"
+                  strokeWidth="2"
+                  fill="none"
+                />
+              </svg>
+            </div>
+            <div className="text-center text-rose-600 text-base font-['FUNFLOW_SURVIVOR_KR'] leading-10">
+              <p>당황 ↑</p>
+              <p>목소리 급변 감지</p>
+              <p>무표정</p>
+            </div>
+          </div>
+
+          {/* Player list */}
+          <div className="ml-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <img
+                src="/assets/people-fill.svg"
+                alt="people"
+                width={24}
+                height={24}
+              />
+              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
+                도비
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <img
+                src="/assets/people-fill.svg"
+                alt="people"
+                width={24}
+                height={24}
+              />
+              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
+                라이어고수
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <img
+                src="/assets/people-fill.svg"
+                alt="people"
+                width={24}
+                height={24}
+              />
+              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
+                프신
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <img
+                src="/assets/people-fill.svg"
+                alt="people"
+                width={24}
+                height={24}
+              />
+              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
+                진짜시민
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Category section */}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-4">
+            <img
+              src="/assets/category.svg"
+              alt="category"
+              width={36}
+              height={36}
+            />
+            <div className="text-primary-600 headline-large">
+              제시어 카테고리
+            </div>
+          </div>
+
+          <div className="bg-gray-200 rounded-xl p-6">
+            <div className="grid grid-cols-4 gap-x-12 gap-y-6">
+              {categories.map((category, index) => (
+                <div
+                  key={category.id}
+                  className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] ${
+                    category.highlight
+                      ? 'text-rose-600 font-bold [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
+                      : 'text-white'
+                  }`}
+                >
+                  {category.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="left-[229px] top-[577px] absolute justify-start text-rose-600 text-4xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        제시어 카테고리
-      </div>
-      <div className="size-11 left-[171px] top-[145px] absolute">
-        <div className="w-9 h-8 left-[3.67px] top-[5.50px] absolute bg-rose-600" />
-      </div>
-      <div className="left-[383px] top-[150px] absolute justify-start text-rose-600 text-3xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        5/6
-      </div>
-      <div className="w-96 h-[722px] left-[909px] top-[150px] absolute bg-white/20 rounded-2xl" />
-      <div className="w-[667px] h-52 left-[176px] top-[657px] absolute bg-white/20 rounded-2xl" />
-      <div className="size-9 left-[175px] top-[584px] absolute">
-        <div className="size-7 left-[4.75px] top-[4.75px] absolute bg-rose-600" />
-      </div>
-      <div className="left-[715px] top-[225px] absolute justify-start text-gray-0 headline-medium">
-        도비
-      </div>
-      <div className="left-[715px] top-[272px] absolute justify-start text-gray-0 headline-medium">
-        라이어고수
-      </div>
-      <div className="left-[715px] top-[319px] absolute justify-start text-gray-0 headline-medium">
-        프신
-      </div>
-      <div className="left-[715px] top-[366px] absolute justify-start text-gray-0 headline-medium">
-        진짜시민
-      </div>
-      <img
-        className="w-72 h-60 left-[175px] top-[222px] absolute rounded-2xl"
-        src="https://placehold.co/287x241"
-      />
-      <div className="left-[180px] top-[227px] absolute justify-start text-black text-base font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        김싸피
-      </div>
-      <div className="size-6 left-[645px] top-[225px] absolute">
-        <div className="size-5 left-[39px] top-[6.12px] absolute bg-white" />
-        <div className="size-5 left-[39px] top-[54px] absolute bg-white" />
-      </div>
-      <div className="size-5 left-[684px] top-[325px] absolute bg-white" />
-      <div className="size-5 left-[684px] top-[372px] absolute bg-white" />
-      <div className="w-40 h-80 left-[490px] top-[222px] absolute bg-red-950 rounded-2xl border-2 border-rose-600" />
-      <div className="w-32 left-[503px] top-[389px] absolute text-center justify-center text-rose-600 text-base font-normal font-['FUNFLOW_SURVIVOR_KR'] leading-10">
-        당황 ↑<br />
-        목소리 급변 감지
-        <br />
-        무표정
-      </div>
-      <div className="size-32 left-[491px] top-[238px] absolute">
-        <div className="w-24 h-16 left-[26px] top-[30px] absolute bg-rose-600" />
-      </div>
-      <div className="w-36 h-12 left-[176px] top-[485px] absolute bg-white/20 rounded-2xl" />
-      <div className="size-12 left-[219.60px] top-[485px] absolute">
-        <div className="w-9 h-6 left-[6.37px] top-[12.24px] absolute bg-white" />
-      </div>
-      <div className="w-32 h-12 left-[330px] top-[485px] absolute bg-white/20 rounded-2xl" />
-      <div className="size-9 left-[377.22px] top-[495.72px] absolute">
-        <div className="w-5 h-7 left-[7.82px] top-[3.13px] absolute bg-white" />
-      </div>
-      <div className="size-14 left-[211px] top-[688px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        랜덤
-      </div>
-      <div className="size-14 left-[211px] top-[744px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        물건
-      </div>
-      <div className="size-14 left-[211px] top-[803px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        인물
-      </div>
-      <div className="w-20 h-14 left-[636px] top-[800px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        브랜드
-      </div>
-      <div className="size-14 left-[353px] top-[688px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        음식
-      </div>
-      <div className="size-14 left-[353px] top-[744px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        나라
-      </div>
-      <div className="w-20 h-14 left-[353px] top-[803px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        스포츠
-      </div>
-      <div className="size-14 left-[494px] top-[688px] absolute justify-start text-rose-600 text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR'] [text-shadow:_5px_3px_4px_rgb(0_0_0_/_0.25)]">
-        동물
-      </div>
-      <div className="size-14 left-[494px] top-[803px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        노래
-      </div>
-      <div className="w-28 h-14 left-[495px] top-[741px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        직업
-      </div>
-      <div className="size-14 left-[636px] top-[688px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        장소
-      </div>
-      <div className="w-32 h-14 left-[636px] top-[744px] absolute justify-start text-white text-2xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        영화/드라마
-      </div>
-      <div className="left-[176px] top-[81px] absolute justify-start text-white text-3xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        게임방 제목
-      </div>
-      <div className="left-[330px] top-[97px] absolute justify-start text-white text-sm font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        Code : 1234 567 8912
-      </div>
-      <div className="w-60 h-20 left-[1042px] top-[897px] absolute bg-black rounded-[37.21px]" />
-      <div className="w-56 h-16 left-[1046.80px] top-[901.74px] absolute bg-rose-600 rounded-[34.10px]" />
-      <div className="w-56 h-16 left-[1051.53px] top-[905.80px] absolute bg-gray-900 rounded-[31.80px]" />
-      <div className="left-[1075px] top-[905px] absolute justify-start text-rose-600 text-5xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        방 나가기
-      </div>
-      <div className="left-[960px] top-[801px] absolute justify-start text-white text-xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        채팅을 입력하세요.
-      </div>
-      <div className="w-80 h-[591px] left-[939px] top-[178px] absolute bg-neutral-800/50 rounded-tl-2xl rounded-tr-2xl" />
-      <div className="left-[960px] top-[676px] absolute justify-start text-white text-xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        도비
-      </div>
-      <div className="left-[960px] top-[715px] absolute text-center justify-start text-lime-500 text-xl font-normal font-['FUNFLOW_SURVIVOR_KR']">
-        나
-      </div>
-      <div className="left-[1036px] top-[715px] absolute justify-start text-lime-500 text-3xl font-normal font-['Cafe24_Supermagic']">
-        안녕하세요
-      </div>
-      <div className="left-[1034px] top-[676px] absolute justify-start text-white text-2xl font-normal font-['Cafe24_Supermagic']">
-        안녕하세요
+
+      {/* Right section - Chat */}
+      <div className="w-1/4 ml-6 flex flex-col">
+        <div className="flex-1 bg-gray-200 rounded-xl p-4 flex flex-col">
+          <div className="flex-1 space-y-4">
+            <div className="flex flex-col">
+              <span className="font-bold">도비</span>
+              <span className="text-white">안녕하세요</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-green-500">나</span>
+              <span className="text-green-500">안녕하세요</span>
+            </div>
+          </div>
+          <div className="mt-4 text-center text-sm text-gray-400">
+            채팅을 입력하세요.
+          </div>
+        </div>
+
+        {/* Exit button */}
+        <div className="flex justify-end mt-4">
+          <GameButton text="시작" />
+        </div>
       </div>
     </div>
   );
 };
+
 export default WaitingRoomPage;

@@ -11,16 +11,16 @@ interface WebSocketContextType {
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export const WebSocketProvider = ({
-  roomId,
+  roomCode,
   children,
 }: {
-  roomId: string;
+  roomCode: string;
   children: React.ReactNode;
 }) => {
   const clientRef = useRef<Client | null>(null);
 
   useEffect(() => {
-    const client = createStompClient(roomId);
+    const client = createStompClient(roomCode);
     clientRef.current = client;
 
     client.onConnect = () => {
@@ -34,7 +34,7 @@ export const WebSocketProvider = ({
     return () => {
       client.deactivate();
     };
-  }, [roomId]);
+  }, [roomCode]);
 
   const subscribe = (endpoint: string, callback: (body: any) => void) => {
     clientRef.current?.subscribe(endpoint, (message) => {
