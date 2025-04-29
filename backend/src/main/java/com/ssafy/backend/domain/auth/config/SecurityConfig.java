@@ -59,7 +59,6 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				// 1) 로그인, 닉네임 중복 검사는 누구나
 				.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-				.requestMatchers(HttpMethod.GET,  "/auth/check-nickname").permitAll()
 
 				// 웹소켓 연결 허용
 				.requestMatchers("/ws/**").permitAll()
