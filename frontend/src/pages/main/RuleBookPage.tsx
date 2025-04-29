@@ -60,7 +60,7 @@ const ruleBookData = [
 
 const RuleBookPage = () => {
   const [pageIndex, setPageIndex] = useState(0);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handlePrev = () => {
     if (pageIndex > 0) {
