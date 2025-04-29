@@ -26,3 +26,14 @@ cors:
   allowed-origins:
     - http://localhost:5173
     - http://localhost:3000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,httptrace
+  metrics:
+    enable:
+      all: true
+  endpoint:
+    prometheus:
+      enabled: true
