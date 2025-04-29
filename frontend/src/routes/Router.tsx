@@ -9,12 +9,12 @@ const Router = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<MainPage />} />
-        <Route path="/rule-book" element={<RuleBookPage />} />
         <Route path="/login" element={<LoginPage />} />
         {/* <Route path="/room-list" element={<RoomListPage />} />
         <Route path="/waiting" element={<WaitingPage />} />
         <Route path="/game" element={<GamePage />} /> */}
       </Route>
+      <Route path="/rule-book" element={<RuleBookPage />} />
     </Routes>
   );
 };
