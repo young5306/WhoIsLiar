@@ -21,6 +21,7 @@ import com.ssafy.backend.domain.auth.security.AuthTokenFilter;
 import com.ssafy.backend.domain.auth.service.AuthService;
 import com.ssafy.backend.global.common.ApiResponse;
 import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.config.CorsProperties;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -29,11 +30,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 	private final AuthService authService;
 
-	@Value("${cors.allowed-origins}")
-	private List<String> allowedOrigins;
+	private final CorsProperties corsProps;
 
-	public SecurityConfig(AuthService authService) {
+	public SecurityConfig(AuthService authService, CorsProperties corsProps)
+	{
 		this.authService = authService;
+		this.corsProps = corsProps;
 	}
 
 	@Bean
@@ -98,7 +100,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration cfg = new CorsConfiguration();
-		cfg.setAllowedOrigins(allowedOrigins);
+		cfg.setAllowedOrigins(corsProps.getAllowedOrigins());
 		cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 		cfg.setAllowCredentials(true);
 		cfg.setAllowedHeaders(List.of("*"));
