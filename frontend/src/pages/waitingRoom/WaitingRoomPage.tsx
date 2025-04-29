@@ -3,33 +3,26 @@ import { createRoom } from '../../services/api/RoomService';
 import { useRoomStore } from '../../stores/useRoomStore';
 
 const WaitingRoomPage = () => {
-  // const categories = [
-  //   { label: '랜덤', id: 'random' },
-  //   { label: '물건', id: 'object' },
-  //   { label: '인물', id: 'person' },
-  //   { label: '음식', id: 'food' },
-  //   { label: '나라', id: 'country' },
-  //   { label: '스포츠', id: 'sports' },
-  //   { label: '직업', id: 'job' },
-  //   { label: '동물', id: 'animal', highlight: true },
-  //   { label: '노래', id: 'song' },
-  //   { label: '장소', id: 'place' },
-  //   { label: '영화/드라마', id: 'movie' },
-  //   { label: '브랜드', id: 'brand' },
-  // ];
+  const categories = [
+    { label: '랜덤', id: 'random' },
+    { label: '물건', id: 'object' },
+    { label: '인물', id: 'person' },
+    { label: '음식', id: 'food' },
+    { label: '나라', id: 'country' },
+    { label: '스포츠', id: 'sports' },
+    { label: '직업', id: 'job' },
+    { label: '동물', id: 'animal', highlight: true },
+    { label: '노래', id: 'song' },
+    { label: '장소', id: 'place' },
+    { label: '영화/드라마', id: 'movie' },
+    { label: '브랜드', id: 'brand' },
+  ];
 
   const { setRoomCode } = useRoomStore();
-  // {
-  //   "hostNickname": "그림자은영",
-  //   "mode": "VIDEO",                      // 'VIDEO' or 'BLIND'
-  //   "roomName": "아무나 들어오세요",
-  //   "password": "1234",                   // 숫자 4자리
-  //   "roundCount": 3                       // 3, 4, 5
-  // }
 
   const handleCreateRoom = async () => {
     const param = {
-      hostNickname: '',
+      hostNickname: '웹소켓테스트',
       mode: 'VIDEO',
       roomName: '아무나 들어오세요',
       password: '1234',
@@ -37,9 +30,8 @@ const WaitingRoomPage = () => {
     };
     const response = await createRoom(param);
     if (response.status === 200) {
-      // 방 생성 성공
       const roomCode = response.data.roomCode;
-      setRoomCode(roomCode); // Zustand store에 방 코드 저장
+      setRoomCode(roomCode);
     } else {
       // 방 생성 실패 처리
     }
@@ -48,7 +40,7 @@ const WaitingRoomPage = () => {
   return (
     <div className="w-screen h-screen flex overflow-hidden p-20 py-10">
       {/* Left section */}
-      <div className="flex-1 flex flex-col px-20">
+      <div className="flex-1 flex-col px-10">
         {/* Header */}
         <div className="text-white headline-large" onClick={handleCreateRoom}>
           방만들기 임시 버튼
@@ -187,50 +179,19 @@ const WaitingRoomPage = () => {
 
           {/* Player list */}
           <div className="ml-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <img
-                src="/assets/people-fill.svg"
-                alt="people"
-                width={24}
-                height={24}
-              />
-              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
-                도비
+            {['도비', '라이어고수', '프신', '진짜시민'].map((name) => (
+              <div key={name} className="flex items-center gap-2">
+                <img
+                  src="/assets/people-fill.svg"
+                  alt="people"
+                  width={24}
+                  height={24}
+                />
+                <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
+                  {name}
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <img
-                src="/assets/people-fill.svg"
-                alt="people"
-                width={24}
-                height={24}
-              />
-              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
-                라이어고수
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <img
-                src="/assets/people-fill.svg"
-                alt="people"
-                width={24}
-                height={24}
-              />
-              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
-                프신
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <img
-                src="/assets/people-fill.svg"
-                alt="people"
-                width={24}
-                height={24}
-              />
-              <div className="text-white text-xl font-['FUNFLOW_SURVIVOR_KR']">
-                진짜시민
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -250,7 +211,7 @@ const WaitingRoomPage = () => {
 
           <div className="bg-gray-200 rounded-xl p-6">
             <div className="grid grid-cols-4 gap-x-12 gap-y-6">
-              {/* {categories.map((category, index) => (
+              {categories.map((category) => (
                 <div
                   key={category.id}
                   className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] ${
@@ -261,7 +222,7 @@ const WaitingRoomPage = () => {
                 >
                   {category.label}
                 </div>
-              ))} */}
+              ))}
             </div>
           </div>
         </div>
@@ -285,7 +246,7 @@ const WaitingRoomPage = () => {
           </div>
         </div>
 
-        {/* Exit button */}
+        {/* Exit / Start button */}
         <div className="flex justify-end mt-4">
           <GameButton text="시작" />
         </div>

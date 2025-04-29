@@ -3,11 +3,12 @@ import './index.css';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './routes/Router';
 import { WebSocketProvider } from './contexts/WebSocketProvider';
-import { useRoomStore } from './stores/useRoomStore';
+// import { useRoomStore } from './stores/useRoomStore';
 
 const Root = () => {
-  const { roomCode } = useRoomStore(); // Zustand로 가져오기
-
+  // const { roomCode } = useRoomStore(); // Zustand로 가져오기
+  // console.log('roomCode', roomCode); // Zustand로 가져오기
+  const roomCode = '9zXIpW'; // 임시로 하드코딩
   return (
     <BrowserRouter>
       {roomCode ? (
