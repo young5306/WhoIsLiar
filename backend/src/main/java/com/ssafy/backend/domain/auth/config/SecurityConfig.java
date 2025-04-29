@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.auth.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,6 +21,7 @@ import com.ssafy.backend.domain.auth.security.AuthTokenFilter;
 import com.ssafy.backend.domain.auth.service.AuthService;
 import com.ssafy.backend.global.common.ApiResponse;
 import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.config.CorsProperties;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -28,8 +30,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 	private final AuthService authService;
 
-	public SecurityConfig(AuthService authService) {
+	private final CorsProperties corsProps;
+
+	public SecurityConfig(AuthService authService, CorsProperties corsProps)
+	{
 		this.authService = authService;
+		this.corsProps = corsProps;
 	}
 
 	@Bean
@@ -52,8 +58,10 @@ public class SecurityConfig {
 			// 4) 인증·인가 규칙
 			.authorizeHttpRequests(auth -> auth
 				// 1) 로그인, 닉네임 중복 검사는 누구나
-				.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-				.requestMatchers(HttpMethod.GET,  "/auth/check-nickname").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+
+				// 웹소켓 연결 허용
+				.requestMatchers("/ws/**").permitAll()
 
 				// 2) Swagger/UI, Actuator 등은 공개
 				.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api/test")
@@ -94,7 +102,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration cfg = new CorsConfiguration();
-		cfg.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:3000"));   // 프론트엔드 도메인
+		cfg.setAllowedOrigins(corsProps.getAllowedOrigins());
 		cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 		cfg.setAllowCredentials(true);
 		cfg.setAllowedHeaders(List.of("*"));

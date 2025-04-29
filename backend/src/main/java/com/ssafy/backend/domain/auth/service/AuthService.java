@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import jakarta.validation.Valid;
 @Service
 @Validated
 public class AuthService {
+	private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 	private final SessionRepository repo;
 	private final Duration sessionTimeout;
 
@@ -39,6 +42,7 @@ public class AuthService {
 	@Transactional
 	public String login(@Valid LoginRequestDto req) {
 		if (!isNicknameAvailable(req.nickname())) {
+			log.warn("로그인 실패: 닉네임 중복 [{}]", req.nickname());
 			throw new CustomException(ResponseCode.CONFLICT);
 		}
 		String token = UUID.randomUUID().toString();
@@ -49,28 +53,39 @@ public class AuthService {
 		s.setCreatedAt(now);
 		s.setLastActiveAt(now);
 		repo.save(s);
+		log.info("로그인 성공: nickname={}, token={}", req.nickname(), token);
 		return token;
 	}
 
 	/** 토큰 검사 및 마지막 활동 시간 갱신 */
 	@Transactional
 	public SessionEntity validateAndRefresh(String token) {
-		SessionEntity s = repo.findByToken(token)
-			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
-		// 타임아웃 체크
-		if (s.getLastActiveAt().plus(sessionTimeout).isBefore(LocalDateTime.now())) {
-			repo.delete(s);
-			throw new CustomException(ResponseCode.UNAUTHORIZED);
+		try {
+			SessionEntity s = repo.findByToken(token)
+				.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
+			// 타임아웃 검사
+			if (s.getLastActiveAt().plus(sessionTimeout).isBefore(LocalDateTime.now())) {
+				repo.delete(s);
+				log.warn("토큰만료: token={}", token);
+				throw new CustomException(ResponseCode.UNAUTHORIZED);
+			}
+			s.setLastActiveAt(LocalDateTime.now());
+			log.info("토큰검증 성공: nickname={}, token={}", s.getNickname(), token);
+			return s;
+		} catch (CustomException ex) {
+			log.warn("토큰검증 실패: token={}, 이유={}", token, ex.getResponseCode());
+			throw ex;
 		}
-		s.setLastActiveAt(LocalDateTime.now());
-		return s;
 	}
 
 	/** 로그아웃 (토큰이 있으면 삭제) */
 	@Transactional
 	public void logoutIfPresent(String token) {
 		if (token != null) {
-			repo.findByToken(token).ifPresent(repo::delete);
+			repo.findByToken(token).ifPresent(s -> {
+				repo.delete(s);
+				log.info("로그아웃: nickname={}, token={}", s.getNickname(), token);
+			});
 		}
 	}
 

@@ -8,14 +8,17 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
     },
     '/rule-book': {
       imageUrl: '/bgImages/ruleBookBg.svg',
-      backgroundColor: 'bg-[#2F1914]',
+      backgroundColor: 'bg-[#321913]',
     },
     '/login': {
       imageUrl: '/bgImages/loginBg3.svg',
       backgroundColor: 'bg-[#090A11]',
     },
+    '/waitingRoom': {
+      imageUrl: '/bgImages/waitingBg.svg',
+      backgroundColor: 'bg-[#090A11]',
+    },
     // '/room-list': { imageUrl: '/bgImages/bg4.svg', backgroundColor: 'bg-white' },
-    // '/waiting': { imageUrl: '/bgImages/bg4.svg', backgroundColor: 'bg-white' },
     // '/game': { imageUrl: '/bgImages/bg4.svg', backgroundColor: 'bg-white' },
   };
 
@@ -34,8 +37,11 @@ const Layout = () => {
       <img
         src={pageStyle.imageUrl}
         alt="배경 이미지"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-screen object-cover z-0"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-screen object-cover z-0
+             [mask-image:radial-gradient(circle,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)]
+             [-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,1)_60%,rgba(0,0,0,0)_100%)]"
       />
+
       {/* 컨텐츠 영역 */}
       <div className="relative w-full h-full p-8 z-10">
         <Outlet />
