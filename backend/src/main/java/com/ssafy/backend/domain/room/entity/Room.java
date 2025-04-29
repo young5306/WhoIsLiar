@@ -55,8 +55,9 @@ public class Room {
 	private LocalDateTime updatedAt;
 
 	@Builder
-	public Room(String roomCode, String roomName, String password, int roundCount, Mode mode, RoomStatus roomStatus,
+	public Room(SessionEntity session, String roomCode, String roomName, String password, int roundCount, Mode mode, RoomStatus roomStatus,
 		LocalDateTime createdAt, LocalDateTime updatedAt) {
+		this.session = session;
 		this.roomCode = roomCode;
 		this.roomName = roomName;
 		this.password = password;
