@@ -19,9 +19,9 @@ import {
 import {
   getToken,
   Subscriber,
-  GameState,
-  PlayerState,
-  Message,
+  // GameState,
+  // PlayerState,
+  // Message,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import UserVideoComponent from './UserVideoComponent';
@@ -34,10 +34,9 @@ const GameRoom: React.FC = () => {
 
   // ck) 세션 ID는 세션을 식별하는 문자열, 입장 코드?와 비슷한 역할을 하는듯 (중복되면 안되고, 같은 세션 이이디 입력한 사람은 같은 방에 접속되며, 만약 세션 아이디가 존재하지 않는다면 새로 생성해서 세션을 오픈할 수 있게끔 한다.) -> 어떻게 생성하고 바꿀지 고민 필요
   // const [mySessionId, setMySessionId] = useState('SessionA');
-  // const [mySessionId, setMySessionId] = useState(
-  //   `asdsad${Math.floor(Math.random() * 100)}`
-  // );
-  const [mySessionId, setMySessionId] = useState(`asdsad5`);
+  const [mySessionId, setMySessionId] = useState(
+    `asdsad${Math.floor(Math.random() * 100)}`
+  );
 
   // ck) << OpenVidu >>
   // ck) 현재 연결된 세션
@@ -61,21 +60,21 @@ const GameRoom: React.FC = () => {
   const [currentMicDevice, setCurrentMicDevice] = useState<Device | null>(null);
 
   // ck) 카메라, 마이크 상태 관리
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  // const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  // const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
-  const [gameState, setGameState] = useState<GameState>({
-    round: 1,
-    turn: 1,
-    category: '',
-    topic: '',
-    message: [],
-  });
+  // const [gameState, setGameState] = useState<GameState>({
+  //   round: 1,
+  //   turn: 1,
+  //   category: '',
+  //   topic: '',
+  //   message: [],
+  // });
 
-  const [playerState, setPlayerState] = useState<PlayerState>({
-    currentPlayer: '',
-    isLiar: false,
-  });
+  // const [playerState, setPlayerState] = useState<PlayerState>({
+  //   currentPlayer: '',
+  //   isLiar: false,
+  // });
 
   const OV = useRef<OpenVidu | null>(null);
 
@@ -146,8 +145,10 @@ const GameRoom: React.FC = () => {
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
         audioSource: undefined,
         videoSource: undefined,
-        publishAudio: isAudioEnabled,
-        publishVideo: isVideoEnabled,
+        publishAudio: true,
+        publishVideo: true,
+        // publishAudio: isAudioEnabled,
+        // publishVideo: isVideoEnabled,
         resolution: '640x480',
         frameRate: 30,
         insertMode: 'APPEND',
@@ -220,7 +221,7 @@ const GameRoom: React.FC = () => {
 
     // ck) 세션 ID 초기화 수정
     // setMySessionId(`asdsad${Math.floor(Math.random() * 100)}`);
-    setMySessionId(`asdsad3`);
+    setMySessionId(`asdsad7`);
     // ck) 사용자 이름 초기화 수정
     setMyUserName(
       userInfo?.nickname || 'Participant' + Math.floor(Math.random() * 100)
@@ -248,21 +249,21 @@ const GameRoom: React.FC = () => {
     };
   }, [leaveSession]);
 
-  const toggleAudio = () => {
-    if (publisher) {
-      const newAudioState = !isAudioEnabled;
-      publisher.publishAudio(newAudioState);
-      setIsAudioEnabled(newAudioState);
-    }
-  };
+  // const toggleAudio = () => {
+  //   if (publisher) {
+  //     const newAudioState = !isAudioEnabled;
+  //     publisher.publishAudio(newAudioState);
+  //     setIsAudioEnabled(newAudioState);
+  //   }
+  // };
 
-  const toggleVideo = () => {
-    if (publisher) {
-      const newVideoState = !isVideoEnabled;
-      publisher.publishVideo(newVideoState);
-      setIsVideoEnabled(newVideoState);
-    }
-  };
+  // const toggleVideo = () => {
+  //   if (publisher) {
+  //     const newVideoState = !isVideoEnabled;
+  //     publisher.publishVideo(newVideoState);
+  //     setIsVideoEnabled(newVideoState);
+  //   }
+  // };
 
   const switchCamera = async () => {
     if (
@@ -326,22 +327,22 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  const getParticipantPosition = (
-    index: number,
-    totalParticipants: number
-  ): string => {
-    const positions = {
-      1: 'col-span-1 col-start-1 row-span-2 row-start-2 min-w-[200px]',
-      2: 'col-span-1 col-start-1 row-span-2 row-start-4 min-w-[200px]',
-      3: 'col-span-1 col-start-6 row-span-2 row-start-2 min-w-[200px]',
-      4: 'col-span-1 col-start-6 row-span-2 row-start-4 min-w-[200px]',
-      5: 'row-span-2 row-start-1 min-w-[200px] justify-center',
-      // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
-    };
-    return positions[index as keyof typeof positions] || '';
-  };
+  // const getParticipantPosition = (
+  //   index: number,
+  //   totalParticipants: number
+  // ): string => {
+  //   const positions = {
+  //     1: 'col-span-1 col-start-1 row-span-2 row-start-2 min-w-[200px]',
+  //     2: 'col-span-1 col-start-1 row-span-2 row-start-4 min-w-[200px]',
+  //     3: 'col-span-1 col-start-6 row-span-2 row-start-2 min-w-[200px]',
+  //     4: 'col-span-1 col-start-6 row-span-2 row-start-4 min-w-[200px]',
+  //     5: 'row-span-2 row-start-1 min-w-[200px] justify-center',
+  //     // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
+  //   };
+  //   return positions[index as keyof typeof positions] || '';
+  // };
 
-  const myPosition = 'col-span-2 col-start-3 row-span-2 row-start-5';
+  // const myPosition = 'col-span-2 col-start-3 row-span-2 row-start-5';
 
   return (
     <>
@@ -431,9 +432,53 @@ const GameRoom: React.FC = () => {
             </div>
           </div>
         ) : null}
-        {/* {session !== undefined? (<><div className='w-screen h-screen'></>) : null} */}
 
-        {/* </div> */}
+        {/* {session !== undefined ? (
+          <>
+            <div className="w-screen h-screen text-white p-4 relative">
+              <div className="w-full h-full flex flex-col"> */}
+        {/* GameInfo 영역 */}
+
+        {/* Video 영역 */}
+        {/* <div className="grid grid-cols-6 grid-rows-7 gap-4 flex-grow">
+                  {subscribers.map((sub, index) => (
+                    <div
+                      key={sub.id || index}
+                      className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
+                    >
+                      <div className="w-full h-full bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg"> */}
+        {/* subs video */}
+        {/* <div className="w-full h-full relative"> */}
+        {/* name */}
+        {/* <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                            <div className="w-full h-full flex items-center justify-center">
+                              <div className="text-5xl font-bold">Me</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))} */}
+
+        {/* my video */}
+        {/* <div className={`relative ${myPosition}`}>
+                    <div className="w-full h-full bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                      <div className="w-full h-full relative">
+                        <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                          나
+                        </div>
+
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-5xl font-bold">Me</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : null} */}
       </div>
     </>
   );
