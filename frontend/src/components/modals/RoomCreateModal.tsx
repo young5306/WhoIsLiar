@@ -9,7 +9,7 @@ interface RoomCreateModalProps {
   onClose: () => void;
 }
 
-export const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
+const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const navigate = useNavigate();
 
   const { userInfo } = useAuthStore();
@@ -187,3 +187,5 @@ export const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
     </div>
   );
 };
+
+export default RoomCreateModal;

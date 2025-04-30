@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { GameButton } from '../../components/common/GameButton';
-import { RoomCreateModal } from '../../components/modals/RoomCreateModal';
+import GameButton from '../../components/common/GameButton';
+import RoomCreateModal from '../../components/modals/RoomCreateModal';
 
-export const RoomListPage = () => {
+const RoomListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleOpenModal = () => setIsCreateModalOpen(true);
@@ -18,3 +18,5 @@ export const RoomListPage = () => {
     </div>
   );
 };
+
+export default RoomListPage;

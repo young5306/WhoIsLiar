@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import UserVideoComponent from './UserVideoComponent';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
-import { GameButton } from '../../components/common/GameButton';
+import GameButton from '../../components/common/GameButton';
 
 const APPLICATION_SERVER_URL = import.meta.env.PROD
   ? import.meta.env.VITE_OVD_SERVER_URL

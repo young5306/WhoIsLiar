@@ -10,11 +10,7 @@ const sizeClasses = {
   large: 'px-8 py-3 display-large',
 };
 
-export const GameButton = ({
-  text,
-  size = 'medium',
-  onClick,
-}: GameButtonProps) => {
+const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
   return (
     <div className="inline-block p-1 bg-gray-900 rounded-full ">
       <button
@@ -38,3 +34,5 @@ export const GameButton = ({
     </div>
   );
 };
+
+export default GameButton;

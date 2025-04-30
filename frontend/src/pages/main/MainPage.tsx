@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { GameButton } from '../../components/common/GameButton';
+import GameButton from '../../components/common/GameButton';
 
 const MainPage = () => {
   const navigate = useNavigate();
