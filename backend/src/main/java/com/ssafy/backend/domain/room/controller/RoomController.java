@@ -4,15 +4,16 @@ import static com.ssafy.backend.global.common.ResponseUtil.*;
 
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
+import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
 import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
-import com.ssafy.backend.domain.room.dto.response.RoomJoinByCodeResponse;
+import com.ssafy.backend.domain.room.dto.response.RoomJoinResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;
 import com.ssafy.backend.domain.room.service.RoomService;
 import com.ssafy.backend.global.common.ApiResponse;
-import com.ssafy.backend.global.common.ResponseCode;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,18 +33,23 @@ public class RoomController {
 
 	@PostMapping
 	@Operation(summary = "방 생성", description = "새로운 방을 생성합니다.")
-	public ResponseEntity<ApiResponse<RoomCreateResponse>> createRoom(
-		@RequestBody RoomCreateRequest request) {
-		RoomCreateResponse dto = roomService.createRoom(request);
-		return created(dto);
+	public ResponseEntity<ApiResponse<RoomCreateResponse>> createRoom(@RequestBody RoomCreateRequest request) {
+		RoomCreateResponse response = roomService.createRoom(request);
+		return created(response);
 	}
 
 	@PostMapping("/join/code")
 	@Operation(summary = "코드로 방 입장", description = "코드로 방에 입장합니다.")
-	public ResponseEntity<ApiResponse<RoomJoinByCodeResponse>> joinRoomByCode(
-		@RequestBody RoomJoinByCodeRequest request) {
-		RoomJoinByCodeResponse dto = roomService.joinRoomByCode(request);
-		return ok(dto);
+	public ResponseEntity<ApiResponse<RoomJoinResponse>> joinRoomByCode(@RequestBody RoomJoinByCodeRequest request) {
+		RoomJoinResponse response = roomService.joinRoomByCode(request);
+		return ok(response);
+	}
+
+	@PostMapping("/join/password")
+	@Operation(summary = "비밀번호로 방 입장", description = "비밀번호로 방에 입장합니다.")
+	public ResponseEntity<ApiResponse<RoomJoinResponse>> joinRoomByPassword(@RequestBody RoomJoinByPasswordRequest request) {
+		RoomJoinResponse response = roomService.joinRoomByPassword(request);
+		return ok(response);
 	}
 
 	/** 방 목록 조회 */
