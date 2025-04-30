@@ -16,7 +16,7 @@ const Router = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/room-list" element={<RoomListPage />} />
         {/* <Route path="/game" element={<GamePage />} /> */}
-        <Route path="/waitingRoom" element={<WaitingRoomPage />} />
+        <Route path="/waiting-room" element={<WaitingRoomPage />} />
 
         {/* openvidu */}
         <Route path="/game-vid" element={<GameVid />} />
