@@ -64,10 +64,8 @@ public class AuthController {
 	@PostMapping("/login")
 	public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Parameter(description = "로그인 요청 정보", required = true) @Valid @RequestBody LoginRequestDto req,
 		HttpServletResponse response) {
-		boolean available = auth.isNicknameAvailable(req.nickname());
-		if (!available) {
-			throw new CustomException(ResponseCode.CONFLICT);
-		}
+
+		// AuthService.login() 내부에서 중복 시 409 예외를 던집니다.
 		String token = auth.login(req);
 		// HttpOnly 쿠키로 토큰 발급
 		ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
@@ -79,7 +77,7 @@ public class AuthController {
 			.build();
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 		// 3) 응답 바디에 토큰 + 닉네임 같이 담아서 반환
-		LoginResponseDto body = new LoginResponseDto(token, req.nickname(),true);
+		LoginResponseDto body = new LoginResponseDto(token, req.nickname());
 		return ok(body);
 	}
 
