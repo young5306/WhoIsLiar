@@ -6,6 +6,7 @@ import LoginPage from '../pages/main/LoginPage';
 
 import GameVid from '../pages/game/GameVid';
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
+import { RoomListPage } from '../pages/roomList/RoomListPage';
 
 const Router = () => {
   return (
@@ -13,6 +14,8 @@ const Router = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/room-list" element={<RoomListPage />} />
+        {/* <Route path="/game" element={<GamePage />} /> */}
         <Route path="/waitingRoom" element={<WaitingRoomPage />} />
 
         {/* openvidu */}
