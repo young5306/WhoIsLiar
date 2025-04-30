@@ -10,17 +10,25 @@ import org.springframework.web.socket.config.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@EnableWebSocket
+@EnableWebSocketMessageBroker
 @RequiredArgsConstructor
-public class WebSocketConfig implements WebSocketConfigurer {
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final AuthHandshakeInterceptor authHandshakeInterceptor;
-	private final CustomWebSocketHandler customWebSocketHandler;
 
 	@Override
-	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		registry.addHandler(customWebSocketHandler, "/ws")
+	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		registry.addEndpoint("/ws")
+			.setAllowedOriginPatterns("*")
 			.addInterceptors(authHandshakeInterceptor)
-			.setAllowedOrigins("*"); // 테스트할 땐 모두 허용
+			.withSockJS(); // SockJS fallback 사용
+	}
+
+	@Override
+	public void configureMessageBroker(MessageBrokerRegistry registry) {
+		// /topic으로 시작하는 주소로 브로커가 메시지를 보냄
+		registry.enableSimpleBroker("/topic");
+		// 클라이언트가 메시지를 보낼 때 /app으로 시작해야 컨트롤러로 들어옴
+		registry.setApplicationDestinationPrefixes("/app");
 	}
 }
