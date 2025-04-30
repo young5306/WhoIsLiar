@@ -36,6 +36,7 @@ bin/
 # === Spring Boot Config ===
 .env
 *.local
+.env.prod
 
 # === Logs ===
 *.log
