@@ -1,6 +1,8 @@
 package com.ssafy.backend.global.websocket;
 
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.global.util.SecurityUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
@@ -80,6 +82,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		attributes.put("token", AUTH_TOKEN);
 		attributes.put("roomCode", roomCode);
+		attributes.put("nickname", SecurityUtils.getAuthentication());
 
 		return true;
 	}
