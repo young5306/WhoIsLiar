@@ -10,7 +10,5 @@ interface createRoomRequest {
 
 export const createRoom = async (param: createRoomRequest) => {
   const res = await api.post('/rooms', param);
-  console.log(param);
-
   return res.data;
 };
