@@ -1,13 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import GameButton from '../../components/common/GameButton';
-import {
-  useWebSocketContext,
-  WebSocketProvider,
-} from '../../contexts/WebSocketProvider';
+import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { useRoomStore } from '../../stores/useRoomStore';
 // import { useAuthStore } from '../../stores/useAuthStore';
-import { logoutApi } from '../../services/api/AuthService';
 import { VideoOff, Video, Mic, MicOff } from 'lucide-react';
+import { getRoomData } from '../../services/api/RoomService';
 
 const WaitingRoomContent = () => {
   const categories = [
@@ -31,6 +28,7 @@ const WaitingRoomContent = () => {
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
   const [audioLevel, setAudioLevel] = useState<number>(0);
+  // eslint-disable-next-line
   const [vitalData, setVitalData] = useState<number[]>(Array(100).fill(50));
   const [barHeights, setBarHeights] = useState<number[]>(Array(20).fill(2));
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -38,6 +36,9 @@ const WaitingRoomContent = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const [chatMessages, setChatMessages] = useState<
+    Array<{ sender: string; content: string }>
+  >([]);
 
   const updateVitalData = useCallback(() => {
     setVitalData((prevData) => {
@@ -232,21 +233,54 @@ const WaitingRoomContent = () => {
   }, []); // 빈 의존성 배열로 컴포넌트 마운트 시 한 번만 실행
 
   const { roomCode: contextRoomCode } = useRoomStore();
-  const { send: contextSend, subscribe } = useWebSocketContext();
+  const {
+    connect,
+    send: contextSend,
+    isConnected,
+    stompClient,
+  } = useWebSocketContext();
 
   useEffect(() => {
-    if (!contextRoomCode) return;
+    console.log('WaitingRoomContent mounted');
+    console.log('Current roomCode:', contextRoomCode);
 
-    // 서버에 입장 메시지 전송
-    contextSend(`/ws/roomCode=${contextRoomCode}`, {
-      type: 'ENTER',
-    });
+    const fetchRoomData = async () => {
+      if (contextRoomCode) {
+        try {
+          const roomData = await getRoomData(contextRoomCode);
+          console.log('Room data fetched:', roomData);
+        } catch (error) {
+          console.error('Failed to fetch room data:', error);
+        }
+      }
+    };
 
-    // 입장/채팅 등 수신 구독
-    subscribe(`/topic/rooms/${contextRoomCode}`, (msg) => {
-      console.log('📥 서버에서 수신:', msg);
-    });
-  }, [contextRoomCode, contextSend, subscribe]);
+    fetchRoomData();
+
+    if (!contextRoomCode) {
+      console.warn('roomCode가 없습니다.');
+      return;
+    }
+
+    console.log('연결 시도:', contextRoomCode);
+    // 웹소켓 연결
+    connect(contextRoomCode);
+
+    // 연결이 성공하면 메시지 전송
+    if (isConnected) {
+      // 서버에 입장 메시지 전송
+      contextSend('입장했습니다.', 'System');
+      console.log('메시지 전송 완료');
+
+      // 채팅 메시지 구독
+      if (stompClient) {
+        stompClient.subscribe(`/topic/room.${contextRoomCode}`, (frame) => {
+          const message = JSON.parse(frame.body);
+          setChatMessages((prev) => [...prev, message]);
+        });
+      }
+    }
+  }, [contextRoomCode, connect, contextSend, isConnected, stompClient]);
 
   const toggleCamera = async () => {
     if (isCameraOn) {
@@ -353,7 +387,7 @@ const WaitingRoomContent = () => {
             {/* Camera and mic controls */}
             <div className="flex justify-center gap-4 mt-2">
               <button
-                className={`rounded-full p-2 transition-colors duration-200 hover:bg-opacity-90 ${
+                className={`rounded-full p-2 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
                   isCameraOn
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-gray-700/80 hover:bg-gray-600'
@@ -367,7 +401,7 @@ const WaitingRoomContent = () => {
                 )}
               </button>
               <button
-                className={`rounded-full p-2 transition-colors duration-200 hover:bg-opacity-90 ${
+                className={`rounded-full p-2 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
                   isMicOn
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-gray-700/80 hover:bg-gray-600'
@@ -527,14 +561,22 @@ const WaitingRoomContent = () => {
             채팅
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto">
-            <div className="flex flex-col">
-              <span className="font-bold text-gray-300">도비</span>
-              <span className="text-white">안녕하세요</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-green-500">나</span>
-              <span className="text-green-500">안녕하세요</span>
-            </div>
+            {chatMessages.map((msg, index) => (
+              <div key={index} className="flex flex-col">
+                <span
+                  className={`font-bold ${msg.sender === 'System' ? 'text-gray-300' : 'text-green-500'}`}
+                >
+                  {msg.sender}
+                </span>
+                <span
+                  className={
+                    msg.sender === 'System' ? 'text-white' : 'text-green-500'
+                  }
+                >
+                  {msg.content}
+                </span>
+              </div>
+            ))}
           </div>
           <div className="mt-4 text-center text-sm text-gray-400">
             채팅을 입력하세요.
@@ -557,11 +599,7 @@ const WaitingRoomPage = () => {
     return <div>방 코드가 없습니다.</div>;
   }
 
-  return (
-    <WebSocketProvider roomCode={roomCode}>
-      <WaitingRoomContent />
-    </WebSocketProvider>
-  );
+  return <WaitingRoomContent />;
 };
 
 export default WaitingRoomPage;

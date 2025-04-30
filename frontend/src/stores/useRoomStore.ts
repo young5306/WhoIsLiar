@@ -11,8 +11,14 @@ export const useRoomStore = create<RoomStoreState>()(
   persist(
     (set) => ({
       roomCode: null,
-      setRoomCode: (roomCode: string) => set({ roomCode }),
-      clearRoomCode: () => set({ roomCode: null }),
+      setRoomCode: (roomCode: string) => {
+        console.log('Setting roomCode:', roomCode);
+        set({ roomCode });
+      },
+      clearRoomCode: () => {
+        console.log('Clearing roomCode');
+        set({ roomCode: null });
+      },
     }),
     {
       name: 'room-storage',

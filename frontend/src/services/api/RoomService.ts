@@ -33,3 +33,8 @@ export const getRoomList = async (
   });
   return res.data.data.rooms;
 };
+
+export const getRoomData = async (roomCode: string) => {
+  const res = await api.get(`/rooms/${roomCode}`);
+  return res.data.data;
+};

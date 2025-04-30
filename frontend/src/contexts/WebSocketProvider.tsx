@@ -5,101 +5,119 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useCallback,
 } from 'react';
-import { Client } from '@stomp/stompjs';
+import { Client as StompClient } from '@stomp/stompjs';
 import { createStompClient } from '../websocket/stompClient';
+import { useParams } from 'react-router-dom';
 
-interface WebSocketContextType {
-  subscribe: (endpoint: string, callback: (body: any) => void) => void;
-  send: (destination: string, payload: any) => void;
-  isConnected: boolean;
+interface Message {
+  sender: string;
+  content: string;
+  chatType: string;
 }
 
-const WebSocketContext = createContext<WebSocketContextType | null>(null);
+interface WebSocketContextType {
+  stompClient: StompClient | null;
+  isConnected: boolean;
+  connect: (roomCode: string) => void;
+  send: (content: string, sender: string) => void;
+}
 
-export const WebSocketProvider = ({
-  roomCode,
+const WebSocketContext = createContext<WebSocketContextType>({
+  stompClient: null,
+  isConnected: false,
+  connect: () => {},
+  send: () => {},
+});
+
+export const useWebSocketContext = () => useContext(WebSocketContext);
+
+export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
-}: {
-  roomCode: string;
-  children: React.ReactNode;
 }) => {
-  const clientRef = useRef<Client | null>(null);
+  const { roomCode } = useParams<{ roomCode: string }>();
   const [isConnected, setIsConnected] = useState(false);
-  const pendingSubscriptions = useRef<
-    { endpoint: string; callback: (body: any) => void }[]
-  >([]);
+  const clientRef = useRef<StompClient | null>(null);
 
-  useEffect(() => {
-    const client = createStompClient(roomCode);
-    clientRef.current = client;
-
-    client.onConnect = () => {
-      console.log('🟢 WebSocket 연결 성공');
-      setIsConnected(true);
-
-      // 연결 후에 구독 대기 리스트 처리
-      pendingSubscriptions.current.forEach(({ endpoint, callback }) => {
-        client.subscribe(endpoint, (message) => {
-          const body = JSON.parse(message.body);
-          callback(body);
-        });
-      });
-      pendingSubscriptions.current = []; // 대기 리스트 초기화
-    };
-
-    client.onStompError = (frame) => {
-      console.error('❌ STOMP 오류:', frame);
-      setIsConnected(false);
-    };
-
-    client.onWebSocketClose = () => {
-      console.log('🔴 WebSocket 연결 종료');
-      setIsConnected(false);
-    };
-
-    client.activate();
-
-    return () => {
-      if (clientRef.current?.connected) {
-        clientRef.current.deactivate();
-      }
-      setIsConnected(false);
-    };
-  }, [roomCode]);
-
-  const subscribe = (endpoint: string, callback: (body: any) => void) => {
-    if (clientRef.current?.connected) {
-      clientRef.current.subscribe(endpoint, (message) => {
-        const body = JSON.parse(message.body);
-        callback(body);
-      });
-    } else {
-      // 연결되지 않았으면 대기열에 추가
-      pendingSubscriptions.current.push({ endpoint, callback });
-    }
-  };
-
-  const send = (destination: string, payload: any) => {
-    if (!clientRef.current?.connected) {
-      console.warn('⚠️ WebSocket이 연결되지 않았습니다.');
+  const connect = useCallback((roomCode: string) => {
+    if (!roomCode) {
+      console.error('roomCode가 없습니다.');
       return;
     }
-    clientRef.current.publish({
-      destination,
-      body: JSON.stringify(payload),
-    });
-  };
+
+    try {
+      console.log('WebSocket 연결 시도:', roomCode);
+      const client = createStompClient(roomCode);
+
+      client.onConnect = () => {
+        console.log('STOMP 연결 성공');
+        setIsConnected(true);
+
+        // 구독 설정
+        client.subscribe(`/topic/room.${roomCode}`, (frame) => {
+          const message = JSON.parse(frame.body) as Message;
+          console.log('메시지 수신:', message);
+        });
+      };
+
+      client.onStompError = (frame) => {
+        console.error('STOMP 에러:', frame);
+        setIsConnected(false);
+      };
+
+      client.onWebSocketClose = () => {
+        console.log('WebSocket 연결 종료');
+        setIsConnected(false);
+      };
+
+      client.activate();
+      clientRef.current = client;
+    } catch (error) {
+      console.error('WebSocket 연결 실패:', error);
+      setIsConnected(false);
+    }
+  }, []);
+
+  const send = useCallback(
+    (content: string, sender: string) => {
+      if (!clientRef.current?.connected || !roomCode) {
+        console.warn('WebSocket이 연결되지 않았습니다.');
+        return;
+      }
+
+      const message: Message = {
+        sender,
+        content,
+        chatType: 'NORMAL',
+      };
+
+      console.log('메시지 전송:', message);
+      clientRef.current.publish({
+        destination: `/app/chat.send/${roomCode}`,
+        body: JSON.stringify(message),
+      });
+    },
+    [roomCode]
+  );
+
+  useEffect(() => {
+    if (roomCode) {
+      connect(roomCode);
+    }
+
+    return () => {
+      if (clientRef.current) {
+        clientRef.current.deactivate();
+      }
+    };
+  }, [roomCode, connect]);
 
   return (
-    <WebSocketContext.Provider value={{ subscribe, send, isConnected }}>
+    <WebSocketContext.Provider
+      value={{ stompClient: clientRef.current, isConnected, connect, send }}
+    >
       {children}
     </WebSocketContext.Provider>
   );
-};
-
-export const useWebSocketContext = () => {
-  const ctx = useContext(WebSocketContext);
-  if (!ctx) throw new Error('WebSocketProvider가 필요합니다.');
-  return ctx;
 };
