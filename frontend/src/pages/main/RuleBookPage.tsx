@@ -11,17 +11,20 @@ const pageImages = [
 
 const RuleBookPage = () => {
   const [pageIndex, setPageIndex] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const navigate = useNavigate();
 
   const handlePrev = () => {
     if (pageIndex > 0) {
-      setPageIndex(pageIndex - 1);
+      setImageLoaded(false);
+      setPageIndex((prev) => prev - 1);
     }
   };
 
   const handleNext = () => {
     if (pageIndex < pageImages.length - 1) {
-      setPageIndex(pageIndex + 1);
+      setImageLoaded(false);
+      setPageIndex((prev) => prev + 1);
     }
   };
 
@@ -30,17 +33,17 @@ const RuleBookPage = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen">
-      {/* 페이지별 전용 배경 이미지 */}
+    <div className="relative w-screen h-screen bg-black">
       <img
         src={pageImages[pageIndex]}
         alt={`RuleBook Page ${pageIndex + 1}`}
-        className="absolute top-0 left-0 w-full h-full object-cover z-0"
+        className={`absolute top-0 left-0 w-full h-full object-cover z-0 transition-opacity duration-300 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        onLoad={() => setImageLoaded(true)}
       />
 
-      {/* 가운데 화살표 + 페이지 표시 */}
       <div className="absolute bottom-17 left-1/2 -translate-x-1/2 flex items-center gap-6 z-20">
-        {/* 왼쪽 화살표 or 빈 공간 */}
         <div className="w-[40px] flex justify-center">
           {pageIndex > 0 ? (
             <button onClick={handlePrev}>
@@ -49,12 +52,10 @@ const RuleBookPage = () => {
           ) : null}
         </div>
 
-        {/* 현재 페이지 표시 */}
         <p className="text-point-rulebook1 headline-large w-[80px] text-center">
           {pageIndex + 1} / {pageImages.length}
         </p>
 
-        {/* 오른쪽 화살표 or 빈 공간 */}
         <div className="w-[40px] flex justify-center">
           {pageIndex < pageImages.length - 1 ? (
             <button onClick={handleNext}>
@@ -64,7 +65,6 @@ const RuleBookPage = () => {
         </div>
       </div>
 
-      {/* 오른쪽 하단 뒤로가기 버튼 추가 */}
       <button
         onClick={handleBack}
         className="absolute bottom-6 right-6 flex items-center gap-2 z-20 cursor-pointer"

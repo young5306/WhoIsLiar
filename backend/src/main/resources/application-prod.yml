@@ -20,4 +20,5 @@ cookie:
 
 cors:
   allowed-origins:
-    - https://your-production-domain.com
+    - https://k12a604.p.ssafy.io
+    - http://localhost:5173
