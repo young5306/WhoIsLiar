@@ -1,11 +1,18 @@
 // contexts/WebSocketProvider.tsx
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Client } from '@stomp/stompjs';
 import { createStompClient } from '../websocket/stompClient';
 
 interface WebSocketContextType {
   subscribe: (endpoint: string, callback: (body: any) => void) => void;
   send: (destination: string, payload: any) => void;
+  isConnected: boolean;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -18,6 +25,7 @@ export const WebSocketProvider = ({
   children: React.ReactNode;
 }) => {
   const clientRef = useRef<Client | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const pendingSubscriptions = useRef<
     { endpoint: string; callback: (body: any) => void }[]
   >([]);
@@ -28,6 +36,7 @@ export const WebSocketProvider = ({
 
     client.onConnect = () => {
       console.log('🟢 WebSocket 연결 성공');
+      setIsConnected(true);
 
       // 연결 후에 구독 대기 리스트 처리
       pendingSubscriptions.current.forEach(({ endpoint, callback }) => {
@@ -41,12 +50,21 @@ export const WebSocketProvider = ({
 
     client.onStompError = (frame) => {
       console.error('❌ STOMP 오류:', frame);
+      setIsConnected(false);
+    };
+
+    client.onWebSocketClose = () => {
+      console.log('🔴 WebSocket 연결 종료');
+      setIsConnected(false);
     };
 
     client.activate();
 
     return () => {
-      client.deactivate();
+      if (clientRef.current?.connected) {
+        clientRef.current.deactivate();
+      }
+      setIsConnected(false);
     };
   }, [roomCode]);
 
@@ -63,14 +81,18 @@ export const WebSocketProvider = ({
   };
 
   const send = (destination: string, payload: any) => {
-    clientRef.current?.publish({
+    if (!clientRef.current?.connected) {
+      console.warn('⚠️ WebSocket이 연결되지 않았습니다.');
+      return;
+    }
+    clientRef.current.publish({
       destination,
       body: JSON.stringify(payload),
     });
   };
 
   return (
-    <WebSocketContext.Provider value={{ subscribe, send }}>
+    <WebSocketContext.Provider value={{ subscribe, send, isConnected }}>
       {children}
     </WebSocketContext.Provider>
   );

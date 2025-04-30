@@ -1,11 +1,15 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import GameButton from '../../components/common/GameButton';
-import { useWebSocketContext } from '../../contexts/WebSocketProvider';
+import {
+  useWebSocketContext,
+  WebSocketProvider,
+} from '../../contexts/WebSocketProvider';
+import { useRoomStore } from '../../stores/useRoomStore';
 // import { useAuthStore } from '../../stores/useAuthStore';
 import { logoutApi } from '../../services/api/AuthService';
 import { VideoOff, Video, Mic, MicOff } from 'lucide-react';
 
-const WaitingRoomPage = () => {
+const WaitingRoomContent = () => {
   const categories = [
     { label: '랜덤', id: 'random' },
     { label: '물건', id: 'object' },
@@ -28,6 +32,7 @@ const WaitingRoomPage = () => {
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [vitalData, setVitalData] = useState<number[]>(Array(100).fill(50));
+  const [barHeights, setBarHeights] = useState<number[]>(Array(20).fill(2));
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -79,6 +84,8 @@ const WaitingRoomPage = () => {
     const updateAudioLevel = () => {
       if (!analyserRef.current || !isMicOn) {
         setAudioLevel(0);
+        // 마이크가 꺼지면 바 높이를 최소값으로 설정
+        setBarHeights((prev) => prev.map(() => 2));
         return;
       }
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -94,6 +101,21 @@ const WaitingRoomPage = () => {
       const weightedAverage = bass * 0.4 + mid * 0.4 + treble * 0.2;
       setAudioLevel(weightedAverage);
 
+      // 각 주파수 영역의 데이터를 기반으로 바 높이 직접 설정
+      const newBarHeights = Array(20)
+        .fill(0)
+        .map((_, i) => {
+          // 여러 주파수 영역에서 데이터 추출
+          const freqIndex = Math.floor(
+            i * (analyserRef.current!.frequencyBinCount / 40)
+          );
+          const freqValue = dataArray[freqIndex] || 0;
+
+          // 직접적인 주파수 값을 사용하여 높이 계산 (0-40 범위로)
+          return Math.max(2, (freqValue / 255) * 40);
+        });
+
+      setBarHeights(newBarHeights);
       requestAnimationFrame(updateAudioLevel);
     };
     updateAudioLevel();
@@ -209,29 +231,22 @@ const WaitingRoomPage = () => {
     };
   }, []); // 빈 의존성 배열로 컴포넌트 마운트 시 한 번만 실행
 
-  const logoutHandler = () => {
-    // 로그아웃 처리
-    console.log('로그아웃');
-    const response = logoutApi();
-    console.log(response);
-  };
-
-  const { send } = useWebSocketContext();
-  const roomCode = 'Fdawge'; // 임시로 하드코딩
+  const { roomCode: contextRoomCode } = useRoomStore();
+  const { send: contextSend, subscribe } = useWebSocketContext();
 
   useEffect(() => {
-    if (!roomCode) return;
+    if (!contextRoomCode) return;
 
     // 서버에 입장 메시지 전송
-    send(`/ws/roomCode=${roomCode}`, {
+    contextSend(`/ws/roomCode=${contextRoomCode}`, {
       type: 'ENTER',
     });
 
-    // 입장/채팅 등 수신 구독 예시
-    // subscribe(`/topic/rooms/${roomCode}`, (msg) => {
-    //   console.log('📥 서버에서 수신:', msg);
-    // });
-  }, [roomCode]);
+    // 입장/채팅 등 수신 구독
+    subscribe(`/topic/rooms/${contextRoomCode}`, (msg) => {
+      console.log('📥 서버에서 수신:', msg);
+    });
+  }, [contextRoomCode, contextSend, subscribe]);
 
   const toggleCamera = async () => {
     if (isCameraOn) {
@@ -281,9 +296,6 @@ const WaitingRoomPage = () => {
       {/* Left section */}
       <div className="flex-1 flex-col px-10">
         {/* Header */}
-        <div className="text-white headline-large" onClick={logoutHandler}>
-          방만들기 임시 버튼
-        </div>
         <div className="flex items-center mb-6">
           <div className="text-white headline-large">게임방 제목</div>
           <div className="text-white body-medium ml-3">
@@ -372,32 +384,74 @@ const WaitingRoomPage = () => {
           </div>
 
           {/* Emotion analysis box */}
-          <div className="w-40 h-80 rounded-2xl flex flex-col items-center justify-center p-4">
+          <div className="w-40 h-80 rounded-2xl flex flex-col items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
             <div className="w-full h-48 mb-4 relative">
               <svg
                 viewBox="0 0 100 100"
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-full h-full"
               >
-                {/* 하트 모양 경로 */}
-                <path
-                  d="M50,90 C100,65 100,25 75,10 C60,0 50,10 50,20 C50,10 40,0 25,10 C0,25 0,65 50,90 Z"
-                  fill="none"
-                  stroke="#FF2D55"
-                  strokeWidth="2"
+                {/* 그리드 패턴 */}
+                <pattern
+                  id="smallGrid"
+                  width="8"
+                  height="8"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M 8 0 L 0 0 0 8"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="0.5"
+                  />
+                </pattern>
+                <rect width="100" height="100" fill="url(#smallGrid)" />
+
+                {/* 중심선 */}
+                <line
+                  x1="0"
+                  y1="50"
+                  x2="100"
+                  y2="50"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="0.5"
                 />
 
-                {/* 심전도 라인 */}
-                <path
-                  d={`M25,50 H40 ${
-                    isMicOn && audioLevel > 5
-                      ? `L45,${50 - audioLevel / 2} L50,${50 + audioLevel / 3} L55,${50 - audioLevel} L60,${50 + audioLevel / 2}`
-                      : 'L45,50 L50,50 L55,50 L60,50'
-                  } H75`}
+                {/* 주파수 막대 */}
+                {barHeights.map((height, i) => {
+                  const barWidth = 3;
+                  const gap = 2;
+                  const x = i * (barWidth + gap) + 5;
+
+                  return (
+                    <rect
+                      key={i}
+                      x={x}
+                      y={50 - height}
+                      width={barWidth}
+                      height={height * 2}
+                      fill={`rgba(255, 45, 85, ${0.5 + height / 80})`}
+                      rx="1"
+                    />
+                  );
+                })}
+
+                {/* 파동 효과 */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={isMicOn ? Math.min(audioLevel * 0.7, 30) : 0}
                   fill="none"
-                  stroke="#FF2D55"
-                  strokeWidth="2"
-                  className="transition-all duration-100"
+                  stroke="rgba(255, 45, 85, 0.4)"
+                  strokeWidth="0.5"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={isMicOn ? Math.min(audioLevel * 1.2, 50) : 0}
+                  fill="none"
+                  stroke="rgba(255, 45, 85, 0.2)"
+                  strokeWidth="0.5"
                 />
               </svg>
             </div>
@@ -493,6 +547,20 @@ const WaitingRoomPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const WaitingRoomPage = () => {
+  const { roomCode } = useRoomStore();
+
+  if (!roomCode) {
+    return <div>방 코드가 없습니다.</div>;
+  }
+
+  return (
+    <WebSocketProvider roomCode={roomCode}>
+      <WaitingRoomContent />
+    </WebSocketProvider>
   );
 };
 
