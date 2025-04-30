@@ -1,6 +1,7 @@
 package com.ssafy.backend.global.exception;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,12 @@ public class GlobalExceptionHandler {
 				(existing, replacement) -> existing
 			));
 		return ApiResponse.success(ResponseCode.VALIDATION_ERROR,errors);
+	}
+
+	@ExceptionHandler(NoSuchElementException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ApiResponse<Void> handleNoSuch(NoSuchElementException ex) {
+		return ApiResponse.failure(ResponseCode.NOT_FOUND);
 	}
 
 	@ExceptionHandler(CustomException.class)

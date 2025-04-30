@@ -51,7 +51,7 @@ public class RoomService {
 	public RoomCreateResponse createRoom(RoomCreateRequest request) {
 		String roomCode = generateUniqueRoomCode();
 		SessionEntity session = sessionRepository.findByNickname(request.hostNickname())
-			.orElseThrow(() -> new NoSuchElementException("세션 정보를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		Room room = Room.builder()
 			.session(session)
@@ -112,10 +112,10 @@ public class RoomService {
 	// 코드로 방 입장
 	public RoomJoinResponse joinRoomByCode(RoomJoinByCodeRequest request) {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
-			.orElseThrow(() -> new NoSuchElementException("존재하지 않는 방입니다."));
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
-			.orElseThrow(() -> new NoSuchElementException("세션 정보를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		Participant participant = Participant.builder()
 			.session(session)
@@ -154,12 +154,12 @@ public class RoomService {
 	// 비밀번호로 방 입장
 	public RoomJoinResponse joinRoomByPassword(RoomJoinByPasswordRequest request) {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
-			.orElseThrow(() -> new NoSuchElementException("존재하지 않는 방입니다."));
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		checkPassword(room, request.password());
 
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
-			.orElseThrow(() -> new NoSuchElementException("세션 정보를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		Participant participant = Participant.builder()
 			.session(session)
@@ -198,7 +198,7 @@ public class RoomService {
 	// 비밀번호 확인
 	public void checkPassword(Room room, String password) {
 		if (!room.getPassword().equals(password)) {
-			throw new IllegalArgumentException("비밀번호가 잘못되었습니다.");
+			throw new CustomException(ResponseCode.FORBIDDEN);
 		}
 	}
 
