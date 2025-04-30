@@ -8,12 +8,13 @@ import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
+import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
 import com.ssafy.backend.domain.room.dto.response.ParticipantInfo;
 import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomInfo;
-import com.ssafy.backend.domain.room.dto.response.RoomJoinByCodeResponse;
+import com.ssafy.backend.domain.room.dto.response.RoomJoinResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomSearchResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;
@@ -109,7 +110,7 @@ public class RoomService {
 	}
 
 	// 코드로 방 입장
-	public RoomJoinByCodeResponse joinRoomByCode(RoomJoinByCodeRequest request) {
+	public RoomJoinResponse joinRoomByCode(RoomJoinByCodeRequest request) {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new NoSuchElementException("존재하지 않는 방입니다."));
 
@@ -147,7 +148,58 @@ public class RoomService {
 			))
 			.collect(toList());
 
-		return new RoomJoinByCodeResponse(roomInfo, participantInfos);
+		return new RoomJoinResponse(roomInfo, participantInfos);
+	}
+
+	// 비밀번호로 방 입장
+	public RoomJoinResponse joinRoomByPassword(RoomJoinByPasswordRequest request) {
+		Room room = roomRepository.findByRoomCode(request.roomCode())
+			.orElseThrow(() -> new NoSuchElementException("존재하지 않는 방입니다."));
+
+		checkPassword(room, request.password());
+
+		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
+			.orElseThrow(() -> new NoSuchElementException("세션 정보를 찾을 수 없습니다."));
+
+		Participant participant = Participant.builder()
+			.session(session)
+			.room(room)
+			.isActive(true)
+			.createdAt(LocalDateTime.now())
+			.updatedAt(LocalDateTime.now())
+			.build();
+		participantRepository.save(participant);
+
+		List<Participant> participants = participantRepository.findByRoom(room);
+
+		RoomInfo roomInfo = RoomInfo.builder()
+			.roomName(room.getRoomName())
+			.roomCode(room.getRoomCode())
+			.isSecret(room.getPassword() != null)
+			.playerCount(participants.size()) // 생성자는 무조건 1명 (자기 자신)
+			.roundCount(room.getRoundCount())
+			.mode(room.getMode().name())
+			.category(room.getCategory().name())
+			.hostNickname(SecurityUtils.getCurrentNickname())
+			.status(room.getRoomStatus().name())
+			.build();
+
+		List<ParticipantInfo> participantInfos = participants.stream()
+			.map(p -> new ParticipantInfo(
+				p.getId(),
+				p.getSession().getNickname(),
+				p.isActive()
+			))
+			.collect(toList());
+
+		return new RoomJoinResponse(roomInfo, participantInfos);
+	}
+
+	// 비밀번호 확인
+	public void checkPassword(Room room, String password) {
+		if (!room.getPassword().equals(password)) {
+			throw new IllegalArgumentException("비밀번호가 잘못되었습니다.");
+		}
 	}
 
 	/** 방 목록 조회 */
