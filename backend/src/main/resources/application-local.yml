@@ -23,5 +23,5 @@ cors:
     - http://localhost:3000
 
 openvidu:
-  url:    ${openvidu.url}
-  secret: ${openvidu.secret}
+  url: ${OPENVIDU_URL}
+  secret: ${OPENVIDU_SECRET}

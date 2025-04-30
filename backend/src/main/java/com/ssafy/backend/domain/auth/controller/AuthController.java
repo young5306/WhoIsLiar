@@ -59,15 +59,15 @@ public class AuthController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "유효성 검사 실패",
 			content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "닉네임 중복(이미 사용 중)",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류",
 			content = @Content)
 	})
 	@PostMapping("/login")
 	public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Parameter(description = "로그인 요청 정보", required = true) @Valid @RequestBody LoginRequestDto req,
 		HttpServletResponse response) {
-		boolean available = auth.isNicknameAvailable(req.nickname());
-		if (!available) {
-			throw new CustomException(ResponseCode.CONFLICT);
-		}
+
+		// AuthService.login() 내부에서 중복 시 409 예외를 던집니다.
 		String token = auth.login(req);
 		// HttpOnly 쿠키로 토큰 발급
 		ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
@@ -79,7 +79,7 @@ public class AuthController {
 			.build();
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 		// 3) 응답 바디에 토큰 + 닉네임 같이 담아서 반환
-		LoginResponseDto body = new LoginResponseDto(token, req.nickname(),true);
+		LoginResponseDto body = new LoginResponseDto(token, req.nickname());
 		return ok(body);
 	}
 
@@ -89,6 +89,10 @@ public class AuthController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공",
 			content = @Content(mediaType = "application/json")),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류",
 			content = @Content)
 	})
 	@PostMapping("/logout")
@@ -112,6 +116,10 @@ public class AuthController {
 			content = @Content(mediaType = "application/json",
 				schema = @Schema(example = "{ 'nickname': 'user1' }"))),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류",
 			content = @Content)
 	})
 	@GetMapping("/me")

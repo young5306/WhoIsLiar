@@ -1,6 +1,7 @@
 package com.ssafy.backend.domain.auth.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ public interface SessionRepository extends JpaRepository<SessionEntity, Long> {
 	Optional<SessionEntity> findByToken(String token);
 	void deleteByLastActiveAtBefore(LocalDateTime cutoff);
 	boolean existsByToken(String token);
+	List<SessionEntity> findByLastActiveAtBefore(LocalDateTime cutoff);
 }
