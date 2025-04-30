@@ -19,6 +19,7 @@ const GameButton2 = ({ text, onClick }: GameButton2Props) => {
           active:brightness-90
           transition
           px-6 py-2 display-medium
+          cursor-pointer
         "
       >
         {text}

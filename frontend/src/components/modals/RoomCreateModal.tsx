@@ -148,7 +148,7 @@ export const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                 <button
                   key={num}
                   onClick={() => setRoundCount(num)}
-                  className={`w-25 h-12 flex items-center justify-center rounded-md border-3 headline-medium  ${
+                  className={`w-25 h-12 flex items-center justify-center rounded-md border-3 headline-medium cursor-pointer ${
                     roundCount === num
                       ? 'border-primary-600 text-primary-600'
                       : 'border-point-button1 text-point-button1'

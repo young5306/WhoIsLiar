@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import GameButton from '../../components/common/GameButton';
+import { GameButton } from '../../components/common/GameButton';
 import { RoomCreateModal } from '../../components/modals/RoomCreateModal';
 
 export const RoomListPage = () => {
