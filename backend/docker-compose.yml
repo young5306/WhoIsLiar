@@ -8,12 +8,12 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ssafy
-      MYSQL_DATABASE: liar_game_db
-      MYSQL_USER: a604
-      MYSQL_PASSWORD: skdaks
+      MYSQL_ROOT_PASSWORD: ssafy          # 루트 비밀번호
+      MYSQL_DATABASE: liar_game_db         # 기본 생성할 DB
+      MYSQL_USER: a604                     # 사용자 이름
+      MYSQL_PASSWORD: skdaks               # 사용자 비밀번호(낭만)
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql          # DB 데이터 볼륨
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - backend-net
@@ -23,8 +23,8 @@ services:
     container_name: openvidu-server
     restart: always
     ports:
-      - "4443:4443"
-      - "5443:5443"
+      - "4443:4443"      # HTTPS/WebSocket
+      - "5443:5443"      # Media/WebRTC
     environment:
       - OPENVIDU_SECRET=MY_SECRET
       - DOMAIN_OR_PUBLIC_IP=localhost
@@ -45,9 +45,34 @@ services:
     networks:
       - backend-net
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - backend-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    ports:
+      - "3001:3000"
+    networks:
+      - backend-net
+
 volumes:
   mysql-data:
   redis-data:
+  grafana-data:
 
 networks:
   backend-net:
