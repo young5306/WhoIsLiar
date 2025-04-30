@@ -30,9 +30,14 @@ import GameButton from '../../components/common/GameButton';
 
 const GameRoom: React.FC = () => {
   const [myUserName, setMyUserName] = useState<string>('');
+  const [myToken, setMyToken] = useState<string>('');
 
   // ck) 세션 ID는 세션을 식별하는 문자열, 입장 코드?와 비슷한 역할을 하는듯 (중복되면 안되고, 같은 세션 이이디 입력한 사람은 같은 방에 접속되며, 만약 세션 아이디가 존재하지 않는다면 새로 생성해서 세션을 오픈할 수 있게끔 한다.) -> 어떻게 생성하고 바꿀지 고민 필요
-  const [mySessionId, setMySessionId] = useState('SessionA');
+  // const [mySessionId, setMySessionId] = useState('SessionA');
+  // const [mySessionId, setMySessionId] = useState(
+  //   `asdsad${Math.floor(Math.random() * 100)}`
+  // );
+  const [mySessionId, setMySessionId] = useState(`asdsad5`);
 
   // ck) << OpenVidu >>
   // ck) 현재 연결된 세션
@@ -80,6 +85,10 @@ const GameRoom: React.FC = () => {
       setMyUserName(userInfo.nickname);
     } else {
       setMyUserName(`Participant${Math.floor(Math.random() * 100)}`);
+    }
+
+    if (userInfo?.token) {
+      setMyToken(userInfo.token);
     }
   }, [userInfo]);
 
@@ -131,7 +140,7 @@ const GameRoom: React.FC = () => {
 
     try {
       // ck) getToken 분리
-      const token = await getToken(mySessionId);
+      const token = await getToken(myUserName, mySessionId, myToken);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
@@ -210,7 +219,8 @@ const GameRoom: React.FC = () => {
     setSubscribers([]);
 
     // ck) 세션 ID 초기화 수정
-    setMySessionId('SessionA');
+    // setMySessionId(`asdsad${Math.floor(Math.random() * 100)}`);
+    setMySessionId(`asdsad3`);
     // ck) 사용자 이름 초기화 수정
     setMyUserName(
       userInfo?.nickname || 'Participant' + Math.floor(Math.random() * 100)
@@ -326,7 +336,7 @@ const GameRoom: React.FC = () => {
       3: 'col-span-1 col-start-6 row-span-2 row-start-2 min-w-[200px]',
       4: 'col-span-1 col-start-6 row-span-2 row-start-4 min-w-[200px]',
       5: 'row-span-2 row-start-1 min-w-[200px] justify-center',
-      6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
+      // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
     };
     return positions[index as keyof typeof positions] || '';
   };
@@ -336,7 +346,9 @@ const GameRoom: React.FC = () => {
   return (
     <>
       <div>GameRoom</div>
-      {/* waitingRoom에서 RoomID를 받아서 그걸 SessionID에 저장 후 back에 보내기 */}
+      {/* waitingRoom에서 RoomID를 받아서 그걸 SessionID에 저장 후 be에 보내기 */}
+      {/* const [mySessionId, setMySessionId] = useState('SessionA'); */}
+
       {/* 
       ck) 
       - (상황) : 이미 사람들이 방 정보를 입력하고 대기실에 접속한 상태에서 openvidu연결을 대기하는 것임.
@@ -354,13 +366,15 @@ const GameRoom: React.FC = () => {
         {session === undefined ? (
           <div id="join">
             <div id="join-dialog" className="jumbotron vertical-center">
-              <div className="mb-2">
-                <h1>Join a video session</h1>
-                <div>
+              <div className="mb-2 w-100 h-30 bg-amber-200 flex justify-center flex-col">
+                <h1 className="text-2xl mb-3 flex justify-center">
+                  게임 대기방 Waiting Room
+                </h1>
+                <div className="flex justify-center mb-2">
                   <label>Participant: </label>
                   {myUserName}
                 </div>
-                <div>
+                <div className="flex justify-center">
                   <label>Session: </label>
                   {mySessionId}
                 </div>
@@ -417,6 +431,9 @@ const GameRoom: React.FC = () => {
             </div>
           </div>
         ) : null}
+        {/* {session !== undefined? (<><div className='w-screen h-screen'></>) : null} */}
+
+        {/* </div> */}
       </div>
     </>
   );
