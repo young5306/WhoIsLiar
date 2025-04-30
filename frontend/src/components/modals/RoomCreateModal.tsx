@@ -42,9 +42,10 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
     try {
       const response = await createRoom(params);
       const roomCode = response.data.room.roomCode;
+      console.log('roomCode', roomCode);
       setRoomCode(roomCode);
       onClose();
-      navigate('/waiting-room');
+      navigate(`/waiting-room?roomCode=${roomCode}`);
     } catch (err) {
       alert('방 생성 중 오류가 발생했습니다.');
     }
