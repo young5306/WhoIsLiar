@@ -82,7 +82,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		attributes.put("token", AUTH_TOKEN);
 		attributes.put("roomCode", roomCode);
-		attributes.put("nickname", SecurityUtils.getAuthentication());
+		attributes.put("nickname", SecurityUtils.getCurrentNickname());
 
 		return true;
 	}
