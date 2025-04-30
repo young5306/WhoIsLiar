@@ -3,6 +3,8 @@ import Layout from '../layouts/Layout';
 import MainPage from '../pages/main/MainPage';
 import RuleBookPage from '../pages/main/RuleBookPage';
 import LoginPage from '../pages/main/LoginPage';
+
+import GameVid from '../pages/game/GameVid';
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
 
 const Router = () => {
@@ -12,6 +14,9 @@ const Router = () => {
         <Route path="/" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/waitingRoom" element={<WaitingRoomPage />} />
+
+        {/* openvidu */}
+        <Route path="/game-vid" element={<GameVid />} />
       </Route>
       <Route path="/rule-book" element={<RuleBookPage />} />
     </Routes>
