@@ -10,6 +10,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
@@ -20,7 +21,7 @@ public class StompSubscribeEventListener {
 	private final SimpMessagingTemplate messagingTemplate;
 
 	@EventListener
-	public void handleSubscribeEvent(org.springframework.web.socket.messaging.SessionSubscribeEvent event) {
+	public void handleSubscribeEvent(SessionSubscribeEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 		String destination = accessor.getDestination(); // ex: "/topic/room.n8SymH"
 		String sessionId = accessor.getSessionId();
