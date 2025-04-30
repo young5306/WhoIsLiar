@@ -62,6 +62,8 @@ public class SecurityConfig {
 
 				// 웹소켓 연결 허용
 				.requestMatchers("/ws/**").permitAll()
+				// openvidu 테스트용
+				.requestMatchers("/api/openvidu/**").permitAll()
 
 				// 2) Swagger/UI, Actuator 등은 공개
 				.requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api/test2")
