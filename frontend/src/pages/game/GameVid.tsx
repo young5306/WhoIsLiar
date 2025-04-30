@@ -15,7 +15,12 @@ import {
   ExceptionEvent,
 } from 'openvidu-browser';
 import axios from 'axios';
+import gameRoom from './GameRoom.module.css';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../stores/useAuthStore';
 import UserVideoComponent from './UserVideoComponent';
+import { useWebSocketContext } from '../../contexts/WebSocketProvider';
+import GameButton from '../../components/common/GameButton';
 
 const APPLICATION_SERVER_URL = import.meta.env.PROD
   ? import.meta.env.VITE_OVD_SERVER_URL
@@ -26,17 +31,15 @@ interface Subscriber extends StreamManager {
 }
 
 const GameVid: React.FC = () => {
+  const [myUserName, setMyUserName] = useState<string>('');
+
   // ck) 세션 ID는 세션을 식별하는 문자열, 입장 코드?와 비슷한 역할을 하는듯 (중복되면 안되고, 같은 세션 이이디 입력한 사람은 같은 방에 접속되며, 만약 세션 아이디가 존재하지 않는다면 새로 생성해서 세션을 오픈할 수 있게끔 한다.) -> 어떻게 생성하고 바꿀지 고민 필요
   const [mySessionId, setMySessionId] = useState('SessionA');
-  // ck) 실제 사용자 닉네임으로 들어갈 수 있도록 수정 필요
-  const [myUserName, setMyUserName] = useState(
-    `Participant${Math.floor(Math.random() * 100)}`
-  );
 
   // ck) 현재 연결된 세션
   const [session, setSession] = useState<Session | undefined>(undefined);
 
-  //   // ck) 메인으로 표시될 비디오 스트림 (다른 메인도 표시해줄지 아니면 본인것을 메인으로 간주할지?)
+  // ck) 메인으로 표시될 비디오 스트림 (다른 메인도 표시해줄지 아니면 본인것을 메인으로 간주할지?)
   const [mainStreamManager, setMainStreamManager] = useState<
     StreamManager | undefined
   >(undefined);
@@ -55,15 +58,14 @@ const GameVid: React.FC = () => {
 
   const OV = useRef<OpenVidu | null>(null);
 
-  // ck) 세션ID 입력값 변경
-  const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMySessionId(e.target.value);
-  };
-
-  // ck) 사용자 닉네임 변경
-  const handleChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMyUserName(e.target.value);
-  };
+  const { userInfo } = useAuthStore();
+  useEffect(() => {
+    if (userInfo?.nickname) {
+      setMyUserName(userInfo.nickname);
+    } else {
+      setMyUserName(`Participant${Math.floor(Math.random() * 100)}`);
+    }
+  }, [userInfo]);
 
   // ck) 메인 비디오 스트림 변경
   const handleMainVideoStream = (stream: StreamManager) => {
@@ -78,8 +80,8 @@ const GameVid: React.FC = () => {
   };
 
   // ck) 세션 참가
-  const joinSession = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
+  const joinSession = async () => {
+    // if (e) e.preventDefault();
     // ck) add - 사용자 닉네임? 기준으로 이미 세션에 참가중이면 새로운 세션 참가 막기
 
     OV.current = new OpenVidu();
@@ -301,100 +303,23 @@ const GameVid: React.FC = () => {
       => 따라서 session이 없는 상태는 대기실에 있는 상태 / session이 있는 상태는 게임 진행중인 상태
        */}
 
-      {/* 대기실 */}
-      {/* {session === undefined ? (
-        <>
-          <div>
-            <div>게임 참가 대기실</div> */}
-      {/* ck) 여기도 form 처리할 필요 없을듯. 추후 수정 */}
-
-      {/* <form>
-              <p id="userName">닉네임: {myUserName}</p>
-              <p id="sessionId">세션정보: {mySessionId}</p>
-              <p className="text-center">
-                <input
-                  className="btn btn-lg btn-success"
-                  name="commit"
-                  type="submit"
-                  value="JOIN"
-                />
-              </p>
-            </form>
-          </div> */}
-
-      {/* <div>
-            <p>닉네임: {myUserName}</p>
-            <form className="form-group" onSubmit={joinSession}> */}
-      {/* <input
-                className="form-control"
-                type="text"
-                id="userName"
-                value={myUserName}
-                onChange={handleChangeUserName}
-                required
-              /> */}
-      {/* <input
-                className="form-control"
-                type="text"
-                id="sessionId"
-                value={mySessionId}
-                onChange={handleChangeSessionId}
-                required
-              />
-            </form>
-          </div> */}
-      {/* </>
-      ) : null} */}
-
-      {/* 게임중 */}
-      {/* {session !== undefined ? <>게임ING</> : null} */}
-
-      {/* ------------------------------------------------------------------------------ */}
-
       <div className="container">
         {/* 세션이 없을 때: 참가 폼 */}
         {session === undefined ? (
           <div id="join">
-            <div id="img-div">
-              <img
-                src="resources/images/openvidu_grey_bg_transp_cropped.png"
-                alt="OpenVidu logo"
-              />
-            </div>
             <div id="join-dialog" className="jumbotron vertical-center">
-              <h1>Join a video session</h1>
-              <form className="form-group" onSubmit={joinSession}>
-                <p>
+              <div className="mb-2">
+                <h1>Join a video session</h1>
+                <div>
                   <label>Participant: </label>
-                  <input
-                    className="form-control"
-                    type="text"
-                    id="userName"
-                    value={myUserName}
-                    onChange={handleChangeUserName}
-                    required
-                  />
-                </p>
-                <p>
+                  {myUserName}
+                </div>
+                <div>
                   <label>Session: </label>
-                  <input
-                    className="form-control"
-                    type="text"
-                    id="sessionId"
-                    value={mySessionId}
-                    onChange={handleChangeSessionId}
-                    required
-                  />
-                </p>
-                <p className="text-center">
-                  <input
-                    className="btn btn-lg btn-success"
-                    name="commit"
-                    type="submit"
-                    value="JOIN"
-                  />
-                </p>
-              </form>
+                  {mySessionId}
+                </div>
+              </div>
+              <GameButton text="시작하기" size="small" onClick={joinSession} />
             </div>
           </div>
         ) : null}
