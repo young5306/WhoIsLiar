@@ -3,7 +3,7 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-  FormEvent,
+  // FormEvent,
 } from 'react';
 import {
   OpenVidu,
@@ -15,11 +15,11 @@ import {
   ExceptionEvent,
 } from 'openvidu-browser';
 import axios from 'axios';
-import gameRoom from './GameRoom.module.css';
-import { useNavigate } from 'react-router-dom';
+// import gameRoom from './GameRoom.module.css';
+// import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
 import UserVideoComponent from './UserVideoComponent';
-import { useWebSocketContext } from '../../contexts/WebSocketProvider';
+// import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import GameButton from '../../components/common/GameButton';
 
 const APPLICATION_SERVER_URL = import.meta.env.PROD
