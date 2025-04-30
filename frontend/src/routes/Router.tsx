@@ -6,7 +6,7 @@ import LoginPage from '../pages/main/LoginPage';
 
 import GameVid from '../pages/game/GameVid';
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
-import { RoomListPage } from '../pages/roomList/RoomListPage';
+import RoomListPage from '../pages/roomList/RoomListPage';
 
 const Router = () => {
   return (

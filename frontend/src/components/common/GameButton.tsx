@@ -12,7 +12,7 @@ const sizeClasses = {
 
 const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
   return (
-    <div className="inline-block p-1 bg-gray-900 rounded-full">
+    <div className="inline-block p-1 bg-gray-900 rounded-full ">
       <button
         onClick={onClick}
         className={`
@@ -25,6 +25,7 @@ const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
           hover:brightness-140
           active:brightness-90
           transition
+          cursor-pointer
           ${sizeClasses[size]}
         `}
       >
