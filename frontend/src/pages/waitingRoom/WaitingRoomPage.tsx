@@ -26,22 +26,22 @@ const WaitingRoomPage = () => {
   const { userInfo } = useAuthStore();
   console.log('userInfo', userInfo); // Zustand로 가져오기
 
-  const handleCreateRoom = async () => {
-    const param = {
-      hostNickname: 'test',
-      mode: 'VIDEO',
-      roomName: '아무나 들어오세요',
-      password: '1234',
-      roundCount: 3,
-    };
-    const response = await createRoom(param);
-    if (response.status === 200) {
-      const roomCode = response.data.roomCode;
-      setRoomCode(roomCode);
-    } else {
-      // 방 생성 실패 처리
-    }
-  };
+  // const handleCreateRoom = async () => {
+  //   const param = {
+  //     hostNickname: 'test',
+  //     mode: 'VIDEO',
+  //     roomName: '아무나 들어오세요',
+  //     password: '1234',
+  //     roundCount: 3,
+  //   };
+  //   const response = await createRoom(param);
+  //   if (response.status === 200) {
+  //     const roomCode = response.data.roomCode;
+  //     setRoomCode(roomCode);
+  //   } else {
+  //     // 방 생성 실패 처리
+  //   }
+  // };
 
   const logoutHandler = () => {
     // 로그아웃 처리

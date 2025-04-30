@@ -3,6 +3,7 @@ import './index.css';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './routes/Router';
 import { WebSocketProvider } from './contexts/WebSocketProvider';
+import Toast from './components/common/Toast';
 // import { useRoomStore } from './stores/useRoomStore';
 
 const Root = () => {
@@ -18,6 +19,7 @@ const Root = () => {
       ) : (
         <Router />
       )}
+      <Toast />
     </BrowserRouter>
   );
 };
