@@ -18,6 +18,23 @@ services:
     networks:
       - backend-net
 
+  openvidu-server:
+    image: openvidu/openvidu-server-kms:latest
+    container_name: openvidu-server
+    restart: always
+    ports:
+      - "4443:4443"      # HTTPS/WebSocket
+      - "5443:5443"      # Media/WebRTC
+    environment:
+      - OPENVIDU_SECRET=MY_SECRET
+      - DOMAIN_OR_PUBLIC_IP=localhost
+      - HTTPS=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend-net
+
+
 volumes:
   mysql-data:
 
