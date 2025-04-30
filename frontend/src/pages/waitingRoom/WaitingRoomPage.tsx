@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import GameButton from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
-import { createRoom } from '../../services/api/RoomService';
-import { useRoomStore } from '../../stores/useRoomStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { logoutApi } from '../../services/api/AuthService';
 
@@ -22,7 +20,6 @@ const WaitingRoomPage = () => {
     { label: '브랜드', id: 'brand' },
   ];
 
-  const { setRoomCode } = useRoomStore();
   const { userInfo } = useAuthStore();
   console.log('userInfo', userInfo); // Zustand로 가져오기
 
