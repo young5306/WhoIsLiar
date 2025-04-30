@@ -8,7 +8,28 @@ interface createRoomRequest {
   roundCount: number; // 3, 4, 5
 }
 
+export interface RoomSummary {
+  roomName: string;
+  roomCode: string;
+  isSecret: boolean;
+  playerCount: number;
+  roundCount: number;
+  mode: 'video' | 'blind';
+  category: string;
+  hostNickname: string;
+  status: 'waiting' | 'playing';
+}
+
 export const createRoom = async (param: createRoomRequest) => {
   const res = await api.post('/rooms', param);
   return res.data;
+};
+
+export const getRoomList = async (
+  roomName?: string
+): Promise<RoomSummary[]> => {
+  const res = await api.get('/rooms', {
+    params: roomName ? { roomName } : {},
+  });
+  return res.data.data.rooms;
 };
