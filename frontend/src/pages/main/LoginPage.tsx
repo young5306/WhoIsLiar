@@ -8,13 +8,11 @@ import { loginApi } from '../../services/api/AuthService';
 const LoginPage = () => {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState('');
-  const { setAccessToken, setUserInfo } = useAuthStore();
+  const { setUserInfo } = useAuthStore();
 
   const handleLogin = async () => {
     try {
       const { token, nickname: returnedNickname } = await loginApi(nickname);
-
-      setAccessToken(token);
       setUserInfo({ token, nickname: returnedNickname });
 
       navigate('/room-list');
