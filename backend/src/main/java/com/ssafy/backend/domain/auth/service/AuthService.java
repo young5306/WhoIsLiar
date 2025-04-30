@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.auth.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -14,9 +15,13 @@ import org.springframework.validation.annotation.Validated;
 import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
+import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.util.SecurityUtils;
 
+import io.micrometer.core.instrument.Counter;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
@@ -27,10 +32,25 @@ public class AuthService {
 	private final SessionRepository repo;
 	private final Duration sessionTimeout;
 
+	private final Counter loginSuccess;
+	private final Counter loginFailure;
+	private final Counter tokenFail;
+	private final RoomRepository roomRepository;
+	private final ParticipantRepository participantRepository;
+
 	public AuthService(SessionRepository repo,
-		@Value("${session.timeout.minutes:30}") long timeoutMin) {
+		@Value("${session.timeout.minutes:30}") long timeoutMin,
+		Counter authSuccessCounter,
+		Counter authFailureCounter,
+		Counter tokenValidationFailureCounter, RoomRepository roomRepository,
+		ParticipantRepository participantRepository) {
 		this.repo = repo;
 		this.sessionTimeout = Duration.ofMinutes(timeoutMin);
+		this.loginSuccess = authSuccessCounter;
+		this.loginFailure = authFailureCounter;
+		this.tokenFail    = tokenValidationFailureCounter;
+		this.roomRepository = roomRepository;
+		this.participantRepository = participantRepository;
 	}
 
 	/** 닉네임 중복 확인 */
@@ -42,6 +62,7 @@ public class AuthService {
 	@Transactional
 	public String login(@Valid LoginRequestDto req) {
 		if (!isNicknameAvailable(req.nickname())) {
+			loginFailure.increment();
 			log.warn("로그인 실패: 닉네임 중복 [{}]", req.nickname());
 			throw new CustomException(ResponseCode.CONFLICT);
 		}
@@ -54,6 +75,7 @@ public class AuthService {
 		s.setLastActiveAt(now);
 		repo.save(s);
 		log.info("로그인 성공: nickname={}, token={}", req.nickname(), token);
+		loginSuccess.increment();
 		return token;
 	}
 
@@ -74,6 +96,7 @@ public class AuthService {
 			return s;
 		} catch (CustomException ex) {
 			log.warn("토큰검증 실패: token={}, 이유={}", token, ex.getResponseCode());
+			tokenFail.increment();
 			throw ex;
 		}
 	}
@@ -81,6 +104,7 @@ public class AuthService {
 	/** 로그아웃 (토큰이 있으면 삭제) */
 	@Transactional
 	public void logoutIfPresent(String token) {
+		System.out.println(SecurityUtils.getCurrentNickname());
 		if (token != null) {
 			repo.findByToken(token).ifPresent(s -> {
 				repo.delete(s);
@@ -94,6 +118,15 @@ public class AuthService {
 	@Transactional
 	public void cleanupStaleSessions() {
 		LocalDateTime cutoff = LocalDateTime.now().minus(sessionTimeout);
-		repo.deleteByLastActiveAtBefore(cutoff);
+		List<SessionEntity> staleSessions = repo.findByLastActiveAtBefore(cutoff);
+		for (SessionEntity s : staleSessions) {
+			boolean isHost = roomRepository.existsBySession(s);
+			boolean isParticipant = participantRepository.existsBySession(s);
+			// 2) 어떤 방의 호스트도, 참여자도 아니라면 삭제
+			if (!isHost && !isParticipant) {
+				repo.delete(s);
+				log.info("Stale session deleted: {}", s.getId());
+			}
+		}
 	}
 }

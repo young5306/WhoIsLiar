@@ -9,12 +9,19 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
 import com.ssafy.backend.domain.room.dto.response.ParticipantInfo;
+import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
+import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomInfo;
 import com.ssafy.backend.domain.room.dto.response.RoomJoinByCodeResponse;
+import com.ssafy.backend.domain.room.dto.response.RoomSearchResponse;
+import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
+import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.global.common.ResponseCode;
 import com.ssafy.backend.global.enums.RoomStatus;
+import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -140,5 +148,95 @@ public class RoomService {
 			.collect(toList());
 
 		return new RoomJoinByCodeResponse(roomInfo, participantInfos);
+	}
+
+	/** 방 목록 조회 */
+	@Transactional(readOnly = true)
+	public RoomsListResponse getRoomsList() {
+		List<Room> rooms = roomRepository.findAll();
+		List<RoomInfo> roomInfos = rooms.stream()
+			.map(room -> {
+				int count = (int)(participantRepository.countByRoom(room));
+				return RoomInfo.builder()
+					.roomName(room.getRoomName())
+					.roomCode(room.getRoomCode())
+					.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
+					.playerCount(count)
+					.roundCount(room.getRoundCount())
+					.mode(room.getMode().name())
+					.category(room.getCategory().name())
+					.hostNickname(room.getSession().getNickname())
+					.status(room.getRoomStatus().name())
+					.build();
+			})
+			.collect(Collectors.toList());
+		return new RoomsListResponse(roomInfos);
+	}
+
+	/** 특정 roomCode 방의 참가자 목록 조회 */
+	public ParticipantsListResponse getParticipants(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		var participants = participantRepository.findByRoom(room).stream()
+			.map(p -> new ParticipantInfo(
+				p.getId(),
+				p.getSession().getNickname(),
+				p.isActive()
+			))
+			.collect(Collectors.toList());
+
+		return new ParticipantsListResponse(participants);
+	}
+
+	/** roomName을 포함한 방들을 검색합니다. */
+	public RoomsSearchResponse searchRooms(String roomName) {
+		var rooms = roomRepository.findByRoomNameContaining(roomName);
+		var result = rooms.stream()
+			.map(room -> {
+				int count = (int)(participantRepository.countByRoom(room) + 1);
+				return new RoomSearchResponse(
+					room.getRoomName(),
+					room.getSession().getNickname(),
+					count,
+					room.getRoomStatus().name(),
+					room.getPassword() != null && !room.getPassword().isEmpty()
+				);
+			})
+			.collect(Collectors.toList());
+		return new RoomsSearchResponse(result);
+	}
+
+	/**
+	 * roomCode 로 방을 조회하고, 방 정보 + 참가자 목록을 합쳐서 반환합니다
+	 */
+	public RoomDetailResponse getRoomDetail(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 1) RoomInfo 생성 (참여자 수 = 참가 테이블 수 + 1(호스트))
+		int participantCount = (int)(participantRepository.countByRoom(room));
+		RoomInfo info = RoomInfo.builder()
+			.roomName(room.getRoomName())
+			.roomCode(room.getRoomCode())
+			.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
+			.playerCount(participantCount)
+			.roundCount(room.getRoundCount())
+			.mode(room.getMode().name())
+			.category(room.getCategory().name())
+			.hostNickname(room.getSession().getNickname())
+			.status(room.getRoomStatus().name())
+			.build();
+
+		// 2) ParticipantResponse 리스트 생성
+		List<ParticipantInfo> parts = participantRepository.findByRoom(room).stream()
+			.map(p -> new ParticipantInfo(
+				p.getId(),
+				p.getSession().getNickname(),
+				p.isActive()
+			))
+			.collect(Collectors.toList());
+
+		return new RoomDetailResponse(info, parts);
 	}
 }

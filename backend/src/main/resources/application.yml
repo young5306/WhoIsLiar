@@ -37,6 +37,8 @@ management:
   endpoint:
     prometheus:
       enabled: true
+    health:
+      show-details: always
 openvidu:
   url:
   secret:
