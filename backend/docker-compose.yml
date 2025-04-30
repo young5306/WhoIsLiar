@@ -8,12 +8,12 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ssafy          # 루트 비밀번호
-      MYSQL_DATABASE: liar_game_db         # 기본 생성할 DB
-      MYSQL_USER: a604                     # 사용자 이름
-      MYSQL_PASSWORD: skdaks               # 사용자 비밀번호(낭만)
+      MYSQL_ROOT_PASSWORD: ssafy
+      MYSQL_DATABASE: liar_game_db
+      MYSQL_USER: a604
+      MYSQL_PASSWORD: skdaks
     volumes:
-      - mysql-data:/var/lib/mysql          # DB 데이터 볼륨
+      - mysql-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - backend-net
@@ -23,8 +23,8 @@ services:
     container_name: openvidu-server
     restart: always
     ports:
-      - "4443:4443"      # HTTPS/WebSocket
-      - "5443:5443"      # Media/WebRTC
+      - "4443:4443"
+      - "5443:5443"
     environment:
       - OPENVIDU_SECRET=MY_SECRET
       - DOMAIN_OR_PUBLIC_IP=localhost
@@ -34,9 +34,20 @@ services:
     networks:
       - backend-net
 
+  redis:
+    image: redis:7.2.4
+    container_name: redis-container
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend-net
 
 volumes:
   mysql-data:
+  redis-data:
 
 networks:
   backend-net:
