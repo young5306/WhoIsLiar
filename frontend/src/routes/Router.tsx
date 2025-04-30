@@ -4,7 +4,7 @@ import MainPage from '../pages/main/MainPage';
 import RuleBookPage from '../pages/main/RuleBookPage';
 import LoginPage from '../pages/main/LoginPage';
 
-import GameVid from '../pages/game/GameVid';
+import GameRoom from '../pages/game/GameRoom';
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
 import RoomListPage from '../pages/roomList/RoomListPage';
 
@@ -19,7 +19,7 @@ const Router = () => {
         <Route path="/waiting-room" element={<WaitingRoomPage />} />
 
         {/* openvidu */}
-        <Route path="/game-vid" element={<GameVid />} />
+        <Route path="/gameRoom" element={<GameRoom />} />
       </Route>
       <Route path="/rule-book" element={<RuleBookPage />} />
     </Routes>
