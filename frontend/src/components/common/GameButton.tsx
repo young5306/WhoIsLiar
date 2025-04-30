@@ -5,9 +5,9 @@ interface GameButtonProps {
 }
 
 const sizeClasses = {
-  small: 'px-4 py-1 headline-large',
-  medium: 'px-6 py-2 display-medium',
-  large: 'px-8 py-3 display-large',
+  small: 'px-4 py-1 headline-large text-gray-500 border-gray-500',
+  medium: 'px-6 py-2 display-medium text-primary-600 border-primary-600 ',
+  large: 'px-8 py-3 display-large text-primary-600 border-primary-600 ',
 };
 
 const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
@@ -19,8 +19,7 @@ const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
           w-full 
           h-full 
           bg-point-button1 
-          text-primary-600 
-          border-3 border-primary-600 
+          border-3 
           rounded-full 
           hover:brightness-140
           active:brightness-90
