@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { api } from '../../services/api/Api';
 import GameButton2 from '../common/GameButton2';
+import { createRoom } from '../../services/api/RoomService';
+import { useNavigate } from 'react-router-dom';
+import { useRoomStore } from '../../stores/useRoomStore';
 
 interface RoomCreateModalProps {
   onClose: () => void;
 }
 
 export const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
+  const navigate = useNavigate();
+
   const { userInfo } = useAuthStore();
+  const { setRoomCode } = useRoomStore();
   const hostNickname = userInfo?.nickname;
 
   const [mode, setMode] = useState<'VIDEO' | 'BLIND'>('VIDEO');
@@ -22,18 +27,24 @@ export const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const handleCreate = async () => {
     if (!roomName) return alert('방 제목을 입력해주세요.');
     if (!roundCount) return alert('라운드 수를 선택해주세요');
-    if (isSecret && password.length !== 4)
+    if (isSecret && !/^\d{4}$/.test(password)) {
       return alert('비밀번호는 4자리 숫자여야 합니다.');
+    }
+
+    const params = {
+      hostNickname: hostNickname ?? '',
+      mode,
+      roomName,
+      password: isSecret ? password : '',
+      roundCount,
+    };
 
     try {
-      await api.post('/rooms', {
-        hostNickname,
-        mode,
-        roomName,
-        password: isSecret ? password : '',
-        roundCount,
-      });
+      const response = await createRoom(params);
+      const roomCode = response.data.roomCode;
+      setRoomCode(roomCode);
       onClose();
+      navigate('/waiting-room');
     } catch (err) {
       alert('방 생성 중 오류가 발생했습니다.');
     }
@@ -131,6 +142,9 @@ export const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
             <input
               type="password"
+              inputMode="numeric"
+              pattern="\d{4}"
+              maxLength={4}
               placeholder="4자리 숫자 비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

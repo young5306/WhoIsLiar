@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import GameButton from '../../components/common/GameButton';
+import { GameButton } from '../../components/common/GameButton';
 import InputField from '../../components/common/InputField';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { loginApi } from '../../services/api/AuthService';

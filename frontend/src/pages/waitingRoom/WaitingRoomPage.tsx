@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import GameButton from '../../components/common/GameButton';
+import { GameButton } from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { createRoom } from '../../services/api/RoomService';
 import { useRoomStore } from '../../stores/useRoomStore';
