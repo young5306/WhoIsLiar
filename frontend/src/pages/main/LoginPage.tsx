@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import GameButton from '../../components/common/GameButton';
 import InputField from '../../components/common/InputField';
 import { useAuthStore } from '../../stores/useAuthStore';
-import loginApi from '../../services/api/AuthService';
+import { loginApi } from '../../services/api/AuthService';
 
 const LoginPage = () => {
   const navigate = useNavigate();

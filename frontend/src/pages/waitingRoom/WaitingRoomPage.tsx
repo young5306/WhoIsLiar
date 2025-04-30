@@ -3,6 +3,8 @@ import GameButton from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { createRoom } from '../../services/api/RoomService';
 import { useRoomStore } from '../../stores/useRoomStore';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { logoutApi } from '../../services/api/AuthService';
 
 const WaitingRoomPage = () => {
   const categories = [
@@ -21,6 +23,8 @@ const WaitingRoomPage = () => {
   ];
 
   const { setRoomCode } = useRoomStore();
+  const { userInfo } = useAuthStore();
+  console.log('userInfo', userInfo); // Zustand로 가져오기
 
   const handleCreateRoom = async () => {
     const param = {
@@ -37,6 +41,13 @@ const WaitingRoomPage = () => {
     } else {
       // 방 생성 실패 처리
     }
+  };
+
+  const logoutHandler = () => {
+    // 로그아웃 처리
+    console.log('로그아웃');
+    const response = logoutApi();
+    console.log(response);
   };
 
   const { send } = useWebSocketContext();
@@ -61,7 +72,7 @@ const WaitingRoomPage = () => {
       {/* Left section */}
       <div className="flex-1 flex-col px-10">
         {/* Header */}
-        <div className="text-white headline-large" onClick={handleCreateRoom}>
+        <div className="text-white headline-large" onClick={logoutHandler}>
           방만들기 임시 버튼
         </div>
         <div className="flex items-center mb-6">
