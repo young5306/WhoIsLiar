@@ -13,14 +13,12 @@ public class OpenViduService {
 
 
     public String createSession(String customSessionId) throws OpenViduJavaClientException, OpenViduHttpException {
-        // 세션 설정
         SessionProperties properties = new SessionProperties.Builder()
-                .customSessionId(customSessionId) // optional, null 가능
-                .mediaMode(MediaMode.ROUTED)      // ROUTED(기본) 또는 RELAY
-                .recordingMode(RecordingMode.MANUAL) // 녹화 설정
+                .customSessionId(customSessionId)
+                .mediaMode(MediaMode.ROUTED)
+                .recordingMode(RecordingMode.MANUAL)
                 .build();
 
-        // 세션 생성
         Session session = openVidu.createSession(properties);
         return session.getSessionId();
     }
@@ -32,7 +30,6 @@ public class OpenViduService {
             throw new IllegalArgumentException("세션이 존재하지 않습니다: " + sessionId);
         }
 
-        // 연결 속성 설정
         ConnectionProperties connectionProperties = new ConnectionProperties.Builder()
                 .type(ConnectionType.WEBRTC)
                 .role(OpenViduRole.PUBLISHER)
