@@ -1,21 +1,12 @@
 package com.ssafy.backend.domain.openvidu.service;
 
-import io.openvidu.java.client.*;
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
-
-
-
+import com.ssafy.backend.domain.openvidu.dto.OpenViduTokenResponse;
 import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-
-import com.ssafy.backend.domain.openvidu.dto.OpenViduTokenResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -31,25 +22,36 @@ public class OpenViduService {
 
         String redisKey = REDIS_PREFIX + roomId;
         String sessionId = redisTemplate.opsForValue().get(redisKey);
-
         Session session;
 
         if (sessionId == null) {
+            // Redis에 없으면 세션 새로 생성
             session = openVidu.createSession(
                 new SessionProperties.Builder()
                     .customSessionId(roomId)
                     .build()
             );
             sessionId = session.getSessionId();
-            redisTemplate.opsForValue().set(redisKey, sessionId, Duration.ofHours(2)); // TTL 설정
+            redisTemplate.opsForValue().set(redisKey, sessionId, Duration.ofHours(2));
         } else {
+            // Redis에는 있지만 OpenVidu에 세션이 없으면 제거 후 재생성
             session = openVidu.getActiveSession(sessionId);
             if (session == null) {
-                redisTemplate.delete(redisKey);
-                throw new IllegalStateException("세션이 만료되었거나 존재하지 않습니다.");
+                //  OpenVidu에서 세션이 만료된 상태
+                redisTemplate.delete(redisKey); //  Redis 삭제
+
+                // 새 세션 생성 및 Redis 갱신
+                session = openVidu.createSession(
+                    new SessionProperties.Builder()
+                        .customSessionId(roomId)
+                        .build()
+                );
+                sessionId = session.getSessionId();
+                redisTemplate.opsForValue().set(redisKey, sessionId, Duration.ofHours(2));
             }
         }
 
+        // 세션에 참가자 토큰 발급
         Connection connection = session.createConnection(
             new ConnectionProperties.Builder()
                 .data(nickname)
