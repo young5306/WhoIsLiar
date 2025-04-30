@@ -23,5 +23,5 @@ cors:
     - http://localhost:3000
 
 openvidu:
-  url:    ${openvidu.url}
-  secret: ${openvidu.secret}
+  url: http://localhost:4443
+  secret: MY_SECRET
