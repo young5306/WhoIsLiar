@@ -4,6 +4,7 @@ import GameButton2 from '../common/GameButton2';
 import { createRoom } from '../../services/api/RoomService';
 import { useNavigate } from 'react-router-dom';
 import { useRoomStore } from '../../stores/useRoomStore';
+import { notify } from '../common/Toast';
 
 interface RoomCreateModalProps {
   onClose: () => void;
@@ -47,7 +48,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
       onClose();
       navigate(`/waiting-room?roomCode=${roomCode}`);
     } catch (err) {
-      alert('방 생성 중 오류가 발생했습니다.');
+      notify({ type: 'error', text: '방 생성 중 오류가 발생했습니다.' });
     }
   };
 
