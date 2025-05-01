@@ -47,6 +47,8 @@ const RoomListPage = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
+  const handleRefresh = () => fetchRooms(search || undefined);
+
   // 공통 대기방 이동
   const goToWaitingRoom = (roomCode: string) => {
     setRoomCode(roomCode);
@@ -114,7 +116,13 @@ const RoomListPage = () => {
   return (
     <div className="w-screen h-screen mt-10 p-20 py-10">
       <div className="flex items-end justify-between mb-5">
-        <h1 className="display-medium text-gray-0">방 목록</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="display-medium text-gray-0">방 목록</h1>
+          {/* 새로고침 아이콘 버튼 */}
+          <button onClick={handleRefresh} className="cursor-pointer">
+            <img src="/assets/renew.png" alt="갱신" className="w-12" />
+          </button>
+        </div>
 
         {/* 검색창 */}
         <div className="flex gap-2 justify-end">
