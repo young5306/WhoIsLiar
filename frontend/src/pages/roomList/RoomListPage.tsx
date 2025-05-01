@@ -2,25 +2,33 @@ import { useEffect, useState } from 'react';
 import GameButton from '../../components/common/GameButton';
 import { useNavigate } from 'react-router-dom';
 import RoomCreateModal from '../../components/modals/RoomCreateModal';
-import { getRoomList, RoomSummary } from '../../services/api/RoomService';
+import {
+  getRoomList,
+  joinRoomByCode,
+  joinRoomByPassword,
+  RoomSummary,
+} from '../../services/api/RoomService';
 import { useRoomStore } from '../../stores/useRoomStore';
+import { notify } from '../../components/common/Toast';
+import InputModal from '../../components/modals/InputModal';
 
 const RoomListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const handleOpenCreateModal = () => setIsCreateModalOpen(true);
   const handleCloseCreateModal = () => setIsCreateModalOpen(false);
-  const handleCodeModal = () => {};
 
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const [search, setSearch] = useState('');
-  const { setRoomCode } = useRoomStore();
+  const [selectedRoomCode, setSelectedRoomCode] = useState<string>(''); // 비밀방 roomCode
 
+  const { setRoomCode } = useRoomStore();
   const navigate = useNavigate();
 
   const fetchRooms = async (roomName?: string) => {
     try {
       const rooms = await getRoomList(roomName);
-      console.log('response', rooms);
       setRooms(rooms);
     } catch (err) {
       alert('방 목록을 불러오는데 실패했습니다.');
@@ -39,15 +47,82 @@ const RoomListPage = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  const handleEnterRoom = (roomCode: string) => {
+  const handleRefresh = () => fetchRooms(search || undefined);
+
+  // 공통 대기방 이동
+  const goToWaitingRoom = (roomCode: string) => {
     setRoomCode(roomCode);
     navigate(`/waiting-room?roomCode=${roomCode}`);
+  };
+
+  // 코드 입장
+  const tryJoinRoomByCode = async (roomCode: string) => {
+    try {
+      await joinRoomByCode(roomCode);
+      goToWaitingRoom(roomCode);
+    } catch (err: any) {
+      const st = err?.response?.status;
+      if (st === 404)
+        notify({ type: 'error', text: '유효하지 않은 방 코드입니다.' });
+      else if (st === 423)
+        notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
+      else if (st === 409)
+        notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
+      else
+        notify({
+          type: 'error',
+          text: '코드 입장 중 오류가 발생했습니다.',
+        });
+    }
+  };
+  const handleSubmitCode = async (roomCode: string) => {
+    await tryJoinRoomByCode(roomCode);
+    setIsCodeModalOpen(false);
+  };
+
+  // 비밀번호 모달
+  const handleJoinRoom = (room: RoomSummary) => {
+    if (room.isSecret) {
+      // 비밀방 ⇒ roomCode 기억 + 비밀번호 모달 오픈
+      setSelectedRoomCode(room.roomCode);
+      setIsPasswordModalOpen(true);
+    } else {
+      tryJoinRoomByCode(room.roomCode);
+    }
+  };
+
+  // 비밀번호 입장
+  const handleSubmitPassword = async (roomCode: string, password: string) => {
+    try {
+      await joinRoomByPassword(roomCode, password);
+      goToWaitingRoom(roomCode);
+    } catch (err: any) {
+      const st = err?.response?.status;
+      if (st === 404) notify({ type: 'error', text: '비밀번호가 틀렸습니다.' });
+      else if (st === 423)
+        notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
+      else if (st === 409)
+        notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
+      else
+        notify({
+          type: 'error',
+          text: '비밀번호 확인 중 오류가 발생했습니다.',
+        });
+    } finally {
+      setIsPasswordModalOpen(false);
+    }
   };
 
   return (
     <div className="w-screen h-screen mt-10 p-20 py-10">
       <div className="flex items-end justify-between mb-5">
-        <h1 className="display-medium text-gray-0">방 목록</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="display-medium text-gray-0">방 목록</h1>
+          {/* 새로고침 아이콘 버튼 */}
+          <button onClick={handleRefresh} className="cursor-pointer">
+            <img src="/assets/renew.png" alt="갱신" className="w-12" />
+          </button>
+        </div>
 
         {/* 검색창 */}
         <div className="flex gap-2 justify-end">
@@ -132,7 +207,7 @@ const RoomListPage = () => {
                   <GameButton
                     text="입장"
                     size="small"
-                    onClick={() => handleEnterRoom(room.roomCode)}
+                    onClick={() => handleJoinRoom(room)}
                   />
                 </div>
               </div>
@@ -142,7 +217,32 @@ const RoomListPage = () => {
       </div>
 
       <div className="flex justify-end mt-6 gap-6">
-        <GameButton text="코드 입장" size="medium" onClick={handleCodeModal} />
+        <GameButton
+          text="코드 입장"
+          size="medium"
+          onClick={() => setIsCodeModalOpen(true)}
+        />
+
+        {/* 코드 입력 모달 */}
+        {isCodeModalOpen && (
+          <InputModal
+            title="방 코드 입력"
+            placeholder="방 코드를 입력하세요"
+            onSubmit={handleSubmitCode}
+            onClose={() => setIsCodeModalOpen(false)}
+          />
+        )}
+
+        {/* 비밀번호 입력 모달 */}
+        {isPasswordModalOpen && (
+          <InputModal
+            title="비밀번호 입력"
+            placeholder="비밀번호를 입력하세요"
+            onSubmit={(pwd) => handleSubmitPassword(selectedRoomCode, pwd)}
+            onClose={() => setIsPasswordModalOpen(false)}
+          />
+        )}
+
         <GameButton
           text="방 만들기"
           size="medium"
