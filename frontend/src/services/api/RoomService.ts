@@ -44,3 +44,8 @@ export const joinRoomByPassword = async (
 ) => {
   await api.post('/rooms/join/password', { roomCode, password });
 };
+
+export const getRoomData = async (roomCode: string) => {
+  const res = await api.get(`/rooms/${roomCode}`);
+  return res.data.data;
+};
