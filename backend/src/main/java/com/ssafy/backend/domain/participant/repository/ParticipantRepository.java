@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
 	List<Participant> findByRoom(Room room);
-	long countByRoom(Room room);
+	int countByRoom(Room room);
 	boolean existsBySession(SessionEntity session);
 }

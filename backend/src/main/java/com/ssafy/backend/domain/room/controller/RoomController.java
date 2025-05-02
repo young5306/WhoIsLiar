@@ -64,8 +64,8 @@ public class RoomController {
 	})
 	@PostMapping("/join/code")
 	public ResponseEntity<ApiResponse<RoomJoinResponse>> joinRoomByCode(@RequestBody RoomJoinByCodeRequest request) {
-		RoomJoinResponse response = roomService.joinRoomByCode(request);
-		return ok(response);
+		roomService.joinRoomByCode(request);
+		return ok(null);
 	}
 
 	@Operation(summary = "비밀번호로 방 입장", description = "비밀번호로 방에 입장합니다.")
@@ -80,8 +80,8 @@ public class RoomController {
 	})
 	@PostMapping("/join/password")
 	public ResponseEntity<ApiResponse<RoomJoinResponse>> joinRoomByPassword(@RequestBody RoomJoinByPasswordRequest request) {
-		RoomJoinResponse response = roomService.joinRoomByPassword(request);
-		return ok(response);
+		roomService.joinRoomByPassword(request);
+		return ok(null);
 	}
 
 	@Operation(summary = "방 목록 조회", description = "현재 생성된 모든 방 목록을 조회합니다.")
