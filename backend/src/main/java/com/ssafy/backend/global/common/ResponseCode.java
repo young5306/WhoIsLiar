@@ -23,7 +23,10 @@ public enum ResponseCode {
 	TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 많습니다."),
 	CONFLICT(HttpStatus.CONFLICT, "상태 충돌이 발생했습니다."),
 	SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에 오류가 발생했습니다."),
-	SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "서비스가 일시 중단되었습니다.");
+	SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "서비스가 일시 중단되었습니다."),
+
+	ROOM_PLAYING(HttpStatus.LOCKED, "게임이 이미 진행중입니다."),
+	ROOM_FULL(HttpStatus.CONFLICT, "정원이 초과되었습니다.");
 
 	private final HttpStatus status;
 	private final String message;
