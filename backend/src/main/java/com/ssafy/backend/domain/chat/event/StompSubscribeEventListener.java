@@ -39,7 +39,7 @@ public class StompSubscribeEventListener {
 			String message = nickname + "님이 입장하셨습니다.";
 
 			ChatMessage systemMessage = new ChatMessage(
-				"System",
+				"SYSTEM",
 				message,
 				ChatType.PLAYER_JOIN
 			);

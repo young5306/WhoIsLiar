@@ -25,6 +25,7 @@ public enum ResponseCode {
 	SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에 오류가 발생했습니다."),
 	SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "서비스가 일시 중단되었습니다."),
 
+	ALREADY_IN_ROOM(HttpStatus.CONFLICT, "이미 다른 방에 참여 중이거나 생성한 방이 존재합니다."),
 	ROOM_PLAYING(HttpStatus.LOCKED, "게임이 이미 진행중입니다."),
 	ROOM_FULL(HttpStatus.CONFLICT, "정원이 초과되었습니다.");
 

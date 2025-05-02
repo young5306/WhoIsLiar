@@ -46,12 +46,16 @@ public class RoomService {
 	private static final int ROOM_CODE_LENGTH = 6;
 	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-	// 방 생성
 	public RoomCreateResponse createRoom(RoomCreateRequest request) {
-		String roomCode = generateUniqueRoomCode();
+
 		SessionEntity session = sessionRepository.findByNickname(request.hostNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
+		}
+
+		String roomCode = generateUniqueRoomCode();
 		Room room = Room.builder()
 			.session(session)
 			.roomCode(roomCode)
@@ -110,10 +114,14 @@ public class RoomService {
 
 	// 코드로 방 입장
 	public void joinRoomByCode(RoomJoinByCodeRequest request) {
-		Room room = roomRepository.findByRoomCode(request.roomCode())
+		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
+		}
+
+		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		if (room.getRoomStatus() == RoomStatus.playing) {
@@ -137,13 +145,17 @@ public class RoomService {
 
 	// 비밀번호로 방 입장
 	public void joinRoomByPassword(RoomJoinByPasswordRequest request) {
+		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
+		}
+
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		checkPassword(room, request.password());
-
-		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
-			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		if (room.getRoomStatus() == RoomStatus.playing) {
 			throw new CustomException(ResponseCode.ROOM_PLAYING);

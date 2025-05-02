@@ -41,6 +41,7 @@ public class RoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청", content=@Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content=@Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content=@Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 다른 방에 참여 중이거나 생성한 방이 존재합니다.", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content=@Content)
 	})
 	public ResponseEntity<ApiResponse<RoomCreateResponse>> createRoom(
@@ -58,6 +59,7 @@ public class RoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "방을 찾을 수 없음", content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 다른 방에 참여 중이거나 생성한 방이 존재합니다.", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/join/code")
@@ -73,6 +75,7 @@ public class RoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "비밀번호 불일치 또는 권한 없음", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "방을 찾을 수 없음", content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 다른 방에 참여 중이거나 생성한 방이 존재합니다.", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/join/password")
