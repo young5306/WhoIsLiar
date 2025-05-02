@@ -1,6 +1,7 @@
 package com.ssafy.backend.global.websocket;
 
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.domain.auth.service.AuthService;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 	private final SessionRepository sessionRepository;
+	private final AuthService authService;
 
 	@Override
 	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -80,6 +82,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		log.info("Handshake successful - token: {}, roomCode: {}", AUTH_TOKEN, roomCode);
 
+		authService.validateAndRefresh(AUTH_TOKEN);
 		attributes.put("token", AUTH_TOKEN);
 		attributes.put("roomCode", roomCode);
 		attributes.put("nickname", SecurityUtils.getCurrentNickname());

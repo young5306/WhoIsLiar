@@ -1,7 +1,5 @@
 package com.ssafy.backend.domain.room.service;
 
-import static java.util.stream.Collectors.*;
-
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.participant.entity.Participant;
@@ -14,7 +12,6 @@ import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomInfo;
-import com.ssafy.backend.domain.room.dto.response.RoomJoinResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomSearchResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;
@@ -31,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -47,19 +43,24 @@ public class RoomService {
 	private static final int ROOM_CODE_LENGTH = 6;
 	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-	// 방 생성
 	public RoomCreateResponse createRoom(RoomCreateRequest request) {
-		String roomCode = generateUniqueRoomCode();
+
 		SessionEntity session = sessionRepository.findByNickname(request.hostNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
+		}
+
+		String roomCode = generateUniqueRoomCode();
 		Room room = Room.builder()
 			.session(session)
 			.roomCode(roomCode)
 			.roomName(request.roomName())
 			.password(request.password())
 			.roundCount(request.roundCount())
-			.mode(request.mode())
+			.gameMode(request.gameMode())
+			.videoMode(request.videoMode())
 			.roomStatus(RoomStatus.waiting)
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
@@ -81,7 +82,8 @@ public class RoomService {
 			.isSecret(room.getPassword() != null)
 			.playerCount(1) // 생성자는 무조건 1명 (자기 자신)
 			.roundCount(room.getRoundCount())
-			.mode(room.getMode().name())
+			.gameMode(room.getGameMode().name())
+			.videoMode(room.getVideoMode().name())
 			.category(room.getCategory().name())
 			.hostNickname(session.getNickname())
 			.status(room.getRoomStatus().name())
@@ -111,10 +113,14 @@ public class RoomService {
 
 	// 코드로 방 입장
 	public void joinRoomByCode(RoomJoinByCodeRequest request) {
-		Room room = roomRepository.findByRoomCode(request.roomCode())
+		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
+		}
+
+		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		if (room.getRoomStatus() == RoomStatus.playing) {
@@ -138,13 +144,17 @@ public class RoomService {
 
 	// 비밀번호로 방 입장
 	public void joinRoomByPassword(RoomJoinByPasswordRequest request) {
+		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
+		}
+
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		checkPassword(room, request.password());
-
-		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
-			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		if (room.getRoomStatus() == RoomStatus.playing) {
 			throw new CustomException(ResponseCode.ROOM_PLAYING);
@@ -185,7 +195,8 @@ public class RoomService {
 					.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
 					.playerCount(count)
 					.roundCount(room.getRoundCount())
-					.mode(room.getMode().name())
+					.gameMode(room.getGameMode().name())
+					.videoMode(room.getVideoMode().name())
 					.category(room.getCategory().name())
 					.hostNickname(room.getSession().getNickname())
 					.status(room.getRoomStatus().name())
@@ -244,7 +255,7 @@ public class RoomService {
 			.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
 			.playerCount(participantCount)
 			.roundCount(room.getRoundCount())
-			.mode(room.getMode().name())
+			.videoMode(room.getVideoMode().name())
 			.category(room.getCategory().name())
 			.hostNickname(room.getSession().getNickname())
 			.status(room.getRoomStatus().name())

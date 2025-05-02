@@ -1,7 +1,7 @@
 package com.ssafy.backend.domain.room.dto.request;
 
-import com.ssafy.backend.domain.room.entity.Room;
-import com.ssafy.backend.global.enums.Mode;
+import com.ssafy.backend.global.enums.GameMode;
+import com.ssafy.backend.global.enums.VideoMode;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -13,8 +13,11 @@ public record RoomCreateRequest(
 	@Schema(description = "호스트 닉네임", example = "그림자은영")
 	String hostNickname,
 
+	@Schema(description = "게임 모드", example = "DEFAULT")
+	GameMode gameMode,
+
 	@Schema(description = "방 모드", example = "VIDEO")
-	Mode mode,
+	VideoMode videoMode,
 
 	@Schema(description = "방 제목", example = "재밌는 방")
 	String roomName,

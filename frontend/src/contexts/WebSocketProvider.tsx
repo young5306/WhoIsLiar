@@ -21,7 +21,7 @@ interface WebSocketContextType {
   stompClient: StompClient | null;
   isConnected: boolean;
   connect: (roomCode: string) => void;
-  send: (content: string, sender: string) => void;
+  send: (content: string, sender: string, chatType: string) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -36,9 +36,10 @@ export const useWebSocketContext = () => useContext(WebSocketContext);
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { roomCode } = useParams<{ roomCode: string }>();
+  const { roomCode: urlRoomCode } = useParams<{ roomCode: string }>();
   const [isConnected, setIsConnected] = useState(false);
   const clientRef = useRef<StompClient | null>(null);
+  const currentRoomCodeRef = useRef<string | null>(null);
 
   const connect = useCallback((roomCode: string) => {
     if (!roomCode) {
@@ -48,17 +49,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       console.log('WebSocket 연결 시도:', roomCode);
+      currentRoomCodeRef.current = roomCode;
       const client = createStompClient(roomCode);
 
       client.onConnect = () => {
         console.log('STOMP 연결 성공');
         setIsConnected(true);
-
-        // 구독 설정
-        client.subscribe(`/topic/room.${roomCode}`, (frame) => {
-          const message = JSON.parse(frame.body) as Message;
-          console.log('메시지 수신:', message);
-        });
       };
 
       client.onStompError = (frame) => {
@@ -80,8 +76,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const send = useCallback(
-    (content: string, sender: string) => {
-      if (!clientRef.current?.connected || !roomCode) {
+    (content: string, sender: string, chatType: string) => {
+      if (!clientRef.current?.connected || !currentRoomCodeRef.current) {
         console.warn('WebSocket이 연결되지 않았습니다.');
         return;
       }
@@ -89,21 +85,21 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       const message: Message = {
         sender,
         content,
-        chatType: 'NORMAL',
+        chatType,
       };
 
       console.log('메시지 전송:', message);
       clientRef.current.publish({
-        destination: `/app/chat.send/${roomCode}`,
+        destination: `/app/chat.send/${currentRoomCodeRef.current}`,
         body: JSON.stringify(message),
       });
     },
-    [roomCode]
+    []
   );
 
   useEffect(() => {
-    if (roomCode) {
-      connect(roomCode);
+    if (urlRoomCode) {
+      connect(urlRoomCode);
     }
 
     return () => {
@@ -111,7 +107,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         clientRef.current.deactivate();
       }
     };
-  }, [roomCode, connect]);
+  }, [urlRoomCode, connect]);
 
   return (
     <WebSocketContext.Provider

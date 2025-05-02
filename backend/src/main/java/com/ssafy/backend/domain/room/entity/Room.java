@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.global.enums.Category;
-import com.ssafy.backend.global.enums.Mode;
+import com.ssafy.backend.global.enums.GameMode;
+import com.ssafy.backend.global.enums.VideoMode;
 import com.ssafy.backend.global.enums.RoomStatus;
 
 @Entity
@@ -38,7 +39,11 @@ public class Room {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 10)
-	private Mode mode;
+	private GameMode gameMode;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 10)
+	private VideoMode videoMode;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
@@ -55,14 +60,15 @@ public class Room {
 	private LocalDateTime updatedAt;
 
 	@Builder
-	public Room(SessionEntity session, String roomCode, String roomName, String password, int roundCount, Mode mode, RoomStatus roomStatus,
+	public Room(SessionEntity session, String roomCode, String roomName, String password, int roundCount, GameMode gameMode, VideoMode videoMode, RoomStatus roomStatus,
 		LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.session = session;
 		this.roomCode = roomCode;
 		this.roomName = roomName;
 		this.password = password;
 		this.roundCount = roundCount;
-		this.mode = mode;
+		this.gameMode = gameMode;
+		this.videoMode = videoMode;
 		this.roomStatus = roomStatus;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
