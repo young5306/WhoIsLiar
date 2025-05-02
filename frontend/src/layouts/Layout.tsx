@@ -3,15 +3,11 @@ import { Outlet, useLocation } from 'react-router-dom';
 const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
   {
     '/': {
-      imageUrl: '/bgImages/mainBg3.svg',
+      imageUrl: '/bgImages/mainBg.svg',
       backgroundColor: 'bg-[#08050F]',
     },
-    '/rule-book': {
-      imageUrl: '/bgImages/ruleBookBg.svg',
-      backgroundColor: 'bg-[#321913]',
-    },
     '/login': {
-      imageUrl: '/bgImages/loginBg3.svg',
+      imageUrl: '/bgImages/loginBg.svg',
       backgroundColor: 'bg-[#090A11]',
     },
     '/waiting-room': {
@@ -22,8 +18,7 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
       imageUrl: '/bgImages/waitingBg.svg',
       backgroundColor: 'bg-[#090A11]',
     },
-    // '/room-list': { imageUrl: '/bgImages/bg4.svg', backgroundColor: 'bg-white' },
-    '/game-room': {
+    '/gameRoom': {
       imageUrl: '/bgImages/waitingBg.svg',
       backgroundColor: 'bg-[#090A11]',
     },

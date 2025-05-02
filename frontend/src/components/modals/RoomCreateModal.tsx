@@ -17,7 +17,12 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const { setRoomCode } = useRoomStore();
   const hostNickname = userInfo?.nickname;
 
-  const [mode, setMode] = useState<'VIDEO' | 'BLIND'>('VIDEO');
+  const [videoMode, setVideoMode] = useState<'VIDEO' | 'BLIND' | undefined>(
+    undefined
+  );
+  const [gameMode, setGameMode] = useState<'DEFAULT' | 'FOOL' | undefined>(
+    undefined
+  );
   const [roomName, setRoomName] = useState('');
   const [isSecret, setIsSecret] = useState(false);
   const [password, setPassword] = useState('');
@@ -26,15 +31,24 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleCreate = async () => {
-    if (!roomName) return alert('방 제목을 입력해주세요.');
-    if (!roundCount) return alert('라운드 수를 선택해주세요');
-    if (isSecret && !/^\d{4}$/.test(password)) {
-      return alert('비밀번호는 4자리 숫자여야 합니다.');
-    }
+    if (!videoMode)
+      return notify({ type: 'warning', text: '화면모드를 선택해주세요.' });
+    if (!gameMode)
+      return notify({ type: 'warning', text: '게임모드를 선택해주세요.' });
+    if (!roomName)
+      return notify({ type: 'warning', text: '방 제목을 입력해주세요.' });
+    if (!roundCount)
+      return notify({ type: 'warning', text: '라운드 수를 선택해주세요.' });
+    if (isSecret && !/^\d{4}$/.test(password))
+      return notify({
+        type: 'warning',
+        text: '비밀번호는 4자리 숫자여야 합니다.',
+      });
 
     const params = {
       hostNickname: hostNickname ?? '',
-      mode,
+      videoMode,
+      gameMode,
       roomName,
       password: isSecret ? password : '',
       roundCount,
@@ -53,8 +67,14 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50">
-      <div className="text-primary-600 relative bg-gray-900 border-1 border-primary-600 rounded-xl w-[530px] p-6">
+    <div
+      className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="text-primary-600 relative bg-gray-900 border-1 border-primary-600 rounded-xl w-[530px] p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={() => setIsHelpOpen(true)}
           className="absolute top-2 left-2"
@@ -67,12 +87,23 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
         </button>
 
         {isHelpOpen && (
-          <div className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50">
-            <div className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[300px] text-sm">
+          <div
+            className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50"
+            onClick={() => setIsHelpOpen(false)}
+          >
+            <div
+              className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[300px] text-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="body-medium mb-2">도움말</h3>
               <p>
-                일반 모드는 화면을 공유하는 모드, 블라인드 모드는 화면을
+                비디오 모드는 화면을 공유하는 모드, 블라인드 모드는 화면을
                 공유하지 않는 모드입니다.
+                <br />
+                <br />
+                일반 모드는 라이어에게 라이어임을 알리고 제시어를 제공하지 않는
+                모드, 바보 모드는 라이어에게 라이어임을 알리지 않고 다른
+                제시어를 제공하는 모드입니다.
                 <br />
                 <br />
                 방제목과 라운드 수는 필수, 비밀번호 설정은 선택 항목입니다.
@@ -89,32 +120,72 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
         <h2 className="display-medium text-center mb-4">방 만들기</h2>
 
-        <div className="flex justify-center gap-4 mb-4">
-          <button
-            onClick={() => setMode('VIDEO')}
-            className={`p-2 rounded-md border-3 cursor-pointer ${mode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
-          >
-            <img src="assets/videoMode.png" alt="일반모드" className="" />
-            <p className="body-medium mt-2 text-primary-600">일반 모드</p>
-          </button>
-          <button
-            onClick={() => setMode('BLIND')}
-            className={`p-2 rounded-md border-3 cursor-pointer ${mode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
-          >
-            <img src="assets/blindMode.png" alt="블라인드모드" className="" />
-            <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
-          </button>
+        <div className="mb-4">
+          <h3 className="headline-large mb-2">화면모드</h3>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setVideoMode('VIDEO')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-gray-300/20'}`}
+            >
+              <img
+                src="assets/videoMode.png"
+                alt="비디오 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">비디오 모드</p>
+            </button>
+            <button
+              onClick={() => setVideoMode('BLIND')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/blindMode.png"
+                alt="블라인드 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-6 mb-3 text-primary-600 headline-xlarge">
+        <div className="mb-4">
+          <h3 className="headline-large mb-2">게임모드</h3>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setGameMode('DEFAULT')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/defaultMode.png"
+                alt="일반 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">일반 모드</p>
+            </button>
+            <button
+              onClick={() => setGameMode('FOOL')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/foolMode.png"
+                alt="바보 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">바보 모드</p>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6 mb-3 text-primary-600 headline-large">
           <div className="flex items-center gap-4">
             <label className="w-30">방 제목</label>
             <input
               type="text"
-              placeholder="방 제목을 입력하세요"
+              placeholder="방 제목 입력 (최대 15자)"
               value={roomName}
+              maxLength={15}
               onChange={(e) => setRoomName(e.target.value)}
-              className={`w-full flex-1 border-3 rounded-lg px-3 py-2 placeholder-point-button1 bg-gray-900/20 outline-none 
+              className={`w-full flex-1 border-3 rounded-lg p-2 placeholder-gray-300/40 headline-medium text-gray-0 bg-gray-0/20  outline-none 
                 ${roomName ? 'border-primary-600' : 'border-point-button1'} 
                 focus:border-primary-600`}
             />
@@ -150,7 +221,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
               placeholder="4자리 숫자 비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`flex-1 min-w-0 border-3 rounded-lg px-2 py-1 placeholder-point-button1 bg-gray-900/20 outline-none
+              className={`flex-1 min-w-0 border-3 rounded-lg p-2 placeholder-gray-300/40 headline-medium text-gray-0 bg-gray-0/20 outline-none
                 ${isSecret ? '' : 'invisible pointer-events-none'}
                 ${password ? 'border-primary-600' : 'border-point-button1'}
                 focus:border-primary-600`}
