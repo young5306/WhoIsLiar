@@ -18,8 +18,6 @@ import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
 import com.ssafy.backend.domain.auth.dto.LoginResponseDto;
 import com.ssafy.backend.domain.auth.service.AuthService;
 import com.ssafy.backend.global.common.ApiResponse;
-import com.ssafy.backend.global.exception.CustomException;
-import com.ssafy.backend.global.common.ResponseCode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -67,9 +65,7 @@ public class AuthController {
 	public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Parameter(description = "로그인 요청 정보", required = true) @Valid @RequestBody LoginRequestDto req,
 		HttpServletResponse response) {
 
-		// AuthService.login() 내부에서 중복 시 409 예외를 던집니다.
 		String token = auth.login(req);
-		// HttpOnly 쿠키로 토큰 발급
 		ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
 			.httpOnly(true)
 			.secure(cookieSecure)
@@ -78,7 +74,6 @@ public class AuthController {
 			.maxAge(7 * 24 * 60 * 60) // 7일
 			.build();
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-		// 3) 응답 바디에 토큰 + 닉네임 같이 담아서 반환
 		LoginResponseDto body = new LoginResponseDto(token, req.nickname());
 		return ok(body);
 	}
@@ -101,7 +96,6 @@ public class AuthController {
 		@CookieValue(name = "AUTH_TOKEN", required = false) String token,
 		HttpServletResponse response) {
 		auth.logoutIfPresent(token);
-		// 쿠키 만료 설정
 		ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", "")
 			.httpOnly(true)
 			.path("/")

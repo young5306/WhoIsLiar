@@ -32,7 +32,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 		HttpServletResponse response,
 		FilterChain filterChain)
 		throws ServletException, IOException {
-		// 1) 쿠키에서 토큰 꺼내기
+
 		String token = Optional.ofNullable(request.getCookies())
 			.flatMap(cookies ->
 				List.of(cookies).stream()
@@ -41,7 +41,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 					.findFirst()
 			).orElse(null);
 
-		// 2) 인증 정보가 없으면, 토큰 유효성 검사 & 갱신 시도
 		if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			try {
 				SessionEntity session = authService.validateAndRefresh(token);

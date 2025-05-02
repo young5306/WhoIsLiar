@@ -20,11 +20,9 @@ public class SessionEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	/** 클라이언트에 발급할 랜덤 토큰 */
 	@Column(unique = true, nullable = false)
 	private String token;
 
-	/** 중복 닉네임 방지를 위해 unique */
 	@Column(unique = true, nullable = false)
 	private String nickname;
 
@@ -33,6 +31,4 @@ public class SessionEntity {
 
 	@Column(nullable = false)
 	private LocalDateTime lastActiveAt;
-
-	// 기본 생성자 및 getter/setter 생략
 }

@@ -53,12 +53,10 @@ public class AuthService {
 		this.participantRepository = participantRepository;
 	}
 
-	/** 닉네임 중복 확인 */
 	public boolean isNicknameAvailable(String nickname) {
 		return repo.findByNickname(nickname).isEmpty();
 	}
 
-	/** 로그인: 토큰 발급 */
 	@Transactional
 	public String login(@Valid LoginRequestDto req) {
 		if (!isNicknameAvailable(req.nickname())) {
@@ -79,7 +77,6 @@ public class AuthService {
 		return token;
 	}
 
-	/** 토큰 검사 및 마지막 활동 시간 갱신 */
 	@Transactional
 	public SessionEntity validateAndRefresh(String token) {
 		try {
@@ -101,7 +98,6 @@ public class AuthService {
 		}
 	}
 
-	/** 로그아웃 (토큰이 있으면 삭제) */
 	@Transactional
 	public void logoutIfPresent(String token) {
 		System.out.println(SecurityUtils.getCurrentNickname());
@@ -113,7 +109,6 @@ public class AuthService {
 		}
 	}
 
-	/** 스케줄러: 만료 세션 일괄 정리 (10분마다) */
 	@Scheduled(fixedDelay = 10 * 60 * 1000)
 	@Transactional
 	public void cleanupStaleSessions() {
