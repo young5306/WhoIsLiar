@@ -63,8 +63,14 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50">
-      <div className="text-primary-600 relative bg-gray-900 border-1 border-primary-600 rounded-xl w-[530px] p-6">
+    <div
+      className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="text-primary-600 relative bg-gray-900 border-1 border-primary-600 rounded-xl w-[530px] p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={() => setIsHelpOpen(true)}
           className="absolute top-2 left-2"
@@ -77,8 +83,14 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
         </button>
 
         {isHelpOpen && (
-          <div className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50">
-            <div className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[300px] text-sm">
+          <div
+            className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50"
+            onClick={() => setIsHelpOpen(false)}
+          >
+            <div
+              className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[300px] text-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="body-medium mb-2">도움말</h3>
               <p>
                 비디오 모드는 화면을 공유하는 모드, 블라인드 모드는 화면을

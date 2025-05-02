@@ -32,8 +32,14 @@ const InputModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
-      <div className="relative bg-gray-900 rounded-xl p-8 w-[92%] max-w-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-gray-900 rounded-xl p-8 w-[92%] max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="headline-large text-primary-600 mb-6 text-center">
           {title}
         </h2>
