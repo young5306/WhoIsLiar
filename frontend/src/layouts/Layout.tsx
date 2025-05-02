@@ -18,7 +18,7 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
       imageUrl: '/bgImages/waitingBg.svg',
       backgroundColor: 'bg-[#090A11]',
     },
-    '/gameRoom': {
+    '/game-room': {
       imageUrl: '/bgImages/waitingBg.svg',
       backgroundColor: 'bg-[#090A11]',
     },

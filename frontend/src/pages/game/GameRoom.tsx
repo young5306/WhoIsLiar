@@ -163,7 +163,7 @@ const GameRoom: React.FC = () => {
 
     try {
       // ck) getToken 분리
-      const token = await getToken(myUserName, mySessionId, myToken);
+      const token = await getToken(mySessionId, myToken);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
