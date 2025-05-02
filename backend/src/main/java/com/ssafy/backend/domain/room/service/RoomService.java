@@ -1,7 +1,5 @@
 package com.ssafy.backend.domain.room.service;
 
-import static java.util.stream.Collectors.*;
-
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.participant.entity.Participant;
@@ -30,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -62,7 +59,8 @@ public class RoomService {
 			.roomName(request.roomName())
 			.password(request.password())
 			.roundCount(request.roundCount())
-			.mode(request.mode())
+			.gameMode(request.gameMode())
+			.videoMode(request.videoMode())
 			.roomStatus(RoomStatus.waiting)
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
@@ -84,7 +82,8 @@ public class RoomService {
 			.isSecret(room.getPassword() != null)
 			.playerCount(1) // 생성자는 무조건 1명 (자기 자신)
 			.roundCount(room.getRoundCount())
-			.mode(room.getMode().name())
+			.gameMode(room.getGameMode().name())
+			.videoMode(room.getVideoMode().name())
 			.category(room.getCategory().name())
 			.hostNickname(session.getNickname())
 			.status(room.getRoomStatus().name())
@@ -196,7 +195,8 @@ public class RoomService {
 					.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
 					.playerCount(count)
 					.roundCount(room.getRoundCount())
-					.mode(room.getMode().name())
+					.gameMode(room.getGameMode().name())
+					.videoMode(room.getVideoMode().name())
 					.category(room.getCategory().name())
 					.hostNickname(room.getSession().getNickname())
 					.status(room.getRoomStatus().name())
@@ -255,7 +255,7 @@ public class RoomService {
 			.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
 			.playerCount(participantCount)
 			.roundCount(room.getRoundCount())
-			.mode(room.getMode().name())
+			.videoMode(room.getVideoMode().name())
 			.category(room.getCategory().name())
 			.hostNickname(room.getSession().getNickname())
 			.status(room.getRoomStatus().name())
