@@ -6,7 +6,7 @@ export const createStompClient = (roomCode: string) => {
 
   const client = new StompClient({
     webSocketFactory: () => socket,
-    debug: (str) => console.log('[STOMP]', str),
+    // debug: (str) => console.log('[STOMP]', str),
     reconnectDelay: 5000,
   });
 
