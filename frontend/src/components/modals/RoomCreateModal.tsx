@@ -116,23 +116,6 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
         <h2 className="display-medium text-center mb-4">방 만들기</h2>
 
-        {/* <div className="flex justify-center gap-4 mb-4">
-          <button
-            onClick={() => setVideoMode('VIDEO')}
-            className={`p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
-          >
-            <img src="assets/videoMode.png" alt="일반모드" />
-            <p className="body-medium mt-2 text-primary-600">일반 모드</p>
-          </button>
-          <button
-            onClick={() => setVideoMode('BLIND')}
-            className={`p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
-          >
-            <img src="assets/blindMode.png" alt="블라인드모드" />
-            <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
-          </button>
-        </div> */}
-
         <div className="mb-4">
           <h3 className="headline-large mb-2">화면모드</h3>
           <div className="flex justify-center gap-4">
