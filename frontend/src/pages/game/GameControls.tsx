@@ -31,9 +31,10 @@ const GameControls = ({
   return (
     <>
       {/* <div></div> */}
-      <div className="flex justify-between items-center w-full p-3 bg-gray-900 rounded-lg">
+      {/* <div className="flex justify-between items-center w-full p-3 bg-gray-900 rounded-lg"> */}
+      <div className="flex justify-end items-center w-full p-3 rounded-lg gap-4">
         <div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-4">
             <button
               onClick={onToggleAudio}
               className={`p-2 rounded-full ${isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'}`}

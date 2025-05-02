@@ -360,11 +360,11 @@ const GameRoom: React.FC = () => {
     _totalParticipants: number
   ): string => {
     const positions = {
-      1: 'col-span-2 col-start-2 row-span-2 row-start-2 max-h-[200px] min-w-[200px] max-w-[250px] mt-[-60px]',
-      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[200px] min-w-[200px] max-w-[250px] mt-[-60px]',
-      3: 'col-span-2 col-start-2 row-span-2 row-start-6 max-h-[200px] min-w-[200px] max-w-[250px]',
-      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[200px] min-w-[200px] max-w-[250px] ml-[20px]',
-      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[200px] min-w-[200px] max-w-[250px] ml-[130px]',
+      1: 'col-span-2 col-start-2 row-span-2 row-start-2 max-h-[180px] min-w-[200px] max-w-[250px] mt-[-60px]',
+      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[180px] min-w-[200px] max-w-[250px] mt-[-60px]',
+      3: 'col-span-2 col-start-2 row-span-2 row-start-6 max-h-[180px] min-w-[200px] max-w-[250px]',
+      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[180px] min-w-[200px] max-w-[250px] ml-[20px]',
+      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[180px] min-w-[200px] max-w-[250px] ml-[130px]',
       // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
     };
     return positions[index as keyof typeof positions] || '';
@@ -373,7 +373,7 @@ const GameRoom: React.FC = () => {
   // const myPosition =
   //   'col-span-1 col-start-3 row-span-1 row-start-4 min-h-[150px]';
   const myPosition =
-    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[200px] min-w-[200px] max-w-[250px]';
+    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[180px] min-w-[200px] max-w-[250px]';
 
   return (
     <>
@@ -462,6 +462,9 @@ const GameRoom: React.FC = () => {
                   </div>
                 </div>
               ))}
+              <div className="relative grid col-start-3 min-w-[1500px] row-span-6 row-start-2 ml-[100px] mt-[-100px]">
+                <GameChat />
+              </div>
 
               {/* my video */}
               <div className={`relative ${myPosition}`}>
@@ -493,9 +496,7 @@ const GameRoom: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* <div>
-              <GameChat />
-            </div> */}
+
             <div className="mt-2 mb-[-20px] text-white">
               <GameControls
                 isAudioEnabled={isAudioEnabled}
