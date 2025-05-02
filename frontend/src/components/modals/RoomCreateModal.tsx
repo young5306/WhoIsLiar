@@ -125,7 +125,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
           <div className="flex justify-center gap-4">
             <button
               onClick={() => setVideoMode('VIDEO')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-gray-300/20'}`}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/videoMode.png"
@@ -136,7 +136,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             </button>
             <button
               onClick={() => setVideoMode('BLIND')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/blindMode.png"
@@ -153,7 +153,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
           <div className="flex justify-center gap-4">
             <button
               onClick={() => setGameMode('DEFAULT')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/defaultMode.png"
@@ -164,7 +164,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             </button>
             <button
               onClick={() => setGameMode('FOOL')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/foolMode.png"
@@ -178,21 +178,20 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
         <div className="flex flex-col gap-6 mb-3 text-primary-600 headline-large">
           <div className="flex items-center gap-4">
-            <label className="w-30">방 제목</label>
+            <label className="w-28">방 제목</label>
             <input
               type="text"
               placeholder="방 제목 입력 (최대 15자)"
               value={roomName}
-              maxLength={15}
               onChange={(e) => setRoomName(e.target.value)}
-              className={`w-full flex-1 border-3 rounded-lg p-2 placeholder-gray-300/40 headline-medium text-gray-0 bg-gray-0/20  outline-none 
-                ${roomName ? 'border-primary-600' : 'border-point-button1'} 
+              className={`w-full flex-1 border-3 rounded-lg p-2 headline-medium placeholder-[#734AA1] bg-gray-900/20 outline-none 
+                ${roomName ? 'border-primary-600' : 'border-[#734AA1]'} 
                 focus:border-primary-600`}
             />
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="w-30">비밀번호</label>
+            <label className="w-28">비밀번호</label>
 
             <input
               type="checkbox"
@@ -206,7 +205,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             <div
               onClick={() => setIsSecret((prev) => !prev)}
               className={`w-6 h-6 border-3 rounded-sm cursor-pointer flex items-center justify-center
-                ${isSecret ? 'border-primary-600' : 'border-point-button1'}`}
+                ${isSecret ? 'border-primary-600' : 'border-[#734AA1]'}`}
             >
               {isSecret && (
                 <span className="text-primary-600 text-sm font-bold">✓</span>
@@ -218,18 +217,18 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
               inputMode="numeric"
               pattern="\d{4}"
               maxLength={4}
-              placeholder="4자리 숫자 비밀번호"
+              placeholder="비밀번호 4자리 숫자 입력"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`flex-1 min-w-0 border-3 rounded-lg p-2 placeholder-gray-300/40 headline-medium text-gray-0 bg-gray-0/20 outline-none
+              className={`flex-1 min-w-0 border-3 rounded-lg p-2 headline-medium placeholder-[#734AA1] bg-gray-900/20 outline-none
                 ${isSecret ? '' : 'invisible pointer-events-none'}
-                ${password ? 'border-primary-600' : 'border-point-button1'}
+                ${password ? 'border-primary-600' : 'border-[#734AA1]'}
                 focus:border-primary-600`}
             />
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="w-30">라운드</label>
+            <label className="w-28">라운드</label>
             <div className="flex justify-between flex-1">
               {[3, 4, 5].map((num) => (
                 <button
@@ -238,7 +237,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                   className={`w-25 h-12 flex items-center justify-center rounded-md border-3 headline-medium cursor-pointer ${
                     roundCount === num
                       ? 'border-primary-600 text-primary-600'
-                      : 'border-point-button1 text-point-button1'
+                      : 'border-[#734AA1] text-[#734AA1]'
                   }`}
                 >
                   {num}
