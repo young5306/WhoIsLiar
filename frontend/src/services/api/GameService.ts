@@ -52,10 +52,10 @@ export const createSessionApi = async (
   try {
     // ck) 실제 세션 발급받는 api로 변경
     const response = await axios.post(
-      APPLICATION_SERVER_URL + '/openvidu/sessions',
+      APPLICATION_SERVER_URL + `/openvidu/sessions/${sessionId}`,
       // { customSessionId: sessionId },
       // { roomId: sessionId, nickname: userName },
-      { roomCode: sessionId },
+      {},
       {
         headers: {
           'Content-Type': 'application/json',
