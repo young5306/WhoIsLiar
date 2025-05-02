@@ -1,33 +1,34 @@
 interface InputFieldProps {
   placeholder?: string;
-  className?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEnter?: () => void;
 }
 
 const InputField = ({
   placeholder = '',
-  className = '',
   value,
   onChange,
+  onEnter,
 }: InputFieldProps) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onEnter?.();
+    }
+  };
+
   return (
-    <div
-      className={`
-        flex items-center px-4
-        border-3 border-primary-600 
-        rounded-lg
-        bg-gray-0/20
-        w-[300px] h-[60px]
-        ${className}
-      `}
-    >
+    <div>
       <input
         type="text"
         placeholder={placeholder}
-        className="headline-large text-primary-600 placeholder-primary-600 outline-none"
+        maxLength={10}
+        className="bg-gray-0/20 border-3 border-primary-600 w-[300px] h-[70px] rounded-lg px-4 
+        headline-medium text-gray-0 placeholder-gray-300 outline-none focus:ring-2 focus:ring-primary-600/60"
         value={value}
         onChange={onChange}
+        onKeyDown={handleKeyDown}
       />
     </div>
   );

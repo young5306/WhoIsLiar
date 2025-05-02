@@ -26,11 +26,16 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleCreate = async () => {
-    if (!roomName) return alert('방 제목을 입력해주세요.');
-    if (!roundCount) return alert('라운드 수를 선택해주세요');
-    if (isSecret && !/^\d{4}$/.test(password)) {
-      return alert('비밀번호는 4자리 숫자여야 합니다.');
-    }
+    if (!mode) return notify({ type: 'warning', text: '모드를 선택해주세요.' });
+    if (!roomName)
+      return notify({ type: 'warning', text: '방 제목을 입력해주세요.' });
+    if (!roundCount)
+      return notify({ type: 'warning', text: '라운드 수를 선택해주세요.' });
+    if (isSecret && !/^\d{4}$/.test(password))
+      return notify({
+        type: 'warning',
+        text: '비밀번호는 4자리 숫자여야 합니다.',
+      });
 
     const params = {
       hostNickname: hostNickname ?? '',
@@ -94,14 +99,14 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             onClick={() => setMode('VIDEO')}
             className={`p-2 rounded-md border-3 cursor-pointer ${mode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
           >
-            <img src="assets/videoMode.png" alt="일반모드" className="" />
+            <img src="assets/videoMode.png" alt="일반모드" />
             <p className="body-medium mt-2 text-primary-600">일반 모드</p>
           </button>
           <button
             onClick={() => setMode('BLIND')}
             className={`p-2 rounded-md border-3 cursor-pointer ${mode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
           >
-            <img src="assets/blindMode.png" alt="블라인드모드" className="" />
+            <img src="assets/blindMode.png" alt="블라인드모드" />
             <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
           </button>
         </div>

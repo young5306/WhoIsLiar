@@ -60,16 +60,17 @@ const RoomListPage = () => {
     try {
       await joinRoomByCode(roomCode);
       goToWaitingRoom(roomCode);
+      setIsCodeModalOpen(false);
     } catch (err: any) {
       const st = err?.response?.status;
       if (st === 404)
-        notify({ type: 'error', text: '유효하지 않은 방 코드입니다.' });
+        return notify({ type: 'error', text: '유효하지 않은 방 코드입니다.' });
       else if (st === 423)
-        notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
+        return notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
       else if (st === 409)
-        notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
+        return notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
       else
-        notify({
+        return notify({
           type: 'error',
           text: '코드 입장 중 오류가 발생했습니다.',
         });
@@ -77,7 +78,6 @@ const RoomListPage = () => {
   };
   const handleSubmitCode = async (roomCode: string) => {
     await tryJoinRoomByCode(roomCode);
-    setIsCodeModalOpen(false);
   };
 
   // 비밀번호 모달
@@ -96,25 +96,25 @@ const RoomListPage = () => {
     try {
       await joinRoomByPassword(roomCode, password);
       goToWaitingRoom(roomCode);
+      setIsPasswordModalOpen(false);
     } catch (err: any) {
       const st = err?.response?.status;
-      if (st === 404) notify({ type: 'error', text: '비밀번호가 틀렸습니다.' });
+      if (st === 403)
+        return notify({ type: 'error', text: '비밀번호가 틀렸습니다.' });
       else if (st === 423)
-        notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
+        return notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
       else if (st === 409)
-        notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
+        return notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
       else
-        notify({
+        return notify({
           type: 'error',
           text: '비밀번호 확인 중 오류가 발생했습니다.',
         });
-    } finally {
-      setIsPasswordModalOpen(false);
     }
   };
 
   return (
-    <div className="w-screen h-screen mt-10 p-20 py-10">
+    <div className="w-screen h-screen mt-20 p-20 py-10">
       <div className="flex items-end justify-between mb-5">
         <div className="flex items-center gap-2">
           <h1 className="display-medium text-gray-0">방 목록</h1>
@@ -167,7 +167,7 @@ const RoomListPage = () => {
         </div>
       </div>
 
-      <div className="max-h-[500px] overflow-y-auto ">
+      <div className="max-h-[550px] overflow-y-auto ">
         {rooms.map((room, idx) => (
           <div
             key={idx}
@@ -227,7 +227,7 @@ const RoomListPage = () => {
         {isCodeModalOpen && (
           <InputModal
             title="방 코드 입력"
-            placeholder="방 코드를 입력하세요"
+            placeholder="방 코드 입력"
             onSubmit={handleSubmitCode}
             onClose={() => setIsCodeModalOpen(false)}
           />
@@ -237,7 +237,8 @@ const RoomListPage = () => {
         {isPasswordModalOpen && (
           <InputModal
             title="비밀번호 입력"
-            placeholder="비밀번호를 입력하세요"
+            placeholder="비밀번호 4자리 숫자 입력"
+            numeric
             onSubmit={(pwd) => handleSubmitPassword(selectedRoomCode, pwd)}
             onClose={() => setIsPasswordModalOpen(false)}
           />

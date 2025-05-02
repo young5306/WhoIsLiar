@@ -46,7 +46,7 @@ const RuleBookPage = () => {
       <div className="absolute bottom-17 left-1/2 -translate-x-1/2 flex items-center gap-6 z-20">
         <div className="w-[40px] flex justify-center">
           {pageIndex > 0 ? (
-            <button onClick={handlePrev}>
+            <button onClick={handlePrev} className="cursor-pointer">
               <div className="w-0 h-0 border-y-[17px] border-r-[25px] border-y-transparent border-r-point-rulebook1 hover:border-r-point-rulebook2 drop-shadow-lg transition" />
             </button>
           ) : null}
@@ -58,7 +58,7 @@ const RuleBookPage = () => {
 
         <div className="w-[40px] flex justify-center">
           {pageIndex < pageImages.length - 1 ? (
-            <button onClick={handleNext}>
+            <button onClick={handleNext} className="cursor-pointer">
               <div className="w-0 h-0 border-y-[17px] border-l-[25px] border-y-transparent border-l-point-rulebook1 hover:border-l-point-rulebook2 drop-shadow-lg transition" />
             </button>
           ) : null}
