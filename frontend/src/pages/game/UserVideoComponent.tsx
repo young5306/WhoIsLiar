@@ -1,21 +1,15 @@
 import React from 'react';
 import { StreamManager } from 'openvidu-browser';
 import OpenViduVideoComponent from './OvVideo';
-// import './UserVideo.css';
 
-// props 타입 정의
 interface UserVideoComponentProps {
   streamManager: StreamManager;
 }
 
-/**
- * UserVideoComponent
- * - 스트림 매니저를 받아 비디오와 닉네임을 표시하는 컴포넌트
- */
 const UserVideoComponent: React.FC<UserVideoComponentProps> = ({
   streamManager,
 }) => {
-  // 사용자 닉네임 추출 함수
+  // 사용자 닉네임 추출
   const getNicknameTag = () => {
     // OpenVidu의 connection.data에서 clientData(닉네임) 추출
     try {
