@@ -2,9 +2,10 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import GameButton from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { useRoomStore } from '../../stores/useRoomStore';
-import { VideoOff, Video, Mic, MicOff } from 'lucide-react';
+import { VideoOff, Video, Mic, MicOff, Crown, Copy, Check } from 'lucide-react';
 import { getRoomData } from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { Scrollbars } from 'react-custom-scrollbars-2';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('random');
@@ -40,6 +41,8 @@ const WaitingRoomContent = () => {
   >([]);
   const [chatInput, setChatInput] = useState<string>('');
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<Scrollbars>(null);
   const [roomData, setRoomData] = useState<{
     roomInfo: {
       roomName: string;
@@ -58,6 +61,7 @@ const WaitingRoomContent = () => {
       isActive: boolean;
     }>;
   } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -273,13 +277,13 @@ const WaitingRoomContent = () => {
             const message = JSON.parse(frame.body);
             // 중복 메시지 체크
             setChatMessages((prev) => {
-              const isDuplicate = prev.some(
-                (msg) =>
-                  msg.sender === message.sender &&
-                  msg.content === message.content &&
-                  msg.chatType === message.chatType
-              );
-              if (isDuplicate) return prev;
+              // const isDuplicate = prev.some(
+              //   (msg) =>
+              //     msg.sender === message.sender &&
+              //     msg.content === message.content &&
+              //     msg.chatType === message.chatType
+              // );
+              // if (isDuplicate) return prev;
               return [...prev, message];
             });
           }
@@ -339,6 +343,14 @@ const WaitingRoomContent = () => {
     }
   };
 
+  // 새 메시지가 올 때마다 스크롤을 맨 아래로 이동
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
@@ -352,19 +364,47 @@ const WaitingRoomContent = () => {
     // 웹소켓으로 메시지 전송
     contextSend(chatInput, userInfo?.nickname || 'Unknown', 'NORMAL');
     setChatInput('');
+
+    // 메시지 전송 후 스크롤을 맨 아래로 이동
+    setTimeout(() => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop =
+          chatContainerRef.current.scrollHeight;
+      }
+    }, 100);
+  };
+
+  const copyRoomCode = () => {
+    if (roomData?.roomInfo.roomCode) {
+      navigator.clipboard.writeText(roomData.roomInfo.roomCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
     <div className="w-screen h-screen flex overflow-hidden p-20 py-10">
       {/* Left section */}
-      <div className="flex-1 flex-col px-10">
+      <div className="flex-1 flex-col px-10 h-[calc(100vh-8rem)]">
         {/* Header */}
-        <div className="flex items-center mb-6">
-          <div className="text-white headline-large">
+        <div className="flex items-center mb-8">
+          <div className="text-white text-2xl font-bold bg-gray-800/50 backdrop-blur-sm px-6 py-1 rounded-xl">
             {roomData?.roomInfo.roomName || '게임방'}
           </div>
-          <div className="text-white body-medium ml-3">
-            Code : {roomData?.roomInfo.roomCode || '로딩중...'}
+          <div className="flex items-center gap-2 ml-4 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
+            <span className="text-white body-medium">
+              Code: {roomData?.roomInfo.roomCode || '로딩중...'}
+            </span>
+            <button
+              onClick={copyRoomCode}
+              className="text-white hover:text-rose-500 transition-colors duration-200 cursor-pointer"
+            >
+              {copied ? (
+                <Check className="w-5 h-5" />
+              ) : (
+                <Copy className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -378,7 +418,7 @@ const WaitingRoomContent = () => {
               height={36}
               className="text-rose-600"
             />
-            <div className="text-primary-600 headline-large">플레이어</div>
+            <div className="text-primary-600 headline-medium">플레이어</div>
           </div>
           <div className="text-primary-600 headline-large ml-4">
             {roomData ? `${roomData.roomInfo.playerCount}/6` : '로딩중...'}
@@ -386,7 +426,7 @@ const WaitingRoomContent = () => {
         </div>
 
         {/* Player and analysis section */}
-        <div className="flex mb-10 gap-6">
+        <div className="flex mb-8 gap-6">
           {/* Player profile */}
           <div className="flex flex-col">
             <div className="w-72 h-60 rounded-2xl overflow-hidden bg-gray-800 mb-2 relative">
@@ -451,7 +491,7 @@ const WaitingRoomContent = () => {
           </div>
 
           {/* Emotion analysis box */}
-          <div className="w-40 h-80 rounded-2xl flex flex-col items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
+          <div className="w-80 h-80 rounded-2xl flex flex-col items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
             <div className="w-full h-48 mb-4 relative">
               <svg
                 viewBox="0 0 100 100"
@@ -530,42 +570,56 @@ const WaitingRoomContent = () => {
           </div>
 
           {/* Player list */}
-          <div className="ml-6 space-y-4 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 w-48">
+          <div className="ml-6 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 w-80 h-80">
             <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] mb-3 border-b border-gray-700 pb-2">
               참여자 ({roomData?.participants.length || 0}/6)
             </div>
-            {roomData?.participants.map((participant) => (
-              <div
-                key={participant.participantId}
-                className="flex items-center gap-2 hover:bg-gray-700/50 p-2 rounded-lg transition-colors duration-200"
-              >
-                <img
-                  src="/assets/people-fill.svg"
-                  alt="people"
-                  width={24}
-                  height={24}
-                  className="text-rose-600"
-                />
-                <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR']">
-                  {participant.nickName}
+            <div className="grid grid-cols-2 grid-rows-3 gap-2 h-[calc(100%-40px)]">
+              {roomData?.participants.map((participant) => (
+                <div
+                  key={participant.participantId}
+                  className="flex items-center gap-2 hover:bg-gray-700/50 p-2 rounded-lg transition-colors duration-200"
+                >
+                  {participant.nickName === roomData.roomInfo.hostNickname ? (
+                    <Crown className="w-6 h-6 text-yellow-500" />
+                  ) : (
+                    <img
+                      src="/assets/people-fill.svg"
+                      alt="participant"
+                      width={24}
+                      height={24}
+                      className="text-rose-600"
+                    />
+                  )}
+                  <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] truncate">
+                    {participant.nickName}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Category section */}
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <img
-              src="/assets/category.svg"
-              alt="category"
-              width={36}
-              height={36}
-            />
-            <div className="text-primary-600 headline-large">
-              제시어 카테고리
+        <div className="flex flex-col w-250">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <img
+                src="/assets/category.svg"
+                alt="category"
+                width={36}
+                height={36}
+              />
+              <div className="text-primary-600 headline-large">
+                제시어 카테고리
+              </div>
             </div>
+            <GameButton
+              text="게임시작"
+              onClick={() => {
+                console.log('Selected category:', selectedCategory);
+              }}
+            />
           </div>
 
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6">
@@ -574,7 +628,7 @@ const WaitingRoomContent = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] cursor-pointer  transition-all duration-200
+                  className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] cursor-pointer transition-all duration-200
                     ${
                       selectedCategory === category.id
                         ? 'text-rose-500 font-bold scale-110 [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
@@ -592,29 +646,45 @@ const WaitingRoomContent = () => {
 
       {/* Right section - Chat */}
       <div className="w-1/4 ml-6 flex flex-col">
-        <div className="flex-1 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex flex-col">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex flex-col h-[calc(100vh-8rem)]">
           <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] mb-3 border-b border-gray-700 pb-2">
             채팅
           </div>
-          <div className="flex-1 space-y-4 overflow-y-auto">
-            {chatMessages.map((msg, index) => (
-              <div key={index} className="flex flex-col">
-                <span
-                  className={`font-bold ${
-                    msg.sender === 'System' ? 'text-gray-300' : 'text-green-500'
-                  }`}
-                >
-                  {msg.sender}
-                </span>
-                <span
-                  className={
-                    msg.sender === 'System' ? 'text-white' : 'text-green-500'
-                  }
-                >
-                  {msg.content}
-                </span>
-              </div>
-            ))}
+          <div
+            className="relative flex-1"
+            style={{ height: 'calc(100% - 120px)' }}
+          >
+            <div
+              ref={chatContainerRef}
+              className="absolute inset-0 space-y-4 overflow-y-auto pr-2 custom-scrollbar"
+            >
+              {chatMessages.map((msg, index) => (
+                <div key={index} className="flex flex-col">
+                  <span
+                    className={`font-bold ${
+                      msg.sender === 'System'
+                        ? 'text-primary-500'
+                        : msg.sender === userInfo?.nickname
+                          ? 'text-green-500'
+                          : 'text-white'
+                    }`}
+                  >
+                    {msg.sender}
+                  </span>
+                  <span
+                    className={
+                      msg.sender === 'System'
+                        ? 'text-rose-500'
+                        : msg.sender === userInfo?.nickname
+                          ? 'text-green-500'
+                          : 'text-white'
+                    }
+                  >
+                    {msg.content}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
           <form onSubmit={handleSendMessage} className="mt-4">
             <div className="flex gap-2">
@@ -634,17 +704,6 @@ const WaitingRoomContent = () => {
               </button>
             </div>
           </form>
-        </div>
-
-        {/* Exit / Start button */}
-        <div className="flex justify-end mt-4">
-          <GameButton
-            text="시작"
-            onClick={() => {
-              // TODO: 게임 시작 요청 시 selectedCategory 포함
-              console.log('Selected category:', selectedCategory);
-            }}
-          />
         </div>
       </div>
     </div>
