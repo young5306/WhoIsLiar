@@ -110,12 +110,21 @@ public class RoomService {
 	}
 
 	// 코드로 방 입장
-	public RoomJoinResponse joinRoomByCode(RoomJoinByCodeRequest request) {
+	public void joinRoomByCode(RoomJoinByCodeRequest request) {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (room.getRoomStatus() == RoomStatus.playing) {
+			throw new CustomException(ResponseCode.ROOM_PLAYING);
+		}
+
+		int currentParticipants = participantRepository.countByRoom(room);
+		if (currentParticipants >= 6) {
+			throw new CustomException(ResponseCode.ROOM_FULL);
+		}
 
 		Participant participant = Participant.builder()
 			.session(session)
@@ -125,34 +134,10 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
-
-		List<Participant> participants = participantRepository.findByRoom(room);
-
-		RoomInfo roomInfo = RoomInfo.builder()
-			.roomName(room.getRoomName())
-			.roomCode(room.getRoomCode())
-			.isSecret(room.getPassword() != null)
-			.playerCount(participants.size()) // 생성자는 무조건 1명 (자기 자신)
-			.roundCount(room.getRoundCount())
-			.mode(room.getMode().name())
-			.category(room.getCategory().name())
-			.hostNickname(SecurityUtils.getCurrentNickname())
-			.status(room.getRoomStatus().name())
-			.build();
-
-		List<ParticipantInfo> participantInfos = participants.stream()
-			.map(p -> new ParticipantInfo(
-				p.getId(),
-				p.getSession().getNickname(),
-				p.isActive()
-			))
-			.collect(toList());
-
-		return new RoomJoinResponse(roomInfo, participantInfos);
 	}
 
 	// 비밀번호로 방 입장
-	public RoomJoinResponse joinRoomByPassword(RoomJoinByPasswordRequest request) {
+	public void joinRoomByPassword(RoomJoinByPasswordRequest request) {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
@@ -161,6 +146,15 @@ public class RoomService {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		if (room.getRoomStatus() == RoomStatus.playing) {
+			throw new CustomException(ResponseCode.ROOM_PLAYING);
+		}
+
+		int currentParticipants = participantRepository.countByRoom(room);
+		if (currentParticipants >= 6) {
+			throw new CustomException(ResponseCode.ROOM_FULL);
+		}
+
 		Participant participant = Participant.builder()
 			.session(session)
 			.room(room)
@@ -169,30 +163,6 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
-
-		List<Participant> participants = participantRepository.findByRoom(room);
-
-		RoomInfo roomInfo = RoomInfo.builder()
-			.roomName(room.getRoomName())
-			.roomCode(room.getRoomCode())
-			.isSecret(room.getPassword() != null)
-			.playerCount(participants.size()) // 생성자는 무조건 1명 (자기 자신)
-			.roundCount(room.getRoundCount())
-			.mode(room.getMode().name())
-			.category(room.getCategory().name())
-			.hostNickname(SecurityUtils.getCurrentNickname())
-			.status(room.getRoomStatus().name())
-			.build();
-
-		List<ParticipantInfo> participantInfos = participants.stream()
-			.map(p -> new ParticipantInfo(
-				p.getId(),
-				p.getSession().getNickname(),
-				p.isActive()
-			))
-			.collect(toList());
-
-		return new RoomJoinResponse(roomInfo, participantInfos);
 	}
 
 	// 비밀번호 확인
@@ -208,7 +178,7 @@ public class RoomService {
 		List<Room> rooms = roomRepository.findAll();
 		List<RoomInfo> roomInfos = rooms.stream()
 			.map(room -> {
-				int count = (int)(participantRepository.countByRoom(room));
+				int count = participantRepository.countByRoom(room);
 				return RoomInfo.builder()
 					.roomName(room.getRoomName())
 					.roomCode(room.getRoomCode())
@@ -246,7 +216,7 @@ public class RoomService {
 		var rooms = roomRepository.findByRoomNameContaining(roomName);
 		var result = rooms.stream()
 			.map(room -> {
-				int count = (int)(participantRepository.countByRoom(room) + 1);
+				int count = participantRepository.countByRoom(room) + 1;
 				return new RoomSearchResponse(
 					room.getRoomName(),
 					room.getSession().getNickname(),
@@ -267,7 +237,7 @@ public class RoomService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		// 1) RoomInfo 생성 (참여자 수 = 참가 테이블 수 + 1(호스트))
-		int participantCount = (int)(participantRepository.countByRoom(room));
+		int participantCount = participantRepository.countByRoom(room);
 		RoomInfo info = RoomInfo.builder()
 			.roomName(room.getRoomName())
 			.roomCode(room.getRoomCode())
