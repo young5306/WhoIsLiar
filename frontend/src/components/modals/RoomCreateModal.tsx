@@ -17,7 +17,8 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const { setRoomCode } = useRoomStore();
   const hostNickname = userInfo?.nickname;
 
-  const [mode, setMode] = useState<'VIDEO' | 'BLIND'>('VIDEO');
+  const [videoMode, setVideoMode] = useState<'VIDEO' | 'BLIND'>('VIDEO');
+  const [gameMode, setGameMode] = useState<'DEFAULT' | 'FOOL'>('DEFAULT');
   const [roomName, setRoomName] = useState('');
   const [isSecret, setIsSecret] = useState(false);
   const [password, setPassword] = useState('');
@@ -26,7 +27,10 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleCreate = async () => {
-    if (!mode) return notify({ type: 'warning', text: '모드를 선택해주세요.' });
+    if (!videoMode)
+      return notify({ type: 'warning', text: '화면모드를 선택해주세요.' });
+    if (!gameMode)
+      return notify({ type: 'warning', text: '게임모드를 선택해주세요.' });
     if (!roomName)
       return notify({ type: 'warning', text: '방 제목을 입력해주세요.' });
     if (!roundCount)
@@ -39,7 +43,8 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
     const params = {
       hostNickname: hostNickname ?? '',
-      mode,
+      videoMode,
+      gameMode,
       roomName,
       password: isSecret ? password : '',
       roundCount,
@@ -76,8 +81,13 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             <div className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[300px] text-sm">
               <h3 className="body-medium mb-2">도움말</h3>
               <p>
-                일반 모드는 화면을 공유하는 모드, 블라인드 모드는 화면을
+                비디오 모드는 화면을 공유하는 모드, 블라인드 모드는 화면을
                 공유하지 않는 모드입니다.
+                <br />
+                <br />
+                일반 모드는 라이어에게 라이어임을 알리고 제시어를 제공하지 않는
+                모드, 바보 모드는 라이어에게 라이어임을 알리지 않고 다른
+                제시어를 제공하는 모드입니다.
                 <br />
                 <br />
                 방제목과 라운드 수는 필수, 비밀번호 설정은 선택 항목입니다.
@@ -94,24 +104,80 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
         <h2 className="display-medium text-center mb-4">방 만들기</h2>
 
-        <div className="flex justify-center gap-4 mb-4">
+        {/* <div className="flex justify-center gap-4 mb-4">
           <button
-            onClick={() => setMode('VIDEO')}
-            className={`p-2 rounded-md border-3 cursor-pointer ${mode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            onClick={() => setVideoMode('VIDEO')}
+            className={`p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
           >
             <img src="assets/videoMode.png" alt="일반모드" />
             <p className="body-medium mt-2 text-primary-600">일반 모드</p>
           </button>
           <button
-            onClick={() => setMode('BLIND')}
-            className={`p-2 rounded-md border-3 cursor-pointer ${mode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            onClick={() => setVideoMode('BLIND')}
+            className={`p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
           >
             <img src="assets/blindMode.png" alt="블라인드모드" />
             <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
           </button>
+        </div> */}
+
+        <div className="mb-4">
+          <h3 className="headline-large mb-2">화면모드</h3>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setVideoMode('VIDEO')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/videoMode.png"
+                alt="비디오 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">비디오 모드</p>
+            </button>
+            <button
+              onClick={() => setVideoMode('BLIND')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/blindMode.png"
+                alt="블라인드 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-6 mb-3 text-primary-600 headline-xlarge">
+        <div className="mb-4">
+          <h3 className="headline-large mb-2">게임모드</h3>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setGameMode('DEFAULT')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/defaultMode.png"
+                alt="일반 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">일반 모드</p>
+            </button>
+            <button
+              onClick={() => setGameMode('FOOL')}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+            >
+              <img
+                src="assets/foolMode.png"
+                alt="바보 모드"
+                className="w-30 mx-auto"
+              />
+              <p className="body-medium mt-2 text-primary-600">바보 모드</p>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6 mb-3 text-primary-600 headline-large">
           <div className="flex items-center gap-4">
             <label className="w-30">방 제목</label>
             <input
