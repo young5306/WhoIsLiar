@@ -17,8 +17,12 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
   const { setRoomCode } = useRoomStore();
   const hostNickname = userInfo?.nickname;
 
-  const [videoMode, setVideoMode] = useState<'VIDEO' | 'BLIND'>('VIDEO');
-  const [gameMode, setGameMode] = useState<'DEFAULT' | 'FOOL'>('DEFAULT');
+  const [videoMode, setVideoMode] = useState<'VIDEO' | 'BLIND' | undefined>(
+    undefined
+  );
+  const [gameMode, setGameMode] = useState<'DEFAULT' | 'FOOL' | undefined>(
+    undefined
+  );
   const [roomName, setRoomName] = useState('');
   const [isSecret, setIsSecret] = useState(false);
   const [password, setPassword] = useState('');
@@ -121,7 +125,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
           <div className="flex justify-center gap-4">
             <button
               onClick={() => setVideoMode('VIDEO')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-point-button1'}`}
+              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-gray-300/20'}`}
             >
               <img
                 src="assets/videoMode.png"
@@ -177,10 +181,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             <label className="w-30">방 제목</label>
             <input
               type="text"
-              placeholder="방 제목을 입력하세요"
+              placeholder="방 제목 입력 (최대 15자)"
               value={roomName}
+              maxLength={15}
               onChange={(e) => setRoomName(e.target.value)}
-              className={`w-full flex-1 border-3 rounded-lg px-3 py-2 placeholder-point-button1 bg-gray-900/20 outline-none 
+              className={`w-full flex-1 border-3 rounded-lg p-2 placeholder-gray-300/40 headline-medium text-gray-0 bg-gray-0/20  outline-none 
                 ${roomName ? 'border-primary-600' : 'border-point-button1'} 
                 focus:border-primary-600`}
             />
@@ -216,7 +221,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
               placeholder="4자리 숫자 비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`flex-1 min-w-0 border-3 rounded-lg px-2 py-1 placeholder-point-button1 bg-gray-900/20 outline-none
+              className={`flex-1 min-w-0 border-3 rounded-lg p-2 placeholder-gray-300/40 headline-medium text-gray-0 bg-gray-0/20 outline-none
                 ${isSecret ? '' : 'invisible pointer-events-none'}
                 ${password ? 'border-primary-600' : 'border-point-button1'}
                 focus:border-primary-600`}

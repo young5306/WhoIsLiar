@@ -11,6 +11,7 @@ import {
 import { useRoomStore } from '../../stores/useRoomStore';
 import { notify } from '../../components/common/Toast';
 import InputModal from '../../components/modals/InputModal';
+import { Crown } from 'lucide-react';
 
 const RoomListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -176,14 +177,17 @@ const RoomListPage = () => {
             <div className="flex items-center w-full text-gray-0">
               <span className="w-20 text-center mr-8">{idx + 1}</span>
               <span className="w-[30%] truncate">{room.roomName}</span>
-              <span className="w-[20%] truncate">{room.hostNickname}</span>
+              <div className="w-[20%] flex items-center justify-start">
+                <Crown className="w-9 text-gray-0" />
+                <span className="truncate">{room.hostNickname}</span>
+              </div>
 
               <div className="flex justify-between flex-1 items-center">
                 <div className="w-30 flex items-center justify-start">
                   <img src="assets/people-white.svg" className="w-9 mr-2" />
                   <span>{room.playerCount}/6</span>
                 </div>
-                <span className="w-24 text-center">
+                <span className="w-30 text-center">
                   <span
                     className={`${
                       room.status === 'waiting'
@@ -203,7 +207,7 @@ const RoomListPage = () => {
                   )}
                 </div>
 
-                <div className="w-24 flex justify-end">
+                <div className="w-30 flex justify-end">
                   <GameButton
                     text="입장"
                     size="small"
