@@ -28,5 +28,5 @@ cors:
     - http://localhost:5173
 
 openvidu:
-  url:    ${openvidu.url}
-  secret: ${openvidu.secret}
+  url:    ${OPENVIDU_URL}
+  secret: ${OPENVIDU_SECRET}
