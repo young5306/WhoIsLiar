@@ -14,7 +14,6 @@ import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomInfo;
-import com.ssafy.backend.domain.room.dto.response.RoomJoinResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomSearchResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;

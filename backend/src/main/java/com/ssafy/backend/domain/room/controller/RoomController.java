@@ -8,7 +8,6 @@ import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
 import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
-import com.ssafy.backend.domain.room.dto.response.RoomJoinResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;
 import com.ssafy.backend.domain.room.service.RoomService;
@@ -54,8 +53,7 @@ public class RoomController {
 
 	@Operation(summary = "코드로 방 입장", description = "코드로 방에 입장합니다.")
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "입장 성공",
-			content = @Content(schema = @Schema(implementation = RoomJoinResponse.class))),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "입장 성공", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청(파라미터 누락·형식 오류)", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
@@ -63,15 +61,14 @@ public class RoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/join/code")
-	public ResponseEntity<ApiResponse<RoomJoinResponse>> joinRoomByCode(@RequestBody RoomJoinByCodeRequest request) {
+	public ResponseEntity<ApiResponse<Void>> joinRoomByCode(@RequestBody RoomJoinByCodeRequest request) {
 		roomService.joinRoomByCode(request);
 		return ok(null);
 	}
 
 	@Operation(summary = "비밀번호로 방 입장", description = "비밀번호로 방에 입장합니다.")
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "입장 성공",
-			content = @Content(schema = @Schema(implementation = RoomJoinResponse.class))),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "입장 성공", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청(파라미터 누락·형식 오류)", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "비밀번호 불일치 또는 권한 없음", content = @Content),
@@ -79,7 +76,7 @@ public class RoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/join/password")
-	public ResponseEntity<ApiResponse<RoomJoinResponse>> joinRoomByPassword(@RequestBody RoomJoinByPasswordRequest request) {
+	public ResponseEntity<ApiResponse<Void>> joinRoomByPassword(@RequestBody RoomJoinByPasswordRequest request) {
 		roomService.joinRoomByPassword(request);
 		return ok(null);
 	}
