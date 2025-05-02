@@ -1,15 +1,3 @@
-// import React from "react";
-
-// const OpenViduVideoComponent = () => {
-//   return (
-//     <>
-//       <div>OpenViduVideoComponent</div>
-//     </>
-//   );
-// };
-
-// export default OpenViduVideoComponent;
-
 import React, { useEffect, useRef } from 'react';
 import { StreamManager } from 'openvidu-browser';
 
