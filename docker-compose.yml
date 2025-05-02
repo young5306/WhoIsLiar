@@ -66,6 +66,26 @@ services:
       - backend
     networks:
       - app-network
+  openvidu:
+    image: openvidu/openvidu-server-kms:latest
+    container_name: openvidu
+    restart: always
+    ports:
+      - "4443:4443"  
+      - "5443:5443"  
+    environment:
+      - OPENVIDU_SECRET=MY_SECRET
+      - DOMAIN_OR_PUBLIC_IP=k12a604.p.ssafy.io
+      - CERTIFICATE_TYPE=letsencrypt
+      - LETSENCRYPT_EMAIL=your@email.com
+      - LETSENCRYPT_DOMAIN=k12a604.p.ssafy.io
+      - HTTPS=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/letsencrypt:/etc/letsencrypt  
+    networks:
+      - app-network 
+
 
 volumes:
   mysql-data:
