@@ -168,7 +168,7 @@ const RoomListPage = () => {
         </div>
       </div>
 
-      <div className="max-h-[550px] overflow-y-auto ">
+      <div className="max-h-[550px] overflow-y-auto custom-scrollbar">
         {rooms.map((room, idx) => (
           <div
             key={idx}
