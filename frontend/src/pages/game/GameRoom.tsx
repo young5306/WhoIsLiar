@@ -15,7 +15,10 @@ import {
   ExceptionEvent,
 } from 'openvidu-browser';
 // import gameRoom from './GameRoom.module.css';
-// import { data, useNavigate } from 'react-router-dom';
+import {
+  // data,
+  useNavigate,
+} from 'react-router-dom';
 import {
   getToken,
   Subscriber,
@@ -24,6 +27,7 @@ import {
   // Message,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useRoomStore } from '../../stores/useRoomStore';
 import UserVideoComponent from './UserVideoComponent';
 // import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import GameButton from '../../components/common/GameButton';
@@ -32,14 +36,16 @@ import GameControls from './GameControls';
 import GameChat from './GameChat';
 
 const GameRoom: React.FC = () => {
+  const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [myToken, setMyToken] = useState<string>('');
 
   // ck) 세션 ID는 세션을 식별하는 문자열, 입장 코드?와 비슷한 역할을 하는듯 (중복되면 안되고, 같은 세션 이이디 입력한 사람은 같은 방에 접속되며, 만약 세션 아이디가 존재하지 않는다면 새로 생성해서 세션을 오픈할 수 있게끔 한다.) -> 어떻게 생성하고 바꿀지 고민 필요
   // const [mySessionId, setMySessionId] = useState('SessionA');
-  const [mySessionId, setMySessionId] = useState(
-    `asdsad${Math.floor(Math.random() * 100)}`
-  );
+  // const [mySessionId, setMySessionId] = useState(
+  //   `asdsad${Math.floor(Math.random() * 100)}`
+  // );
+  const [mySessionId, setMySessionId] = useState('');
 
   // ck) << OpenVidu >>
   // ck) 현재 연결된 세션
@@ -82,6 +88,7 @@ const GameRoom: React.FC = () => {
   const OV = useRef<OpenVidu | null>(null);
 
   const { userInfo } = useAuthStore();
+  const { roomCode } = useRoomStore();
   useEffect(() => {
     if (userInfo?.nickname) {
       setMyUserName(userInfo.nickname);
@@ -92,7 +99,16 @@ const GameRoom: React.FC = () => {
     if (userInfo?.token) {
       setMyToken(userInfo.token);
     }
-  }, [userInfo]);
+
+    if (roomCode) {
+      setMySessionId(roomCode);
+      console.log('roomCode', roomCode);
+    } else {
+      setMySessionId('');
+      alert('게임방에 입장해주세요');
+      navigation('/room-list');
+    }
+  }, [userInfo, roomCode]);
 
   // ck) 세션ID 입력값 변경
   const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,7 +243,7 @@ const GameRoom: React.FC = () => {
 
     // ck) 세션 ID 초기화 수정
     // setMySessionId(`asdsad${Math.floor(Math.random() * 100)}`);
-    setMySessionId(`asdsad7`);
+    setMySessionId(roomCode || '');
     // ck) 사용자 이름 초기화 수정
     setMyUserName(
       userInfo?.nickname || 'Participant' + Math.floor(Math.random() * 100)

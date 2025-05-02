@@ -46,18 +46,16 @@ export const getToken = async (
 };
 
 export const createSessionApi = async (
-  userName: string,
   sessionId: string,
   accessToken: string
 ): Promise<string> => {
   try {
-    console.log('createSessionApi-userName', userName);
     // ck) 실제 세션 발급받는 api로 변경
     const response = await axios.post(
       APPLICATION_SERVER_URL + '/openvidu/sessions',
       // { customSessionId: sessionId },
       // { roomId: sessionId, nickname: userName },
-      { roomId: sessionId, nickname: userName },
+      { roomCode: sessionId },
       {
         headers: {
           'Content-Type': 'application/json',
