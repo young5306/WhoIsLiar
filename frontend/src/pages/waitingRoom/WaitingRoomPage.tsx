@@ -2,11 +2,13 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import GameButton from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { useRoomStore } from '../../stores/useRoomStore';
-// import { useAuthStore } from '../../stores/useAuthStore';
 import { VideoOff, Video, Mic, MicOff } from 'lucide-react';
 import { getRoomData } from '../../services/api/RoomService';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 const WaitingRoomContent = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string>('random');
+
   const categories = [
     { label: '랜덤', id: 'random' },
     { label: '물건', id: 'object' },
@@ -15,21 +17,18 @@ const WaitingRoomContent = () => {
     { label: '나라', id: 'country' },
     { label: '스포츠', id: 'sports' },
     { label: '직업', id: 'job' },
-    { label: '동물', id: 'animal', highlight: true },
+    { label: '동물', id: 'animal' },
     { label: '노래', id: 'song' },
     { label: '장소', id: 'place' },
     { label: '영화/드라마', id: 'movie' },
     { label: '브랜드', id: 'brand' },
   ];
 
-  // const { userInfo } = useAuthStore();
-  // console.log('userInfo', userInfo); // Zustand로 가져오기
+  const { userInfo } = useAuthStore();
 
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
   const [audioLevel, setAudioLevel] = useState<number>(0);
-  // eslint-disable-next-line
-  const [vitalData, setVitalData] = useState<number[]>(Array(100).fill(50));
   const [barHeights, setBarHeights] = useState<number[]>(Array(20).fill(2));
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -37,29 +36,32 @@ const WaitingRoomContent = () => {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [chatMessages, setChatMessages] = useState<
-    Array<{ sender: string; content: string }>
+    Array<{ sender: string; content: string; chatType: string }>
   >([]);
+  const [chatInput, setChatInput] = useState<string>('');
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const [roomData, setRoomData] = useState<{
+    roomInfo: {
+      roomName: string;
+      roomCode: string;
+      isSecret: boolean;
+      playerCount: number;
+      roundCount: number;
+      mode: string;
+      category: string;
+      hostNickname: string;
+      status: string;
+    };
+    participants: Array<{
+      participantId: number;
+      nickName: string;
+      isActive: boolean;
+    }>;
+  } | null>(null);
 
   const updateVitalData = useCallback(() => {
-    setVitalData((prevData) => {
-      // 이전 데이터를 왼쪽으로 한 칸씩 이동
-      const newData = [...prevData.slice(1), 50];
-
-      // 새로운 값 생성 (심전도 스타일)
-      if (isMicOn && audioLevel > 5) {
-        const lastIndex = newData.length - 1;
-        // 심전도 파형 스타일로 변경 (R파, P파, T파 등)
-        newData[lastIndex - 3] = 50 - audioLevel / 8; // P파
-        newData[lastIndex - 2] = 50 + audioLevel / 8; // Q파
-        newData[lastIndex - 1] = 50 - audioLevel / 1.5; // R파 (큰 피크)
-        newData[lastIndex] = 50 + audioLevel / 4; // S파
-      }
-
-      return newData;
-    });
-
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
-  }, [audioLevel, isMicOn]);
+  }, []);
 
   // 컴포넌트 마운트 시 애니메이션 시작
   useEffect(() => {
@@ -139,11 +141,9 @@ const WaitingRoomContent = () => {
       setAudioLevel(0);
     } else {
       try {
-        console.log('Requesting microphone...');
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
-        console.log('Microphone granted:', stream);
 
         if (mediaStreamRef.current) {
           stream.getAudioTracks().forEach((track) => {
@@ -162,7 +162,6 @@ const WaitingRoomContent = () => {
 
   const checkMediaDevices = async () => {
     try {
-      console.log('Requesting media devices...');
       // 카메라와 마이크 동시에 요청
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -172,11 +171,9 @@ const WaitingRoomContent = () => {
         },
         audio: true,
       });
-      console.log('Media devices granted:', stream);
 
       // 카메라 설정
       if (videoRef.current) {
-        console.log('Setting video source...');
         // 기존 스트림 정리
         if (videoRef.current.srcObject) {
           const oldStream = videoRef.current.srcObject as MediaStream;
@@ -190,7 +187,6 @@ const WaitingRoomContent = () => {
         // 비디오 재생 시작
         try {
           await videoRef.current.play();
-          console.log('Video playback started');
           setIsCameraOn(true);
         } catch (error) {
           console.error('Failed to start video playback:', error);
@@ -208,7 +204,6 @@ const WaitingRoomContent = () => {
   // 비디오 요소가 마운트될 때 실행되는 useEffect
   useEffect(() => {
     if (videoRef.current && isCameraOn && mediaStreamRef.current) {
-      console.log('Video element mounted, setting up stream...');
       videoRef.current.srcObject = mediaStreamRef.current;
       videoRef.current.play().catch(console.error);
     }
@@ -241,14 +236,11 @@ const WaitingRoomContent = () => {
   } = useWebSocketContext();
 
   useEffect(() => {
-    console.log('WaitingRoomContent mounted');
-    console.log('Current roomCode:', contextRoomCode);
-
     const fetchRoomData = async () => {
       if (contextRoomCode) {
         try {
-          const roomData = await getRoomData(contextRoomCode);
-          console.log('Room data fetched:', roomData);
+          const response = await getRoomData(contextRoomCode);
+          setRoomData(response);
         } catch (error) {
           console.error('Failed to fetch room data:', error);
         }
@@ -262,25 +254,51 @@ const WaitingRoomContent = () => {
       return;
     }
 
-    console.log('연결 시도:', contextRoomCode);
     // 웹소켓 연결
-    connect(contextRoomCode);
+    let subscription: any = null;
 
-    // 연결이 성공하면 메시지 전송
-    if (isConnected) {
-      // 서버에 입장 메시지 전송
-      contextSend('입장했습니다.', 'System');
-      console.log('메시지 전송 완료');
+    const setupWebSocket = () => {
+      connect(contextRoomCode);
 
-      // 채팅 메시지 구독
-      if (stompClient) {
-        stompClient.subscribe(`/topic/room.${contextRoomCode}`, (frame) => {
-          const message = JSON.parse(frame.body);
-          setChatMessages((prev) => [...prev, message]);
-        });
+      if (isConnected && stompClient) {
+        // 이미 구독이 있다면 해제
+        if (subscription) {
+          subscription.unsubscribe();
+        }
+
+        // 새로운 구독 설정
+        subscription = stompClient.subscribe(
+          `/topic/room.${contextRoomCode}`,
+          (frame) => {
+            const message = JSON.parse(frame.body);
+            // 중복 메시지 체크
+            setChatMessages((prev) => {
+              const isDuplicate = prev.some(
+                (msg) =>
+                  msg.sender === message.sender &&
+                  msg.content === message.content &&
+                  msg.chatType === message.chatType
+              );
+              if (isDuplicate) return prev;
+              return [...prev, message];
+            });
+          }
+        );
+
+        // 서버에 입장 메시지 전송
+        contextSend('입장했습니다.', 'System', 'SYSTEM');
       }
-    }
-  }, [contextRoomCode, connect, contextSend, isConnected, stompClient]);
+    };
+
+    setupWebSocket();
+
+    // cleanup 함수
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [contextRoomCode, connect, isConnected, stompClient, contextSend]);
 
   const toggleCamera = async () => {
     if (isCameraOn) {
@@ -296,7 +314,6 @@ const WaitingRoomContent = () => {
       setIsCameraOn(false);
     } else {
       try {
-        console.log('Requesting camera...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280 },
@@ -304,17 +321,14 @@ const WaitingRoomContent = () => {
             facingMode: 'user',
           },
         });
-        console.log('Camera granted:', stream);
 
         mediaStreamRef.current = stream;
         setIsCameraOn(true);
 
         if (videoRef.current) {
-          console.log('Setting video source...');
           videoRef.current.srcObject = stream;
           try {
             await videoRef.current.play();
-            console.log('Video playback started');
           } catch (error) {
             console.error('Failed to start video playback:', error);
           }
@@ -325,15 +339,32 @@ const WaitingRoomContent = () => {
     }
   };
 
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // 웹소켓 연결 상태 확인
+    if (!isConnected) {
+      console.warn('WebSocket이 연결되지 않았습니다.');
+      return;
+    }
+
+    // 웹소켓으로 메시지 전송
+    contextSend(chatInput, userInfo?.nickname || 'Unknown', 'NORMAL');
+    setChatInput('');
+  };
+
   return (
     <div className="w-screen h-screen flex overflow-hidden p-20 py-10">
       {/* Left section */}
       <div className="flex-1 flex-col px-10">
         {/* Header */}
         <div className="flex items-center mb-6">
-          <div className="text-white headline-large">게임방 제목</div>
+          <div className="text-white headline-large">
+            {roomData?.roomInfo.roomName || '게임방'}
+          </div>
           <div className="text-white body-medium ml-3">
-            Code : 1234 587 8912
+            Code : {roomData?.roomInfo.roomCode || '로딩중...'}
           </div>
         </div>
 
@@ -349,7 +380,9 @@ const WaitingRoomContent = () => {
             />
             <div className="text-primary-600 headline-large">플레이어</div>
           </div>
-          <div className="text-primary-600 headline-large ml-4">5/6</div>
+          <div className="text-primary-600 headline-large ml-4">
+            {roomData ? `${roomData.roomInfo.playerCount}/6` : '로딩중...'}
+          </div>
         </div>
 
         {/* Player and analysis section */}
@@ -378,7 +411,7 @@ const WaitingRoomContent = () => {
               <div className="absolute top-3 left-3">
                 <div className="bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
                   <span className="text-white text-base font-['FUNFLOW_SURVIVOR_KR']">
-                    김싸피
+                    {userInfo?.nickname}
                   </span>
                 </div>
               </div>
@@ -499,11 +532,11 @@ const WaitingRoomContent = () => {
           {/* Player list */}
           <div className="ml-6 space-y-4 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 w-48">
             <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] mb-3 border-b border-gray-700 pb-2">
-              참여자 ({['도비', '라이어고수', '프신', '진짜시민'].length}/5)
+              참여자 ({roomData?.participants.length || 0}/6)
             </div>
-            {['도비', '라이어고수', '프신', '진짜시민'].map((name) => (
+            {roomData?.participants.map((participant) => (
               <div
-                key={name}
+                key={participant.participantId}
                 className="flex items-center gap-2 hover:bg-gray-700/50 p-2 rounded-lg transition-colors duration-200"
               >
                 <img
@@ -514,7 +547,7 @@ const WaitingRoomContent = () => {
                   className="text-rose-600"
                 />
                 <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR']">
-                  {name}
+                  {participant.nickName}
                 </div>
               </div>
             ))}
@@ -535,19 +568,22 @@ const WaitingRoomContent = () => {
             </div>
           </div>
 
-          <div className="bg-gray-200 rounded-xl p-6">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6">
             <div className="grid grid-cols-4 gap-x-12 gap-y-6">
               {categories.map((category) => (
-                <div
+                <button
                   key={category.id}
-                  className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] ${
-                    category.highlight
-                      ? 'text-rose-600 font-bold [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
-                      : 'text-white'
-                  }`}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] cursor-pointer  transition-all duration-200
+                    ${
+                      selectedCategory === category.id
+                        ? 'text-rose-500 font-bold scale-110 [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
+                        : 'text-gray-300 hover:text-white hover:scale-105'
+                    }
+                  `}
                 >
                   {category.label}
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -564,7 +600,9 @@ const WaitingRoomContent = () => {
             {chatMessages.map((msg, index) => (
               <div key={index} className="flex flex-col">
                 <span
-                  className={`font-bold ${msg.sender === 'System' ? 'text-gray-300' : 'text-green-500'}`}
+                  className={`font-bold ${
+                    msg.sender === 'System' ? 'text-gray-300' : 'text-green-500'
+                  }`}
                 >
                   {msg.sender}
                 </span>
@@ -578,14 +616,35 @@ const WaitingRoomContent = () => {
               </div>
             ))}
           </div>
-          <div className="mt-4 text-center text-sm text-gray-400">
-            채팅을 입력하세요.
-          </div>
+          <form onSubmit={handleSendMessage} className="mt-4">
+            <div className="flex gap-2">
+              <input
+                ref={chatInputRef}
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="채팅을 입력하세요."
+                className="flex-1 bg-gray-700/50 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+              <button
+                type="submit"
+                className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                전송
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Exit / Start button */}
         <div className="flex justify-end mt-4">
-          <GameButton text="시작" />
+          <GameButton
+            text="시작"
+            onClick={() => {
+              // TODO: 게임 시작 요청 시 selectedCategory 포함
+              console.log('Selected category:', selectedCategory);
+            }}
+          />
         </div>
       </div>
     </div>
