@@ -2,7 +2,8 @@ import { api } from './Api';
 
 interface createRoomRequest {
   hostNickname: string; // 방장 닉네임
-  mode: string; // 'VIDEO' or 'BLIND'
+  videoMode: string; // 'VIDEO' or 'BLIND'
+  gameMode: string; // 'DEFAULT' or 'FOOL'
   roomName: string; // 방 이름
   password: string; // 숫자 4자리
   roundCount: number; // 3, 4, 5
@@ -14,7 +15,7 @@ export interface RoomSummary {
   isSecret: boolean;
   playerCount: number;
   roundCount: number;
-  mode: 'video' | 'blind';
+  mode: 'VIDEO' | 'BLIND';
   category: string;
   hostNickname: string;
   status: 'waiting' | 'playing';

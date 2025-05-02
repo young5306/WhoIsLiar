@@ -4,6 +4,7 @@ import GameButton from '../../components/common/GameButton';
 import InputField from '../../components/common/InputField';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { loginApi } from '../../services/api/AuthService';
+import { notify } from '../../components/common/Toast';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,12 +18,13 @@ const LoginPage = () => {
 
       navigate('/room-list');
     } catch (err: any) {
-      if (err.response?.status === 409) {
-        alert('이미 사용 중인 닉네임입니다.');
-      } else if (err.response?.status === 400) {
-        alert('닉네임을 입력해주세요.');
+      const st = err?.response?.status;
+      if (st === 409) {
+        notify({ type: 'error', text: '이미 사용 중인 닉네임입니다.' });
+      } else if (st === 400) {
+        notify({ type: 'warning', text: '닉네임을 입력해주세요.' });
       } else {
-        alert('로그인 중 문제가 발생했습니다.');
+        notify({ type: 'error', text: '로그인 중 문제가 발생했습니다.' });
       }
     }
   };
@@ -31,9 +33,10 @@ const LoginPage = () => {
     <div className="flex flex-col items-center gap-6 h-screen justify-center">
       <h2 className="display-medium text-primary-600">닉네임 입력</h2>
       <InputField
-        placeholder="닉네임"
+        placeholder="닉네임 (최대 10자)"
         value={nickname}
         onChange={(e) => setNickname(e.target.value)}
+        onEnter={handleLogin}
       />
       <GameButton text="시작" onClick={handleLogin} />
     </div>
