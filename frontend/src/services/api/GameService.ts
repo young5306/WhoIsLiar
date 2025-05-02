@@ -35,11 +35,11 @@ export interface Message {
 
 // ck) 서버 통신
 export const getToken = async (
-  userName: string,
+  // userName: string,
   sessionId: string,
   accessToken: string
 ): Promise<string> => {
-  return await createSessionApi(userName, sessionId, accessToken);
+  return await createSessionApi(sessionId, accessToken);
   // console.log('getToken');
   // const createSessionId = await createSessionApi(sessionId, accessToken);
   // return await createTokenApi(createSessionId, accessToken);
