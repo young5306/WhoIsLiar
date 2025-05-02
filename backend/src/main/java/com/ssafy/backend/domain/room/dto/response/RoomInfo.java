@@ -22,8 +22,11 @@ public record RoomInfo(
 	@Schema(description = "총 라운드 수", example = "5")
 	int roundCount,
 
+	@Schema(description = "게임 모드", example = "default")
+	String gameMode,
+
 	@Schema(description = "방 모드", example = "video")
-	String mode,
+	String videoMode,
 
 	@Schema(description = "카테고리", example = "랜덤")
 	String category,

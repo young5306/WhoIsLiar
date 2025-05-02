@@ -1,5 +1,5 @@
 package com.ssafy.backend.global.enums;
 
-public enum Mode {
+public enum VideoMode {
 	VIDEO, BLIND
 }

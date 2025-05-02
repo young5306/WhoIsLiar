@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS rooms (
     room_name VARCHAR(255) NOT NULL,
     password VARCHAR(50),
     round_count INT NOT NULL,
-    mode ENUM('video', 'blind') NOT NULL,
+    video_mode ENUM('VIDEO', 'BLIND') NOT NULL,
+    game_mode ENUM('DEFAULT','FOOL') NOT NULL,
     category ENUM('랜덤', '음식', '동물', '영화/드라마', '인물', '스포츠', '노래', '브랜드') NOT NULL DEFAULT '랜덤',
     room_status ENUM('waiting', 'playing', 'finished') NOT NULL DEFAULT 'waiting',
     created_at DATETIME NOT NULL,
@@ -55,7 +56,8 @@ CREATE TABLE IF NOT EXISTS rounds (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     room_id BIGINT NOT NULL,
     round_number INT NOT NULL,
-    word VARCHAR(50) NOT NULL,
+    word1 VARCHAR(50) NOT NULL,
+    word2 VARCHAR(50) NOT NULL,
     round_status ENUM('waiting', 'hint', 'discussion', 'voting', 'finished') NOT NULL,
     winner ENUM('civil', 'liar'),
     created_at DATETIME NOT NULL,
@@ -77,3 +79,13 @@ CREATE TABLE IF NOT EXISTS participants_rounds (
     FOREIGN KEY (round_id) REFERENCES rounds(id) ON DELETE CASCADE,
     FOREIGN KEY (target_participant_id) REFERENCES participants(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS category_words (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  category ENUM(
+  '음식', '동물', '장소', '물건', '나라', '직업', '영화_드라마', '인물', '스포츠', '노래', '브랜드') NOT NULL,
+    word VARCHAR(100) NOT NULL,
+    UNIQUE KEY uk_category_word (category, word),
+    INDEX idx_category (category)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
