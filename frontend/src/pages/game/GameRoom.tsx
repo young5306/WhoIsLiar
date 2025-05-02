@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useCallback,
   // FormEvent,
-  // FormEvent,
 } from 'react';
 import {
   OpenVidu,
@@ -20,15 +19,16 @@ import {
 import {
   getToken,
   Subscriber,
-  // GameState,
-  // PlayerState,
+  GameState,
+  PlayerState,
   // Message,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import UserVideoComponent from './UserVideoComponent';
 // import { useWebSocketContext } from '../../contexts/WebSocketProvider';
-// import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import GameButton from '../../components/common/GameButton';
+import GameInfo from './GameInfo';
+import GameControls from './GameControls';
 
 const GameRoom: React.FC = () => {
   const [myUserName, setMyUserName] = useState<string>('');
@@ -44,10 +44,10 @@ const GameRoom: React.FC = () => {
   // ck) 현재 연결된 세션
   const [session, setSession] = useState<Session | undefined>(undefined);
 
-  // // ck) 메인으로 표시될 비디오 스트림 (다른 메인도 표시해줄지 아니면 본인것을 메인으로 간주할지?)
-  const [mainStreamManager, setMainStreamManager] = useState<
-    StreamManager | undefined
-  >(undefined);
+  // // // ck) 메인으로 표시될 비디오 스트림 (다른 메인도 표시해줄지 아니면 본인것을 메인으로 간주할지?)
+  // const [mainStreamManager, setMainStreamManager] = useState<
+  //   StreamManager | undefined
+  // >(undefined);
 
   // ck) 본인의 카메라/마이크 스트림
   const [publisher, setPublisher] = useState<Publisher | undefined>(undefined);
@@ -62,21 +62,21 @@ const GameRoom: React.FC = () => {
   const [currentMicDevice, setCurrentMicDevice] = useState<Device | null>(null);
 
   // ck) 카메라, 마이크 상태 관리
-  // const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  // const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
-  // const [gameState, setGameState] = useState<GameState>({
-  //   round: 1,
-  //   turn: 1,
-  //   category: '',
-  //   topic: '',
-  //   message: [],
-  // });
+  const [gameState, _setGameState] = useState<GameState>({
+    round: 1,
+    turn: 1,
+    category: '',
+    topic: '',
+    message: [],
+  });
 
-  // const [playerState, setPlayerState] = useState<PlayerState>({
-  //   currentPlayer: '',
-  //   isLiar: false,
-  // });
+  const [playerState, _setPlayerState] = useState<PlayerState>({
+    currentPlayer: '',
+    isLiar: false,
+  });
 
   const OV = useRef<OpenVidu | null>(null);
 
@@ -93,12 +93,17 @@ const GameRoom: React.FC = () => {
     }
   }, [userInfo]);
 
-  // // ck) 메인 비디오 스트림 변경
-  const handleMainVideoStream = (stream: StreamManager) => {
-    if (mainStreamManager !== stream) {
-      setMainStreamManager(stream);
-    }
+  // ck) 세션ID 입력값 변경
+  const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMySessionId(e.target.value);
   };
+
+  // // // ck) 메인 비디오 스트림 변경
+  // const handleMainVideoStream = (stream: StreamManager) => {
+  //   if (mainStreamManager !== stream) {
+  //     setMainStreamManager(stream);
+  //   }
+  // };
 
   // ck) 구독자 삭제
   const deleteSubscriber = (streamManager: StreamManager) => {
@@ -147,10 +152,8 @@ const GameRoom: React.FC = () => {
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
         audioSource: undefined,
         videoSource: undefined,
-        publishAudio: true,
-        publishVideo: true,
-        // publishAudio: isAudioEnabled,
-        // publishVideo: isVideoEnabled,
+        publishAudio: isAudioEnabled,
+        publishVideo: isVideoEnabled,
         resolution: '640x480',
         frameRate: 30,
         insertMode: 'APPEND',
@@ -251,21 +254,21 @@ const GameRoom: React.FC = () => {
     };
   }, [leaveSession]);
 
-  // const toggleAudio = () => {
-  //   if (publisher) {
-  //     const newAudioState = !isAudioEnabled;
-  //     publisher.publishAudio(newAudioState);
-  //     setIsAudioEnabled(newAudioState);
-  //   }
-  // };
+  const toggleAudio = () => {
+    if (publisher) {
+      const newAudioState = !isAudioEnabled;
+      publisher.publishAudio(newAudioState);
+      setIsAudioEnabled(newAudioState);
+    }
+  };
 
-  // const toggleVideo = () => {
-  //   if (publisher) {
-  //     const newVideoState = !isVideoEnabled;
-  //     publisher.publishVideo(newVideoState);
-  //     setIsVideoEnabled(newVideoState);
-  //   }
-  // };
+  const toggleVideo = () => {
+    if (publisher) {
+      const newVideoState = !isVideoEnabled;
+      publisher.publishVideo(newVideoState);
+      setIsVideoEnabled(newVideoState);
+    }
+  };
 
   const switchCamera = async () => {
     if (
@@ -329,26 +332,42 @@ const GameRoom: React.FC = () => {
     }
   };
 
+  const getParticipantPosition = (
+    index: number,
+    _totalParticipants: number
+  ): string => {
+    const positions = {
+      1: 'col-span-1 col-start-1 min-w-[150px]',
+      2: 'col-span-1 col-start-1 row-span-1 row-start-4 min-w-[150px]',
+      3: 'col-span-1 col-start-7 max-h-[200px] min-h-[120px] min-w-[150px]',
+      4: 'col-span-1 col-start-7 row-span-1 row-start-4 max-h-[200px] min-h-[120px] min-w-[150px]',
+      5: 'row-span-1 row-start-1 col-span-1 col-start-4 max-h-[200px] min-h-[150px] min-w-[150px]',
+      // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
+    };
+    return positions[index as keyof typeof positions] || '';
+  };
   // const getParticipantPosition = (
   //   index: number,
   //   totalParticipants: number
   // ): string => {
   //   const positions = {
-  //     1: 'col-span-1 col-start-1 row-span-2 row-start-2 min-w-[200px]',
-  //     2: 'col-span-1 col-start-1 row-span-2 row-start-4 min-w-[200px]',
-  //     3: 'col-span-1 col-start-6 row-span-2 row-start-2 min-w-[200px]',
-  //     4: 'col-span-1 col-start-6 row-span-2 row-start-4 min-w-[200px]',
-  //     5: 'row-span-2 row-start-1 min-w-[200px] justify-center',
+  //     1: 'col-span-1 col-start-1 row-span-1 row-start-2',
+  //     2: 'col-span-1 col-start-1 row-span-1 row-start-4',
+  //     3: 'col-span-1 col-start-6 row-span-1 row-start-2 max-h-[200px] min-h-[120px]',
+  //     4: 'col-span-1 col-start-6 row-span-1 row-start-4 max-h-[200px] min-h-[120px]',
+  //     5: 'row-span-1 row-start-1 flex items-center justify-center max-h-[200px] min-h-[150px]',
   //     // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
   //   };
   //   return positions[index as keyof typeof positions] || '';
   // };
 
-  // const myPosition = 'col-span-2 col-start-3 row-span-2 row-start-5';
+  // const myPosition =
+  //   'col-span-1 col-start-3 row-span-1 row-start-4 min-h-[150px]';
+  const myPosition =
+    'row-span-1 col-span-1 col-start-4 row-start-4 min-h-[150px] min-w-[150px]';
 
   return (
     <>
-      <div>GameRoom</div>
       {/* waitingRoom에서 RoomID를 받아서 그걸 SessionID에 저장 후 be에 보내기 */}
       {/* const [mySessionId, setMySessionId] = useState('SessionA'); */}
 
@@ -364,124 +383,122 @@ const GameRoom: React.FC = () => {
       => 따라서 session이 없는 상태는 대기실에 있는 상태 / session이 있는 상태는 게임 진행중인 상태
        */}
 
-      <div className="container">
-        {/* 세션이 없을 때: 참가 폼 */}
-        {session === undefined ? (
-          <div id="join">
-            <div id="join-dialog" className="jumbotron vertical-center">
-              <div className="mb-2 w-100 h-30 bg-amber-200 flex justify-center flex-col">
-                <h1 className="text-2xl mb-3 flex justify-center">
-                  게임 대기방 Waiting Room
-                </h1>
-                <div className="flex justify-center mb-2">
-                  <label>Participant: </label>
-                  {myUserName}
-                </div>
-                <div className="flex justify-center">
-                  <label>Session: </label>
-                  {mySessionId}
-                </div>
+      {/* <div className="container"> */}
+      {/* 세션이 없을 때: 참가 폼 */}
+      {session === undefined ? (
+        <div id="join">
+          <div id="join-dialog" className="jumbotron vertical-center">
+            <div className="text-white">GameRoom</div>
+            <div className="mb-2 w-100 h-30 bg-amber-200 flex justify-center flex-col">
+              <h1 className="text-2xl mb-3 flex justify-center">
+                게임 대기방 Waiting Room
+              </h1>
+              <div className="flex justify-center mb-2">
+                <label>Participant: </label>
+                {myUserName}
               </div>
-              <GameButton text="시작하기" size="small" onClick={joinSession} />
-            </div>
-          </div>
-        ) : null}
-
-        {/* 세션이 있을 때: 비디오 및 컨트롤 */}
-        {session !== undefined ? (
-          <div id="session">
-            <div id="session-header">
-              <h1 id="session-title">{mySessionId}</h1>
-              <input
-                className="btn btn-large btn-danger"
-                type="button"
-                id="buttonLeaveSession"
-                onClick={leaveSession}
-                value="Leave session"
-              />
-              <input
-                className="btn btn-large btn-success"
-                type="button"
-                id="buttonSwitchCamera"
-                onClick={switchCamera}
-                value="Switch Camera"
-              />
-            </div>
-            {mainStreamManager !== undefined ? (
-              <div id="main-video" className="col-md-6">
-                <UserVideoComponent streamManager={mainStreamManager} />
+              <div className="flex justify-center">
+                <label>Session: </label>
+                {/* {mySessionId} */}
+                <input
+                  className="form-control w-30"
+                  type="text"
+                  id="sessionId"
+                  value={mySessionId}
+                  onChange={handleChangeSessionId}
+                  required
+                />
               </div>
-            ) : null}
-            <div id="video-container" className="col-md-6">
-              {publisher !== undefined ? (
-                <div
-                  className="stream-container col-md-6 col-xs-6"
-                  onClick={() => handleMainVideoStream(publisher)}
-                >
-                  <UserVideoComponent streamManager={publisher} />
-                </div>
-              ) : null}
-              {subscribers.map((sub, i) => (
-                <div
-                  key={sub.id || i}
-                  className="stream-container col-md-6 col-xs-6"
-                  onClick={() => handleMainVideoStream(sub)}
-                >
-                  <span>{sub.id}</span>
-                  <UserVideoComponent streamManager={sub} />
-                </div>
-              ))}
             </div>
+            <GameButton text="시작하기" size="small" onClick={joinSession} />
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        {/* {session !== undefined ? (
-          <>
-            <div className="w-screen h-screen text-white p-4 relative">
-              <div className="w-full h-full flex flex-col"> */}
-        {/* GameInfo 영역 */}
+      {/* 세션이 있을 때: 비디오 및 컨트롤 */}
 
-        {/* Video 영역 */}
-        {/* <div className="grid grid-cols-6 grid-rows-7 gap-4 flex-grow">
-                  {subscribers.map((sub, index) => (
-                    <div
-                      key={sub.id || index}
-                      className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
-                    >
-                      <div className="w-full h-full bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg"> */}
-        {/* subs video */}
-        {/* <div className="w-full h-full relative"> */}
-        {/* name */}
-        {/* <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div className="text-5xl font-bold">Me</div>
-                            </div>
-                          </div>
-                        </div>
+      {session !== undefined ? (
+        <>
+          <div className="w-full h-full flex flex-col">
+            <div className=" text-white w-full h-full grid grid-cols-7">
+              {/* <div className="border-white border-2 text-white w-full h-full grid grid-cols-7"> */}
+              {/* <div className="bg-black text-white w-full h-full grid grid-cols-6"> */}
+              {/* GameInfo 영역 */}
+              <GameInfo
+                round={gameState.round}
+                turn={gameState.turn}
+                category={gameState.category}
+                topic={gameState.topic}
+                isLiar={playerState.isLiar}
+              />
+
+              {/* Video 영역 */}
+              {/* <div className="w-screen h-screen grid grid-cols-6 grid-rows-6 gap-4 flex-grow"> */}
+              {subscribers.map((sub, index) => (
+                <div
+                  key={sub.id || index}
+                  className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
+                >
+                  <div className="w-full h-full bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg">
+                    {/* subs video */}
+                    <div className="w-full h-full relative">
+                      {/* name */}
+                      <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                        {sub.nickname}
+                      </div>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <UserVideoComponent streamManager={sub} />
                       </div>
                     </div>
-                  ))} */}
+                  </div>
+                </div>
+              ))}
 
-        {/* my video */}
-        {/* <div className={`relative ${myPosition}`}>
-                    <div className="w-full h-full bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
-                      <div className="w-full h-full relative">
-                        <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                          나
-                        </div>
+              {/* my video */}
+              <div className={`relative ${myPosition}`}>
+                {/* <div className="flex justify-center items-center place-items-center relative"> */}
+                <div className="w-full h-full bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                  <div className="w-full h-full relative">
+                    <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                      나
+                    </div>
 
-                        <div className="w-full h-full flex items-center justify-center">
+                    {/* <div className="w-full h-full flex items-center justify-center"> */}
+                    <div className="w-full h-full flex items-center justify-center">
+                      {publisher !== undefined ? (
+                        isVideoEnabled ? (
+                          // <div
+                          //   className="stream-container col-md-6 col-xs-6"
+                          //   onClick={() => handleMainVideoStream(publisher)}
+                          // >
+                          // </div>
+
+                          <UserVideoComponent streamManager={publisher} />
+                        ) : (
                           <div className="text-5xl font-bold">Me</div>
-                        </div>
-                      </div>
+                        )
+                      ) : null}
+                      {/* <div className="text-5xl font-bold">Me</div> */}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </>
-        ) : null} */}
-      </div>
+            <div className="mt-2 mb-[-20px] text-white">
+              <GameControls
+                isAudioEnabled={isAudioEnabled}
+                isVideoEnabled={isVideoEnabled}
+                onToggleAudio={toggleAudio}
+                onToggleVideo={toggleVideo}
+                onSwitchCamera={switchCamera}
+                onLeaveSession={leaveSession}
+              />
+            </div>
+          </div>
+        </>
+      ) : null}
+      {/* </div> */}
+      {/* </div> */}
     </>
   );
 };

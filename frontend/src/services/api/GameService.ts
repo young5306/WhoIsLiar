@@ -11,6 +11,7 @@ export interface Subscriber extends StreamManager {
   nickname?: string;
   index?: number;
   position?: number;
+  isVideoEnabled?: boolean;
 }
 
 export interface GameState {
