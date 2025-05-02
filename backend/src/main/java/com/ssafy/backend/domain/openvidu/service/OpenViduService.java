@@ -28,25 +28,24 @@ public class OpenViduService {
 	@Value("${openvidu.secret}")
 	private String openviduSecret;
 
-	public OpenViduTokenResponse joinSession(String roomId, String nickname)
+	public OpenViduTokenResponse joinSession(String roomCode)
 		throws OpenViduJavaClientException, OpenViduHttpException {
 		// roomId를 가지고 오픈비두 세션을 가져옴
-		Session session = openVidu.getActiveSession(roomId);
+		Session session = openVidu.getActiveSession(roomCode);
 
 		// 오픈비두 세션이 없었을 때 처음으로 세션을 만드는 경우
 		if (session == null) {
-			session = createNewSession(roomId);
+			session = createNewSession(roomCode);
 		}
 
 		// 오픈비드 세션은 있지만 세션이 만료된 경우
 		if (session != null && !sessionExists(session.getSessionId())) {
-			session = createNewSession(roomId);
+			session = createNewSession(roomCode);
 		}
 
 		Connection connection = session.createConnection(
 			new ConnectionProperties.Builder()
 				.type(ConnectionType.WEBRTC)
-				.data(nickname)
 				.build()
 		);
 

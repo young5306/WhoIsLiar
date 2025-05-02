@@ -4,6 +4,5 @@ import lombok.Getter;
 
 @Getter
 public class OpenViduTokenRequest {
-	private String roomId;
-	private String nickname;
+	private String roomCode;
 }

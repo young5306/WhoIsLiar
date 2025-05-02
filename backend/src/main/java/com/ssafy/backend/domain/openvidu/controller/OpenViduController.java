@@ -21,10 +21,9 @@ public class OpenViduController {
 
     @PostMapping("/sessions")
     public ResponseEntity<OpenViduTokenResponse> join(@RequestBody OpenViduTokenRequest request) throws Exception {
-        String roomId = request.getRoomId();
-        String nickname = request.getNickname();
+        String roomCode = request.getRoomCode();
 
-        OpenViduTokenResponse response = sessionService.joinSession(roomId, nickname);
+        OpenViduTokenResponse response = sessionService.joinSession(roomCode);
         return ResponseEntity.ok(response);
     }
 }
