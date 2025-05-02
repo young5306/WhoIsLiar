@@ -29,6 +29,7 @@ import UserVideoComponent from './UserVideoComponent';
 import GameButton from '../../components/common/GameButton';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
+import GameChat from './GameChat';
 
 const GameRoom: React.FC = () => {
   const [myUserName, setMyUserName] = useState<string>('');
@@ -332,39 +333,47 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  const getParticipantPosition = (
-    index: number,
-    _totalParticipants: number
-  ): string => {
-    const positions = {
-      1: 'col-span-1 col-start-1 min-w-[150px]',
-      2: 'col-span-1 col-start-1 row-span-1 row-start-4 min-w-[150px]',
-      3: 'col-span-1 col-start-7 max-h-[200px] min-h-[120px] min-w-[150px]',
-      4: 'col-span-1 col-start-7 row-span-1 row-start-4 max-h-[200px] min-h-[120px] min-w-[150px]',
-      5: 'row-span-1 row-start-1 col-span-1 col-start-4 max-h-[200px] min-h-[150px] min-w-[150px]',
-      // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
-    };
-    return positions[index as keyof typeof positions] || '';
-  };
+  // option 1) 원형 ---------------------
   // const getParticipantPosition = (
   //   index: number,
-  //   totalParticipants: number
+  //   _totalParticipants: number
   // ): string => {
   //   const positions = {
-  //     1: 'col-span-1 col-start-1 row-span-1 row-start-2',
-  //     2: 'col-span-1 col-start-1 row-span-1 row-start-4',
-  //     3: 'col-span-1 col-start-6 row-span-1 row-start-2 max-h-[200px] min-h-[120px]',
-  //     4: 'col-span-1 col-start-6 row-span-1 row-start-4 max-h-[200px] min-h-[120px]',
-  //     5: 'row-span-1 row-start-1 flex items-center justify-center max-h-[200px] min-h-[150px]',
+  //     1: 'col-span-1 col-start-1 min-w-[150px]',
+  //     2: 'col-span-1 col-start-1 row-span-1 row-start-4 min-w-[150px]',
+  //     3: 'col-span-1 col-start-7 max-h-[200px] min-h-[120px] min-w-[150px]',
+  //     4: 'col-span-1 col-start-7 row-span-1 row-start-4 max-h-[200px] min-h-[120px] min-w-[150px]',
+  //     5: 'row-span-1 row-start-1 col-span-1 col-start-4 max-h-[200px] min-h-[150px] min-w-[150px]',
   //     // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
   //   };
   //   return positions[index as keyof typeof positions] || '';
   // };
 
   // const myPosition =
+  // 'row-span-1 col-span-1 col-start-4 row-start-4 max-h-[140px] min-w-[150px]';
+
+  // ----------------------------------------
+
+  // option 2) 3:3
+  const getParticipantPosition = (
+    index: number,
+    _totalParticipants: number
+  ): string => {
+    const positions = {
+      1: 'col-span-2 col-start-2 row-span-2 row-start-2 max-h-[200px] min-w-[200px] max-w-[250px] mt-[-60px]',
+      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[200px] min-w-[200px] max-w-[250px] mt-[-60px]',
+      3: 'col-span-2 col-start-2 row-span-2 row-start-6 max-h-[200px] min-w-[200px] max-w-[250px]',
+      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[200px] min-w-[200px] max-w-[250px] ml-[20px]',
+      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[200px] min-w-[200px] max-w-[250px] ml-[130px]',
+      // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
+    };
+    return positions[index as keyof typeof positions] || '';
+  };
+
+  // const myPosition =
   //   'col-span-1 col-start-3 row-span-1 row-start-4 min-h-[150px]';
   const myPosition =
-    'row-span-1 col-span-1 col-start-4 row-start-4 min-h-[150px] min-w-[150px]';
+    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[200px] min-w-[200px] max-w-[250px]';
 
   return (
     <>
@@ -484,6 +493,9 @@ const GameRoom: React.FC = () => {
                 </div>
               </div>
             </div>
+            {/* <div>
+              <GameChat />
+            </div> */}
             <div className="mt-2 mb-[-20px] text-white">
               <GameControls
                 isAudioEnabled={isAudioEnabled}
