@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "rounds")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Round {
@@ -25,8 +26,11 @@ public class Round {
 	@Column(name = "round_number", nullable = false)
 	private int roundNumber;
 
-	@Column(nullable = false, length = 50)
-	private String word;
+	@Column(nullable = true, length = 50)
+	private String word1;
+
+	@Column(nullable = true, length = 50)
+	private String word2;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "round_status", nullable = false, length = 20)
@@ -43,11 +47,12 @@ public class Round {
 	private LocalDateTime updatedAt;
 
 	@Builder
-	public Round(Room room, int roundNumber, String word, RoundStatus roundStatus, Winner winner,
+	public Round(Room room, int roundNumber, String word1, String word2, RoundStatus roundStatus, Winner winner,
 		LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.room = room;
 		this.roundNumber = roundNumber;
-		this.word = word;
+		this.word1 = word1;
+		this.word2 = word2;
 		this.roundStatus = roundStatus;
 		this.winner = winner;
 		this.createdAt = createdAt;
