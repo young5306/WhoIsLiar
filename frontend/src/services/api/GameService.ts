@@ -1,10 +1,7 @@
 import axios from 'axios';
 import { StreamManager } from 'openvidu-browser';
 
-const APPLICATION_SERVER_URL = import.meta.env.PROD
-  ? import.meta.env.VITE_OVD_SERVER_URL
-  : // : import.meta.env.VITE_APP_LOCAL_SERVER_URL;
-    import.meta.env.VITE_APP_API_URL;
+const APPLICATION_SERVER_URL = import.meta.env.VITE_APP_API_URL;
 
 export interface Subscriber extends StreamManager {
   id: string;
