@@ -64,32 +64,47 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
+      - prometheus
+      - grafana
     networks:
       - app-network
-  openvidu:
-    image: openvidu/openvidu-server-kms:latest
-    container_name: openvidu
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
     restart: always
-    ports:
-      - "4443:4443"  
-      - "5443:5443"  
-    environment:
-      - OPENVIDU_SECRET=MY_SECRET
-      - DOMAIN_OR_PUBLIC_IP=whoisliar.me
-      - CERTIFICATE_TYPE=letsencrypt
-      - LETSENCRYPT_EMAIL=your@email.com
-      - LETSENCRYPT_DOMAIN=whoisliar.me
-      - HTTPS=true
+    command:
+      - '--config.file=/etc/config/prometheus.yml'
+      - '--web.external-url=https://whoisliar.me/prometheus/'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/letsencrypt:/etc/letsencrypt  
+      - ./backend/prometheus.yml:/etc/config/prometheus.yml:ro  
+    ports:
+      - "3002:9090"
     networks:
-      - app-network 
+      - app-network
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=https://whoisliar.me/grafana/
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - app-network
+
 
 
 volumes:
   mysql-data:
   redis-data:
+  grafana-data:
 
 networks:
   app-network:
