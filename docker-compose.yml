@@ -75,10 +75,10 @@ services:
       - "5443:5443"  
     environment:
       - OPENVIDU_SECRET=MY_SECRET
-      - DOMAIN_OR_PUBLIC_IP=k12a604.p.ssafy.io
+      - DOMAIN_OR_PUBLIC_IP=whoisliar.me
       - CERTIFICATE_TYPE=letsencrypt
       - LETSENCRYPT_EMAIL=your@email.com
-      - LETSENCRYPT_DOMAIN=k12a604.p.ssafy.io
+      - LETSENCRYPT_DOMAIN=whoisliar.me
       - HTTPS=true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

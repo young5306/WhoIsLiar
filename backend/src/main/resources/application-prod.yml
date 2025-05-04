@@ -24,7 +24,7 @@ cookie:
 
 cors:
   allowed-origins:
-    - https://k12a604.p.ssafy.io
+    - https://whoisliar.me
     - http://localhost:5173
 
 openvidu:
