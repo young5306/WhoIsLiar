@@ -160,4 +160,10 @@ public class RoomController {
 		RoomDetailResponse dto = roomService.getRoomDetail(roomCode);
 		return ok(dto);
 	}
+
+	@DeleteMapping("/{roomCode}/out")
+	public ResponseEntity<CommonResponse<Void>> leaveRoom(@PathVariable String roomCode) {
+		roomService.leaveRoom(roomCode);
+		return ok(null);
+	}
 }

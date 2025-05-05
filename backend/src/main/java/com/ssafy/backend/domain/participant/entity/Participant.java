@@ -43,4 +43,9 @@ public class Participant {
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
+
+	public void setActive(boolean b) {
+		this.isActive = b;
+		this.updatedAt = LocalDateTime.now();
+	}
 }
