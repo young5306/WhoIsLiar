@@ -2,14 +2,13 @@ package com.ssafy.backend.domain.auth.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
@@ -18,11 +17,10 @@ import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.global.exception.CustomException;
-import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import io.micrometer.core.instrument.Counter;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
@@ -53,6 +51,7 @@ public class AuthService {
 		this.participantRepository = participantRepository;
 	}
 
+	@Transactional(readOnly = true)
 	public boolean isNicknameAvailable(String nickname) {
 		return repo.findByNickname(nickname).isEmpty();
 	}
@@ -106,22 +105,6 @@ public class AuthService {
 				repo.delete(s);
 				log.info("로그아웃: nickname={}, token={}", s.getNickname(), token);
 			});
-		}
-	}
-
-	@Scheduled(fixedDelay = 10 * 60 * 1000)
-	@Transactional
-	public void cleanupStaleSessions() {
-		LocalDateTime cutoff = LocalDateTime.now().minus(sessionTimeout);
-		List<SessionEntity> staleSessions = repo.findByLastActiveAtBefore(cutoff);
-		for (SessionEntity s : staleSessions) {
-			boolean isHost = roomRepository.existsBySession(s);
-			boolean isParticipant = participantRepository.existsBySession(s);
-			// 2) 어떤 방의 호스트도, 참여자도 아니라면 삭제
-			if (!isHost && !isParticipant) {
-				repo.delete(s);
-				log.info("Stale session deleted: {}", s.getId());
-			}
 		}
 	}
 }

@@ -18,11 +18,12 @@ import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
-import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.exception.CustomException;
+import com.ssafy.backend.integration.gpt.GptService;
 
 @Service
 @Transactional
@@ -45,9 +46,7 @@ public class RoundService {
 		this.gptService = gptService;
 	}
 
-	/**
-	 * 라운드 역할(라이어) 할당
-	 */
+	@Transactional
 	public AssignRoleResponse assignRole(AssignRoleRequest request) {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -64,7 +63,7 @@ public class RoundService {
 		return new AssignRoleResponse(liarId, liarNickname);
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public RoundWordResponse getRoundWord(Long roundId) {
 		Round round = roundRepository.findById(roundId)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -73,9 +72,7 @@ public class RoundService {
 
 		List<CategoryWord> candidates =
 			(cat == Category.랜덤)? categoryWordRepository.findAll() : categoryWordRepository.findByCategory(cat);
-		if(candidates.isEmpty()) {System.out.println("오잉 왜 하나도 없지");}
 		if (candidates.isEmpty()) throw new CustomException(ResponseCode.NOT_FOUND);
-
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = null;
 		if (room.getGameMode() == GameMode.FOOL) {

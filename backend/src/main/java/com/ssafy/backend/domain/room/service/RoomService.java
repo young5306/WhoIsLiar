@@ -17,7 +17,7 @@ import com.ssafy.backend.domain.room.dto.response.RoomsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomsSearchResponse;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
-import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
@@ -43,6 +43,7 @@ public class RoomService {
 	private static final int ROOM_CODE_LENGTH = 6;
 	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+	@Transactional
 	public RoomCreateResponse createRoom(RoomCreateRequest request) {
 
 		SessionEntity session = sessionRepository.findByNickname(request.hostNickname())
@@ -94,7 +95,6 @@ public class RoomService {
 			.build();
 	}
 
-	// roomCode 생성(6자리)
 	private String generateUniqueRoomCode() {
 		Random random = new Random();
 		String roomCode;
@@ -111,7 +111,7 @@ public class RoomService {
 		return roomCode;
 	}
 
-	// 코드로 방 입장
+	@Transactional
 	public void joinRoomByCode(RoomJoinByCodeRequest request) {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -142,7 +142,7 @@ public class RoomService {
 		participantRepository.save(participant);
 	}
 
-	// 비밀번호로 방 입장
+	@Transactional
 	public void joinRoomByPassword(RoomJoinByPasswordRequest request) {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -175,14 +175,12 @@ public class RoomService {
 		participantRepository.save(participant);
 	}
 
-	// 비밀번호 확인
 	public void checkPassword(Room room, String password) {
 		if (!room.getPassword().equals(password)) {
 			throw new CustomException(ResponseCode.FORBIDDEN);
 		}
 	}
 
-	/** 방 목록 조회 */
 	@Transactional(readOnly = true)
 	public RoomsListResponse getRoomsList() {
 		List<Room> rooms = roomRepository.findAll();
@@ -206,7 +204,7 @@ public class RoomService {
 		return new RoomsListResponse(roomInfos);
 	}
 
-	/** 특정 roomCode 방의 참가자 목록 조회 */
+	@Transactional(readOnly = true)
 	public ParticipantsListResponse getParticipants(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -240,9 +238,7 @@ public class RoomService {
 		return new RoomsSearchResponse(result);
 	}
 
-	/**
-	 * roomCode 로 방을 조회하고, 방 정보 + 참가자 목록을 합쳐서 반환합니다
-	 */
+	@Transactional(readOnly = true)
 	public RoomDetailResponse getRoomDetail(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));

@@ -1,4 +1,4 @@
-package com.ssafy.backend.global.websocket;
+package com.ssafy.backend.websocket;
 
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.auth.service.AuthService;

@@ -1,4 +1,4 @@
-package com.ssafy.backend.global.config;
+package com.ssafy.backend.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.RestController;

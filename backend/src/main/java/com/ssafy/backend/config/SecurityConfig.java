@@ -1,8 +1,7 @@
-package com.ssafy.backend.domain.auth.config;
+package com.ssafy.backend.config;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,9 +18,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.backend.domain.auth.security.AuthTokenFilter;
 import com.ssafy.backend.domain.auth.service.AuthService;
-import com.ssafy.backend.global.common.ApiResponse;
-import com.ssafy.backend.global.common.ResponseCode;
-import com.ssafy.backend.global.config.CorsProperties;
+import com.ssafy.backend.global.common.CommonResponse;
+import com.ssafy.backend.global.enums.ResponseCode;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -36,11 +34,6 @@ public class SecurityConfig {
 	{
 		this.authService = authService;
 		this.corsProps = corsProps;
-	}
-
-	@Bean
-	public AuthTokenFilter authTokenFilter() {
-		return new AuthTokenFilter(authService);
 	}
 
 	@Bean
@@ -60,7 +53,8 @@ public class SecurityConfig {
 				.permitAll()
 				.anyRequest().authenticated()
 			)
-			.addFilterBefore(authTokenFilter(),
+			.addFilterBefore(
+				new AuthTokenFilter(authService),
 				UsernamePasswordAuthenticationFilter.class)
 			.exceptionHandling(ex -> ex
 				.authenticationEntryPoint((req, res, authEx) -> {
@@ -68,7 +62,7 @@ public class SecurityConfig {
 					res.setCharacterEncoding("UTF-8");
 					res.setContentType(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
 					String body = objectMapper.writeValueAsString(
-						ApiResponse.failure(ResponseCode.UNAUTHORIZED)
+						CommonResponse.failure(ResponseCode.UNAUTHORIZED)
 					);
 					res.getWriter().write(body);
 				})
@@ -77,7 +71,7 @@ public class SecurityConfig {
 					res.setCharacterEncoding("UTF-8");
 					res.setContentType(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
 					String body = objectMapper.writeValueAsString(
-						ApiResponse.failure(ResponseCode.FORBIDDEN)
+						CommonResponse.failure(ResponseCode.FORBIDDEN)
 					);
 					res.getWriter().write(body);
 				})

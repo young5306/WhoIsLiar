@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.participant.entity;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.room.entity.Room;
+
 import jakarta.persistence.*;
 import lombok.*;
 
