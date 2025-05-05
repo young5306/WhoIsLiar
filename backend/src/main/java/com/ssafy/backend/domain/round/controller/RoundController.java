@@ -14,12 +14,13 @@ import com.ssafy.backend.domain.round.dto.request.AssignRoleRequest;
 import com.ssafy.backend.domain.round.dto.response.AssignRoleResponse;
 import com.ssafy.backend.domain.round.dto.response.RoundWordResponse;
 import com.ssafy.backend.domain.round.service.RoundService;
-import com.ssafy.backend.global.common.ApiResponse;
+import com.ssafy.backend.global.common.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,17 +42,17 @@ public class RoundController {
 		description = "주어진 방 코드와 라운드 번호에 대해 라이어를 랜덤으로 할당합니다."
 	)
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청 성공",
+		@ApiResponse(responseCode = "200", description = "요청 성공",
 			content = @Content(mediaType = "application/json",
 				schema = @Schema(implementation = AssignRoleResponse.class))),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "유효성 검사 실패", content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증이 필요합니다.", content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한이 없습니다.", content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "방 또는 참가자를 찾을 수 없습니다.", content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
+		@ApiResponse(responseCode = "400", description = "유효성 검사 실패", content = @Content),
+		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.", content = @Content),
+		@ApiResponse(responseCode = "403", description = "권한이 없습니다.", content = @Content),
+		@ApiResponse(responseCode = "404", description = "방 또는 참가자를 찾을 수 없습니다.", content = @Content),
+		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/assign/role")
-	public ResponseEntity<ApiResponse<AssignRoleResponse>> assignRole(
+	public ResponseEntity<CommonResponse<AssignRoleResponse>> assignRole(
 		@RequestBody(description = "라운드 역할 할당 요청 정보", required = true,
 			content = @Content(schema = @Schema(implementation = AssignRoleRequest.class)))
 		@Valid @org.springframework.web.bind.annotation.RequestBody AssignRoleRequest request) {
@@ -63,21 +64,21 @@ public class RoundController {
 
 	@Operation(summary = "라운드 단어 조회", description = "라운드 ID에 따라 단어를 반환합니다.")
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
+		@ApiResponse(responseCode = "200", description = "조회 성공",
 			content = @Content(schema = @Schema(implementation = RoundWordResponse.class))),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청",
+		@ApiResponse(responseCode = "400", description = "잘못된 요청",
 			content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요",
+		@ApiResponse(responseCode = "401", description = "인증 필요",
 			content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음",
+		@ApiResponse(responseCode = "403", description = "권한 없음",
 			content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없습니다.",
+		@ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없습니다.",
 			content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류",
+		@ApiResponse(responseCode = "500", description = "서버 오류",
 			content = @Content)
 	})
 	@GetMapping("/{roundId}/word")
-	public ResponseEntity<ApiResponse<RoundWordResponse>> getWord(@PathVariable Long roundId) {
+	public ResponseEntity<CommonResponse<RoundWordResponse>> getWord(@PathVariable Long roundId) {
 		RoundWordResponse res = roundService.getRoundWord(roundId);
 		return ok(res);
 	}

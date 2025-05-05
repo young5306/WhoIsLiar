@@ -6,23 +6,23 @@ import org.springframework.http.ResponseEntity;
  * 유틸리티 빌더
  */
 public class ResponseUtil {
-	public static <T> ResponseEntity<ApiResponse<T>> ok(T data) {
-		ApiResponse<T> body = ApiResponse.success(ResponseCode.SUCCESS, data);
+	public static <T> ResponseEntity<CommonResponse<T>> ok(T data) {
+		CommonResponse<T> body = CommonResponse.success(ResponseCode.SUCCESS, data);
 		return new ResponseEntity<>(body, ResponseCode.SUCCESS.getStatus());
 	}
 
-	public static <T> ResponseEntity<ApiResponse<T>> created(T data) {
-		ApiResponse<T> body = ApiResponse.success(ResponseCode.CREATED, data);
+	public static <T> ResponseEntity<CommonResponse<T>> created(T data) {
+		CommonResponse<T> body = CommonResponse.success(ResponseCode.CREATED, data);
 		return new ResponseEntity<>(body, ResponseCode.CREATED.getStatus());
 	}
 
-	public static <T> ResponseEntity<ApiResponse<T>> accepted(T data) {
-		ApiResponse<T> body = ApiResponse.success(ResponseCode.ACCEPTED, data);
+	public static <T> ResponseEntity<CommonResponse<T>> accepted(T data) {
+		CommonResponse<T> body = CommonResponse.success(ResponseCode.ACCEPTED, data);
 		return new ResponseEntity<>(body, ResponseCode.ACCEPTED.getStatus());
 	}
 
-	public static ResponseEntity<ApiResponse<Void>> error(ResponseCode rc) {
-		ApiResponse<Void> body = ApiResponse.failure(rc);
+	public static ResponseEntity<CommonResponse<Void>> error(ResponseCode rc) {
+		CommonResponse<Void> body = CommonResponse.failure(rc);
 		return new ResponseEntity<>(body, rc.getStatus());
 	}
 }
