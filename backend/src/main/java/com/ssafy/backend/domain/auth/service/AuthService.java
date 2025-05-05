@@ -2,13 +2,11 @@ package com.ssafy.backend.domain.auth.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -16,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
-import com.ssafy.backend.domain.room.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.enums.ResponseCode;

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
-import com.ssafy.backend.domain.room.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 
 @Component

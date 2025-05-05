@@ -2,8 +2,8 @@ package com.ssafy.backend.domain.room.service;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
-import com.ssafy.backend.domain.room.entity.Participant;
-import com.ssafy.backend.domain.room.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.entity.Participant;
+import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;

@@ -7,8 +7,8 @@ import java.util.Random;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ssafy.backend.domain.room.entity.Participant;
-import com.ssafy.backend.domain.room.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.entity.Participant;
+import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.domain.round.dto.request.AssignRoleRequest;

@@ -1,6 +1,6 @@
-package com.ssafy.backend.domain.round.entity;
+package com.ssafy.backend.domain.participant.entity;
 
-import com.ssafy.backend.domain.room.entity.Participant;
+import com.ssafy.backend.domain.round.entity.Round;
 
 import jakarta.persistence.*;
 import lombok.*;
