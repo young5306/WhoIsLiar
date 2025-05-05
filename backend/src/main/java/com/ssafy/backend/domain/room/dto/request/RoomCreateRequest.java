@@ -35,8 +35,10 @@ public record RoomCreateRequest(
 	String roomName,
 
 	@Schema(description = "비밀번호", example = "1234", nullable = true)
-	@Size(min = 4, max = 4, message = "비밀번호는 반드시 4자여야 합니다.")
-	@Pattern(regexp = "\\d{4}", message = "비밀번호는 숫자 4자리여야 합니다.")
+	@Pattern(
+		regexp = "^$|\\d{4}",
+		message = "비밀번호는 비워두거나 숫자 4자리여야 합니다."
+	)
 	String password,
 
 	@Schema(description = "라운드 수", example = "5")
