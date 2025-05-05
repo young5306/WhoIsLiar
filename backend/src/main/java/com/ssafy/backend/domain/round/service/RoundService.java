@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.domain.round.dto.request.AssignRoleRequest;
@@ -25,26 +26,20 @@ import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.integration.gpt.GptService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class RoundService {
 
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
+	private final ParticipantRoundRepository participantRoundRepository;
 	private final RoundRepository roundRepository;
 	private final CategoryWordRepository categoryWordRepository;
 	private final Random random = new Random();
 	private final GptService gptService;
-
-	public RoundService(RoomRepository roomRepository,
-		ParticipantRepository participantRepository, RoundRepository roundRepository,
-		CategoryWordRepository categoryWordRepository, GptService gptService) {
-		this.roomRepository = roomRepository;
-		this.participantRepository = participantRepository;
-		this.roundRepository = roundRepository;
-		this.categoryWordRepository = categoryWordRepository;
-		this.gptService = gptService;
-	}
 
 	@Transactional
 	public AssignRoleResponse assignRole(AssignRoleRequest request) {
@@ -87,4 +82,29 @@ public class RoundService {
 
 		return new RoundWordResponse(w1, w2);
 	}
+
+	@Transactional
+	public void deleteGame(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		List<Round> rounds = roundRepository.findByRoom(room);
+		List<Participant> participants = participantRepository.findByRoomAndActive(room);
+
+		// 1. ParticipantRound 먼저 삭제
+		for (Round round : rounds) {
+			participantRoundRepository.deleteByRound(round);
+		}
+
+		// 2. Round 삭제
+		roundRepository.deleteAll(rounds);
+
+		// 3. Participant 삭제 (isActive == true만)
+		participantRepository.deleteAll(participants);
+
+		// 4. Room 삭제
+		roomRepository.delete(room);
+	}
+
+
 }

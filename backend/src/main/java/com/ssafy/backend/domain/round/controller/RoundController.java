@@ -4,6 +4,7 @@ import static com.ssafy.backend.global.common.ResponseUtil.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,6 +83,18 @@ public class RoundController {
 		Long roundId) {
 		RoundWordResponse res = roundService.getRoundWord(roundId);
 		return ok(res);
+	}
+
+	@Operation(summary = "게임 종료", description = "해당 방 코드에 대한 게임 데이터를 전부 삭제합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "게임 종료 및 데이터 삭제 완료"),
+		@ApiResponse(responseCode = "404", description = "방을 찾을 수 없습니다."),
+		@ApiResponse(responseCode = "500", description = "서버 오류")
+	})
+	@DeleteMapping("/{roomCode}/end")
+	public ResponseEntity<CommonResponse<Void>> endGame(@PathVariable String roomCode) {
+		roundService.deleteGame(roomCode);
+		return ok(null);
 	}
 }
 
