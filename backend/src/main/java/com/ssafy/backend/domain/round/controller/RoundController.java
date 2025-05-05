@@ -4,12 +4,15 @@ import static com.ssafy.backend.global.common.ResponseUtil.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ssafy.backend.domain.round.dto.request.AssignRoleRequest;
 import com.ssafy.backend.domain.round.dto.response.AssignRoleResponse;
+import com.ssafy.backend.domain.round.dto.response.RoundWordResponse;
 import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.global.common.ApiResponse;
 
@@ -55,6 +58,28 @@ public class RoundController {
 
 		AssignRoleResponse response = roundService.assignRole(request);
 		return ok(response);
+	}
+
+
+	@Operation(summary = "라운드 단어 조회", description = "라운드 ID에 따라 단어를 반환합니다.")
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
+			content = @Content(schema = @Schema(implementation = RoundWordResponse.class))),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "권한 없음",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없습니다.",
+			content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류",
+			content = @Content)
+	})
+	@GetMapping("/{roundId}/word")
+	public ResponseEntity<ApiResponse<RoundWordResponse>> getWord(@PathVariable Long roundId) {
+		RoundWordResponse res = roundService.getRoundWord(roundId);
+		return ok(res);
 	}
 }
 

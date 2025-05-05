@@ -1,10 +1,7 @@
 import axios from 'axios';
 import { StreamManager } from 'openvidu-browser';
 
-const APPLICATION_SERVER_URL = import.meta.env.PROD
-  ? import.meta.env.VITE_OVD_SERVER_URL
-  : // : import.meta.env.VITE_APP_LOCAL_SERVER_URL;
-    import.meta.env.VITE_APP_API_URL;
+const APPLICATION_SERVER_URL = import.meta.env.VITE_APP_API_URL;
 
 export interface Subscriber extends StreamManager {
   id: string;
@@ -52,10 +49,10 @@ export const createSessionApi = async (
   try {
     // ck) 실제 세션 발급받는 api로 변경
     const response = await axios.post(
-      APPLICATION_SERVER_URL + '/openvidu/sessions',
+      APPLICATION_SERVER_URL + `/openvidu/sessions/${sessionId}`,
       // { customSessionId: sessionId },
       // { roomId: sessionId, nickname: userName },
-      { roomCode: sessionId },
+      {},
       {
         headers: {
           'Content-Type': 'application/json',

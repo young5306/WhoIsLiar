@@ -255,6 +255,7 @@ public class RoomService {
 			.isSecret(room.getPassword() != null && !room.getPassword().isEmpty())
 			.playerCount(participantCount)
 			.roundCount(room.getRoundCount())
+			.gameMode(room.getGameMode().name())
 			.videoMode(room.getVideoMode().name())
 			.category(room.getCategory().name())
 			.hostNickname(room.getSession().getNickname())

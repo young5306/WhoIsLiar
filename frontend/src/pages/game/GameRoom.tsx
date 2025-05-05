@@ -15,10 +15,7 @@ import {
   ExceptionEvent,
 } from 'openvidu-browser';
 // import gameRoom from './GameRoom.module.css';
-import {
-  // data,
-  useNavigate,
-} from 'react-router-dom';
+// import { data, useNavigate } from 'react-router-dom';
 import {
   getToken,
   Subscriber,
@@ -36,7 +33,7 @@ import GameControls from './GameControls';
 import GameChat from './GameChat';
 
 const GameRoom: React.FC = () => {
-  const navigation = useNavigate();
+  // const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [myToken, setMyToken] = useState<string>('');
 
@@ -105,8 +102,8 @@ const GameRoom: React.FC = () => {
       console.log('roomCode', roomCode);
     } else {
       setMySessionId('');
-      alert('게임방에 입장해주세요');
-      navigation('/room-list');
+      // alert('게임방에 입장해주세요');
+      // navigation('/room-list');
     }
   }, [userInfo, roomCode]);
 
@@ -163,7 +160,7 @@ const GameRoom: React.FC = () => {
 
     try {
       // ck) getToken 분리
-      const token = await getToken(myUserName, mySessionId, myToken);
+      const token = await getToken(mySessionId, myToken);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {

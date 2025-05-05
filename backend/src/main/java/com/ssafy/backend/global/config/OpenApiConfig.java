@@ -27,7 +27,7 @@ public class OpenApiConfig {
 				)
 				.servers(List.of(
 						new Server()
-								.url("https://k12a604.p.ssafy.io")
+								.url("https://whoisliar.me")
 								.description("Prod"),
 						new Server()
 								.url("http://localhost:8080")

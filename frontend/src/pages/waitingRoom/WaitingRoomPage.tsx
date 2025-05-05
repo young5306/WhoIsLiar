@@ -5,7 +5,6 @@ import { useRoomStore } from '../../stores/useRoomStore';
 import { VideoOff, Video, Mic, MicOff, Crown, Copy, Check } from 'lucide-react';
 import { getRoomData } from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { Scrollbars } from 'react-custom-scrollbars-2';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('random');
@@ -42,7 +41,6 @@ const WaitingRoomContent = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const chatInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<Scrollbars>(null);
   const [roomData, setRoomData] = useState<{
     roomInfo: {
       roomName: string;
