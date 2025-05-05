@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   define: {
@@ -12,13 +11,17 @@ export default defineConfig({
   server: {
     proxy: {
       '/ws': {
-        target: 'http://localhost:8080',
+        target: 'https://whoisliar.me',
         changeOrigin: true,
         ws: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/ws/, ''),
       },
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://whoisliar.me',
         changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
