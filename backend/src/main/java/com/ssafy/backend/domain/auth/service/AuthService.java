@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
@@ -20,7 +21,6 @@ import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import io.micrometer.core.instrument.Counter;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 @Service
@@ -51,6 +51,7 @@ public class AuthService {
 		this.participantRepository = participantRepository;
 	}
 
+	@Transactional(readOnly = true)
 	public boolean isNicknameAvailable(String nickname) {
 		return repo.findByNickname(nickname).isEmpty();
 	}
