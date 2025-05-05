@@ -277,4 +277,36 @@ public class RoomService {
 
 		return new RoomDetailResponse(info, parts);
 	}
+
+	// 방 나가기
+	@Transactional
+	public void leaveRoom(String roomCode) {
+		String nickname = SecurityUtils.getCurrentNickname();
+
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		SessionEntity session = sessionRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Participant participant = participantRepository.findByRoomAndSession(room, session)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (room.getRoomStatus() == RoomStatus.waiting) {
+			// 참가자 제거
+			participantRepository.delete(participant);
+
+			// (남은 참가자 수 == 0) => 방 삭제
+			int remainingCount = participantRepository.countByRoom(room);
+			if (remainingCount == 0) {
+				roomRepository.delete(room); // 마지막 인원이면 방도 삭제
+			}
+		} else if (room.getRoomStatus() == RoomStatus.playing) {
+			// 게임 중이면 비활성화만
+			participant.setActive(false);
+		} else {
+			throw new CustomException(ResponseCode.SERVER_ERROR);
+		}
+	}
+
 }
