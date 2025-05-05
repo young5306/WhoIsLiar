@@ -1,8 +1,15 @@
 <configuration>
     <!-- 콘솔 앱엔더: INFO↑ -->
+<!--    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
+<!--        <encoder>-->
+<!--            <pattern>[%d{HH:mm:ss.SSS}] %-5level %logger{36} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+    <!-- INFO 이상 로그를 표준출력으로 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{HH:mm:ss.SSS}] %-5level %logger{36} - %msg%n</pattern>
+            <!-- 오직 메시지만 출력 -->
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
 
