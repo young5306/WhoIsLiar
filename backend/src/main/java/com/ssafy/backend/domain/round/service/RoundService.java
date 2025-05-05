@@ -7,8 +7,8 @@ import java.util.Random;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ssafy.backend.domain.participant.entity.Participant;
-import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
+import com.ssafy.backend.domain.room.entity.Participant;
+import com.ssafy.backend.domain.room.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.domain.round.dto.request.AssignRoleRequest;
@@ -18,11 +18,12 @@ import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
-import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.exception.CustomException;
+import com.ssafy.backend.integration.gpt.GptService;
 
 @Service
 @Transactional

@@ -1,4 +1,4 @@
-package com.ssafy.backend.global.common;
+package com.ssafy.backend.global.enums;
 
 import org.springframework.http.HttpStatus;
 

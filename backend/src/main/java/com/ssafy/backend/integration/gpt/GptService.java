@@ -1,4 +1,4 @@
-package com.ssafy.backend.domain.round.service;
+package com.ssafy.backend.integration.gpt;
 
 import java.util.List;
 import java.util.Map;

@@ -15,10 +15,10 @@ import org.springframework.validation.annotation.Validated;
 import com.ssafy.backend.domain.auth.dto.LoginRequestDto;
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
-import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
+import com.ssafy.backend.domain.room.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.global.exception.CustomException;
-import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import io.micrometer.core.instrument.Counter;

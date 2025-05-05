@@ -1,4 +1,4 @@
-package com.ssafy.backend.global.config;
+package com.ssafy.backend.config;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;

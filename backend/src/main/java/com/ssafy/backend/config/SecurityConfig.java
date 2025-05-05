@@ -1,4 +1,4 @@
-package com.ssafy.backend.domain.auth.config;
+package com.ssafy.backend.config;
 
 import java.util.List;
 
@@ -19,8 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.backend.domain.auth.security.AuthTokenFilter;
 import com.ssafy.backend.domain.auth.service.AuthService;
 import com.ssafy.backend.global.common.CommonResponse;
-import com.ssafy.backend.global.common.ResponseCode;
-import com.ssafy.backend.global.config.CorsProperties;
+import com.ssafy.backend.global.enums.ResponseCode;
 
 import jakarta.servlet.http.HttpServletResponse;
 

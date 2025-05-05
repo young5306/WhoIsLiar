@@ -1,7 +1,7 @@
-package com.ssafy.backend.domain.participant.repository;
+package com.ssafy.backend.domain.room.repository;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
-import com.ssafy.backend.domain.participant.entity.Participant;
+import com.ssafy.backend.domain.room.entity.Participant;
 import com.ssafy.backend.domain.room.entity.Room;
 import org.springframework.data.jpa.repository.JpaRepository;
 

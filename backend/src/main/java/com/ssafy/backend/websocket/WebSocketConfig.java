@@ -1,7 +1,6 @@
-package com.ssafy.backend.global.config;
+package com.ssafy.backend.websocket;
 
 import com.ssafy.backend.domain.auth.service.AuthService;
-import com.ssafy.backend.global.websocket.AuthHandshakeInterceptor;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;

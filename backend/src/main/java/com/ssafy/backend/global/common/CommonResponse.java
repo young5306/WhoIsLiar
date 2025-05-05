@@ -1,5 +1,7 @@
 package com.ssafy.backend.global.common;
 
+import com.ssafy.backend.global.enums.ResponseCode;
+
 import lombok.Getter;
 import lombok.Setter;
 

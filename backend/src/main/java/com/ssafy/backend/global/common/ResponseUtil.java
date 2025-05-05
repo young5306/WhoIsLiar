@@ -2,6 +2,8 @@ package com.ssafy.backend.global.common;
 
 import org.springframework.http.ResponseEntity;
 
+import com.ssafy.backend.global.enums.ResponseCode;
+
 /**
  * 유틸리티 빌더
  */

@@ -1,5 +1,5 @@
 // src/main/java/com/ssafy/backend/global/config/CorsProperties.java
-package com.ssafy.backend.global.config;
+package com.ssafy.backend.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

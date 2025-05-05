@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.ssafy.backend.global.common.CommonResponse;
-import com.ssafy.backend.global.common.ResponseCode;
+import com.ssafy.backend.global.enums.ResponseCode;
 
 import jakarta.servlet.http.HttpServletRequest;
 
