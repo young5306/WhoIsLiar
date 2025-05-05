@@ -37,11 +37,6 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public AuthTokenFilter authTokenFilter() {
-		return new AuthTokenFilter(authService);
-	}
-
-	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http,
 		CorsConfigurationSource corsConfigurationSource, ObjectMapper objectMapper) throws Exception {
 		http
@@ -58,7 +53,8 @@ public class SecurityConfig {
 				.permitAll()
 				.anyRequest().authenticated()
 			)
-			.addFilterBefore(authTokenFilter(),
+			.addFilterBefore(
+				new AuthTokenFilter(authService),
 				UsernamePasswordAuthenticationFilter.class)
 			.exceptionHandling(ex -> ex
 				.authenticationEntryPoint((req, res, authEx) -> {
