@@ -24,9 +24,20 @@ const InputModal = ({
     if (!trimmed) {
       return notify({ type: 'warning', text: '값을 입력해 주세요.' });
     }
-    if (numeric && !/^\d{4}$/.test(trimmed)) {
-      notify({ type: 'warning', text: '비밀번호는 4자리 숫자여야 합니다.' });
-      return;
+    if (numeric) {
+      if (!/^\d{4}$/.test(trimmed)) {
+        return notify({
+          type: 'warning',
+          text: '비밀번호는 4자리 숫자여야 합니다.',
+        });
+      }
+    } else {
+      if (!/^[A-Za-z0-9]{6}$/.test(trimmed)) {
+        return notify({
+          type: 'warning',
+          text: '방 코드는 6자리 영문·숫자여야 합니다.',
+        });
+      }
     }
     onSubmit(trimmed);
   };
@@ -48,8 +59,8 @@ const InputModal = ({
           value={value}
           type={numeric ? 'password' : 'text'}
           inputMode={numeric ? 'numeric' : undefined}
-          pattern={numeric ? '\\d{4}' : undefined}
-          maxLength={numeric ? 4 : undefined}
+          pattern={numeric ? '\\d{4}' : '[A-Za-z0-9]{6}'}
+          maxLength={numeric ? 4 : 6}
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
           className="w-full h-[70px] headline-medium px-3 mb-8 rounded-lg bg-gray-0/20 outline-none placeholder-gray-300 text-gray-0
