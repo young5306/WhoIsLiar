@@ -108,20 +108,4 @@ public class AuthService {
 			});
 		}
 	}
-
-	@Scheduled(fixedDelay = 10 * 60 * 1000)
-	@Transactional
-	public void cleanupStaleSessions() {
-		LocalDateTime cutoff = LocalDateTime.now().minus(sessionTimeout);
-		List<SessionEntity> staleSessions = repo.findByLastActiveAtBefore(cutoff);
-		for (SessionEntity s : staleSessions) {
-			boolean isHost = roomRepository.existsBySession(s);
-			boolean isParticipant = participantRepository.existsBySession(s);
-			// 2) 어떤 방의 호스트도, 참여자도 아니라면 삭제
-			if (!isHost && !isParticipant) {
-				repo.delete(s);
-				log.info("Stale session deleted: {}", s.getId());
-			}
-		}
-	}
 }
