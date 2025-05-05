@@ -43,6 +43,7 @@ public class RoomService {
 	private static final int ROOM_CODE_LENGTH = 6;
 	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+	// 방을 생성하고 호스트를 참가자로 등록
 	@Transactional
 	public RoomCreateResponse createRoom(RoomCreateRequest request) {
 
@@ -95,6 +96,7 @@ public class RoomService {
 			.build();
 	}
 
+	// 중복되지 않는 방 코드를 생성
 	private String generateUniqueRoomCode() {
 		Random random = new Random();
 		String roomCode;
@@ -111,6 +113,7 @@ public class RoomService {
 		return roomCode;
 	}
 
+	// 방 코드로 공개 방에 참여
 	@Transactional
 	public void joinRoomByCode(RoomJoinByCodeRequest request) {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
@@ -142,6 +145,7 @@ public class RoomService {
 		participantRepository.save(participant);
 	}
 
+	// 비밀번호를 입력하여 방 참여
 	@Transactional
 	public void joinRoomByPassword(RoomJoinByPasswordRequest request) {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
@@ -175,12 +179,14 @@ public class RoomService {
 		participantRepository.save(participant);
 	}
 
+	// 방의 비밀번호가 올바른지 확인
 	public void checkPassword(Room room, String password) {
 		if (!room.getPassword().equals(password)) {
 			throw new CustomException(ResponseCode.FORBIDDEN);
 		}
 	}
 
+	// 전체 방 목록을 조회
 	@Transactional(readOnly = true)
 	public RoomsListResponse getRoomsList() {
 		List<Room> rooms = roomRepository.findAll();
@@ -204,6 +210,7 @@ public class RoomService {
 		return new RoomsListResponse(roomInfos);
 	}
 
+	// 방에 참가한 사용자 목록을 조회
 	@Transactional(readOnly = true)
 	public ParticipantsListResponse getParticipants(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
@@ -238,6 +245,7 @@ public class RoomService {
 		return new RoomsSearchResponse(result);
 	}
 
+	// 방의 상세 정보와 참가자 목록
 	@Transactional(readOnly = true)
 	public RoomDetailResponse getRoomDetail(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
