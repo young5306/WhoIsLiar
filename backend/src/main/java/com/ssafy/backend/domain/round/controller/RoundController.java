@@ -56,7 +56,6 @@ public class RoundController {
 		@RequestBody(description = "라운드 역할 할당 요청 정보", required = true,
 			content = @Content(schema = @Schema(implementation = AssignRoleRequest.class)))
 		@Valid @org.springframework.web.bind.annotation.RequestBody AssignRoleRequest request) {
-
 		AssignRoleResponse response = roundService.assignRole(request);
 		return ok(response);
 	}
@@ -78,7 +77,9 @@ public class RoundController {
 			content = @Content)
 	})
 	@GetMapping("/{roundId}/word")
-	public ResponseEntity<CommonResponse<RoundWordResponse>> getWord(@PathVariable Long roundId) {
+	public ResponseEntity<CommonResponse<RoundWordResponse>> getWord(
+		@PathVariable
+		Long roundId) {
 		RoundWordResponse res = roundService.getRoundWord(roundId);
 		return ok(res);
 	}

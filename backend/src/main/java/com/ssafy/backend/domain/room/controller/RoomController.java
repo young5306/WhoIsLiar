@@ -21,15 +21,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rooms")
 @Tag(name = "방 API", description = "방 생성 관련 API")
+@Validated
 public class RoomController {
 
 	private final RoomService roomService;
@@ -64,7 +68,8 @@ public class RoomController {
 		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/join/code")
-	public ResponseEntity<CommonResponse<Void>> joinRoomByCode(@RequestBody RoomJoinByCodeRequest request) {
+	public ResponseEntity<CommonResponse<Void>> joinRoomByCode(
+		@Valid @RequestBody RoomJoinByCodeRequest request) {
 		roomService.joinRoomByCode(request);
 		return ok(null);
 	}
@@ -80,7 +85,8 @@ public class RoomController {
 		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	@PostMapping("/join/password")
-	public ResponseEntity<CommonResponse<Void>> joinRoomByPassword(@RequestBody RoomJoinByPasswordRequest request) {
+	public ResponseEntity<CommonResponse<Void>> joinRoomByPassword(
+		@Valid @RequestBody RoomJoinByPasswordRequest request) {
 		roomService.joinRoomByPassword(request);
 		return ok(null);
 	}
@@ -112,7 +118,9 @@ public class RoomController {
 	})
 	@GetMapping("/{roomCode}/participants")
 	public ResponseEntity<CommonResponse<ParticipantsListResponse>> getParticipants(
-		@PathVariable String roomCode) {
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode) {
 		ParticipantsListResponse dto = roomService.getParticipants(roomCode);
 		return ok(dto);
 	}
@@ -128,7 +136,9 @@ public class RoomController {
 	})
 	@GetMapping(params = "roomName")
 	public ResponseEntity<CommonResponse<RoomsSearchResponse>> searchRooms(
-		@RequestParam String roomName) {
+		@RequestParam
+		@NotBlank(message = "검색어를 입력해주세요.")
+		String roomName) {
 		RoomsSearchResponse dto = roomService.searchRooms(roomName);
 		return ok(dto);
 	}
@@ -144,7 +154,9 @@ public class RoomController {
 	})
 	@GetMapping("/{roomCode}")
 	public ResponseEntity<CommonResponse<RoomDetailResponse>> getRoomByCode(
-		@PathVariable String roomCode) {
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode) {
 		RoomDetailResponse dto = roomService.getRoomDetail(roomCode);
 		return ok(dto);
 	}

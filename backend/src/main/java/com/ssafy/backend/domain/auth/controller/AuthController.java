@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ import java.util.Map;
 @Tag(name = "Auth", description = "인증 관련 API")
 @RestController
 @RequestMapping("/auth")
+@Validated
 public class AuthController {
 
 	private final AuthService auth;
@@ -50,7 +52,7 @@ public class AuthController {
 
 	/** 로그인 (닉네임만) */
 	@Operation(summary = "로그인 및 닉네임 중복 검사",
-		description = "닉네임이 사용 중이면 available=false, 사용 가능하면 세션 발급 및 available=true 반환")
+		description = "닉네임이 사용 중이면 409")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "로그인 성공",
 			content = @Content(mediaType = "application/json",
@@ -63,7 +65,9 @@ public class AuthController {
 			content = @Content)
 	})
 	@PostMapping("/login")
-	public ResponseEntity<CommonResponse<LoginResponseDto>> login(@Parameter(description = "로그인 요청 정보", required = true) @Valid @RequestBody LoginRequestDto req,
+	public ResponseEntity<CommonResponse<LoginResponseDto>> login(
+		@Parameter(description = "로그인 요청 정보", required = true)
+		@Valid @RequestBody LoginRequestDto req,
 		HttpServletResponse response) {
 
 		String token = auth.login(req);
@@ -118,7 +122,8 @@ public class AuthController {
 			content = @Content)
 	})
 	@GetMapping("/me")
-	public ResponseEntity<CommonResponse<Map<String,String>>> me(@Parameter(hidden = true) @AuthenticationPrincipal String nickname) {
+	public ResponseEntity<CommonResponse<Map<String,String>>> me(
+		@Parameter(hidden = true) @AuthenticationPrincipal String nickname) {
 		return ok(Map.of("nickname", nickname));
 	}
 }

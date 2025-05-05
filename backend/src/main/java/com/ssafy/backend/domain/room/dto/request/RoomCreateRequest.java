@@ -17,6 +17,8 @@ public record RoomCreateRequest(
 
 	@Schema(description = "호스트 닉네임", example = "그림자은영")
 	@NotBlank(message = "호스트 닉네임은 필수입니다.")
+	@Size(min = 2, max = 10, message = "닉네임은 2~10자여야 합니다.")
+	@Pattern(regexp = "^[A-Za-z0-9가-힣]+$", message = "닉네임은 영어, 한글, 숫자만 사용할 수 있습니다.")
 	String hostNickname,
 
 	@Schema(description = "게임 모드", example = "DEFAULT")
