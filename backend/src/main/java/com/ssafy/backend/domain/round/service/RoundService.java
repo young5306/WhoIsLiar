@@ -10,12 +10,16 @@ import java.util.stream.IntStream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ssafy.backend.domain.auth.entity.SessionEntity;
+import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.entity.ParticipantRound;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
+import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
@@ -27,6 +31,7 @@ import com.ssafy.backend.global.enums.GameMode;
 import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.exception.CustomException;
+import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
 import lombok.RequiredArgsConstructor;
@@ -43,6 +48,7 @@ public class RoundService {
 	private final CategoryWordRepository categoryWordRepository;
 	private final Random random = new Random();
 	private final GptService gptService;
+	private final SessionRepository sessionRepository;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
@@ -129,5 +135,48 @@ public class RoundService {
 				.build();
 			participantRoundRepository.save(pr);
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public PlayerRoundInfoResponse getPlayerRoundSetup(String roomCode, int roundNumber) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String nickname = SecurityUtils.getCurrentNickname();
+		if (nickname == null) {
+			throw new CustomException(ResponseCode.UNAUTHORIZED);
+		}
+		SessionEntity session = sessionRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
+
+		Participant meParticipant = participantRepository
+			.findByRoomAndSession(room, session)
+			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
+
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		List<PlayerPositionDto> participants = prList.stream()
+			.map(pr -> new PlayerPositionDto(
+				pr.getParticipant().getId(),
+				pr.getOrder()))
+			.collect(Collectors.toList());
+
+		boolean isLiar = prList.stream()
+			.filter(pr -> pr.getParticipant().getId().equals(meParticipant.getId()))
+			.findFirst()
+			.map(ParticipantRound::isLiar)
+			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
+
+		String word;
+		if (room.getGameMode() == GameMode.DEFAULT) {
+			word = isLiar ? "" : round.getWord1();
+		} else {
+			word = isLiar ? round.getWord2() : round.getWord1();
+		}
+
+		return new PlayerRoundInfoResponse(participants, word);
 	}
 }

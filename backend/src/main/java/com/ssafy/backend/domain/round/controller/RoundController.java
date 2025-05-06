@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
-import com.ssafy.backend.domain.round.dto.response.AssignRoleResponse;
-import com.ssafy.backend.domain.round.dto.response.RoundWordResponse;
 import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.global.common.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 
 @Tag(name = "Round", description = "라운드 관련 API")
 @RestController
@@ -65,6 +67,33 @@ public class RoundController {
 		@Valid @RequestBody RoundSettingRequest request) {
 		roundService.settingRound(request);
 		return ok(null);
+	}
+
+	@Operation(
+		summary = "모든 참가자 순서 및 나의 단어 조회",
+		description = "해당 라운드의 전 참가자 순서 목록과 나에게 할당된 단어를 반환합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "조회 성공",
+			content = @Content(schema = @Schema(implementation = PlayerRoundInfoResponse.class))),
+		@ApiResponse(responseCode = "401", description = "인증 필요"),
+		@ApiResponse(responseCode = "403", description = "방 참가자 아님"),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드 없음")
+	})
+	@GetMapping("/{roomCode}/{roundNumber}/player-info")
+	public ResponseEntity<CommonResponse<PlayerRoundInfoResponse>> getPlayerRoundInfo(
+		@Parameter(description = "방 코드", required = true)
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode,
+
+		@Parameter(description = "라운드 번호", required = true, example = "1")
+		@PathVariable
+		@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
+		int roundNumber
+	) {
+		PlayerRoundInfoResponse dto = roundService.getPlayerRoundSetup(roomCode, roundNumber);
+		return ok(dto);
 	}
 }
 
