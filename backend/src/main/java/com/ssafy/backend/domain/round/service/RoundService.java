@@ -79,13 +79,6 @@ public class RoundService {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		room.setGameMode(request.gameMode());
-		room.setCategory(request.category());
-		if (room.getRoomStatus() != RoomStatus.playing) {
-			room.setRoomStatus(RoomStatus.playing);
-		}
-		room.setUpdatedAt(LocalDateTime.now());
-
 		List<CategoryWord> candidates =
 			request.category() == Category.랜덤
 				? categoryWordRepository.findAll()
