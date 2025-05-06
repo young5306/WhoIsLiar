@@ -276,19 +276,22 @@ const WaitingRoomContent = () => {
         // 새로운 구독 설정
         subscription = stompClient.subscribe(
           `/topic/room.${contextRoomCode}`,
-          (frame) => {
+          async (frame) => {
             const message = JSON.parse(frame.body);
             // 중복 메시지 체크
             setChatMessages((prev) => {
-              // const isDuplicate = prev.some(
-              //   (msg) =>
-              //     msg.sender === message.sender &&
-              //     msg.content === message.content &&
-              //     msg.chatType === message.chatType
-              // );
-              // if (isDuplicate) return prev;
               return [...prev, message];
             });
+
+            // 시스템 메시지일 경우 참여자 정보 최신화
+            if (message.chatType === 'SYSTEM') {
+              try {
+                const response = await getRoomData(contextRoomCode);
+                setRoomData(response);
+              } catch (error) {
+                console.error('Failed to fetch room data:', error);
+              }
+            }
           }
         );
 
