@@ -21,7 +21,11 @@ public class ServiceTimeAspect {
 	@Pointcut("within(com.ssafy.backend.domain..*Service)")
 	public void serviceLayer() {}
 
-	@Around("serviceLayer()")
+	@Pointcut("execution(* com.ssafy.backend.domain.auth.service.AuthService.validateAndRefresh(..))")
+	public void excludeValidate() {}
+
+	// @Around("serviceLayer()")
+	@Around("serviceLayer() && !excludeValidate()")
 	public Object logService(ProceedingJoinPoint joinPoint) throws Throwable {
 		String className  = joinPoint.getSignature().getDeclaringType().getSimpleName();
 		String methodName = joinPoint.getSignature().getName();
