@@ -50,3 +50,8 @@ export const getRoomData = async (roomCode: string) => {
   const res = await api.get(`/rooms/${roomCode}`);
   return res.data.data;
 };
+
+export const getRoomParticipants = async (roomCode: string) => {
+  const res = await api.get(`/rooms/${roomCode}/participants`);
+  return res.data.data;
+};
