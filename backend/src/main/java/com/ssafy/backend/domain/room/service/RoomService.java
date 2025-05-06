@@ -328,7 +328,7 @@ public class RoomService {
 			throw new CustomException(ResponseCode.ROOM_PLAYING);
 		}
 
-		room.setRoomStatus(RoomStatus.playing);
+		room.startGame(RoomStatus.playing);
 
 		chatSocketService.gameStarted(roomCode);
 	}
