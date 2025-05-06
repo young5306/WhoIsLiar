@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ssafy.backend.domain.round.dto.request.AssignRoleRequest;
+import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.AssignRoleResponse;
 import com.ssafy.backend.domain.round.dto.response.RoundWordResponse;
 import com.ssafy.backend.domain.round.service.RoundService;
@@ -38,53 +38,6 @@ public class RoundController {
 		this.roundService = roundService;
 	}
 
-	@Operation(
-		summary = "라운드 역할 할당",
-		description = "주어진 방 코드와 라운드 번호에 대해 라이어를 랜덤으로 할당합니다."
-	)
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "요청 성공",
-			content = @Content(mediaType = "application/json",
-				schema = @Schema(implementation = AssignRoleResponse.class))),
-		@ApiResponse(responseCode = "400", description = "유효성 검사 실패", content = @Content),
-		@ApiResponse(responseCode = "401", description = "인증이 필요합니다.", content = @Content),
-		@ApiResponse(responseCode = "403", description = "권한이 없습니다.", content = @Content),
-		@ApiResponse(responseCode = "404", description = "방 또는 참가자를 찾을 수 없습니다.", content = @Content),
-		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
-	})
-	@PostMapping("/assign/role")
-	public ResponseEntity<CommonResponse<AssignRoleResponse>> assignRole(
-		@RequestBody(description = "라운드 역할 할당 요청 정보", required = true,
-			content = @Content(schema = @Schema(implementation = AssignRoleRequest.class)))
-		@Valid @org.springframework.web.bind.annotation.RequestBody AssignRoleRequest request) {
-		AssignRoleResponse response = roundService.assignRole(request);
-		return ok(response);
-	}
-
-
-	@Operation(summary = "라운드 단어 조회", description = "라운드 ID에 따라 단어를 반환합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "조회 성공",
-			content = @Content(schema = @Schema(implementation = RoundWordResponse.class))),
-		@ApiResponse(responseCode = "400", description = "잘못된 요청",
-			content = @Content),
-		@ApiResponse(responseCode = "401", description = "인증 필요",
-			content = @Content),
-		@ApiResponse(responseCode = "403", description = "권한 없음",
-			content = @Content),
-		@ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없습니다.",
-			content = @Content),
-		@ApiResponse(responseCode = "500", description = "서버 오류",
-			content = @Content)
-	})
-	@GetMapping("/{roundId}/word")
-	public ResponseEntity<CommonResponse<RoundWordResponse>> getWord(
-		@PathVariable
-		Long roundId) {
-		RoundWordResponse res = roundService.getRoundWord(roundId);
-		return ok(res);
-	}
-
 	@Operation(summary = "게임 종료", description = "해당 방 코드에 대한 게임 데이터를 전부 삭제합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "게임 종료 및 데이터 삭제 완료"),
@@ -94,6 +47,23 @@ public class RoundController {
 	@DeleteMapping("/{roomCode}/end")
 	public ResponseEntity<CommonResponse<Void>> endGame(@PathVariable String roomCode) {
 		roundService.deleteGame(roomCode);
+		return ok(null);
+	}
+
+	@Operation(summary = "라운드 세팅", description = "방의 게임 모드·카테고리 설정 후 라운드 및 참가자-라운드 데이터를 생성합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "요청 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청(파라미터 오류)", content = @Content),
+		@ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+		@ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
+		@ApiResponse(responseCode = "404", description = "방을 찾을 수 없음", content = @Content),
+		@ApiResponse(responseCode = "409", description = "생성 충돌(참가자 없음 등)", content = @Content),
+		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
+	})
+	@PostMapping("/setting")
+	public ResponseEntity<CommonResponse<Void>> settingRound(
+		@Valid @RequestBody RoundSettingRequest request) {
+		roundService.settingRound(request);
 		return ok(null);
 	}
 }
