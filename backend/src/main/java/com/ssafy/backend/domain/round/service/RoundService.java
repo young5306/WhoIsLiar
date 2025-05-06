@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.domain.chat.service.ChatSocketService;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.entity.ParticipantRound;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
@@ -50,6 +51,7 @@ public class RoundService {
 	private final Random random = new Random();
 	private final GptService gptService;
 	private final SessionRepository sessionRepository;
+	private final ChatSocketService chatSocketService;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
@@ -59,19 +61,15 @@ public class RoundService {
 		List<Round> rounds = roundRepository.findByRoom(room);
 		List<Participant> participants = participantRepository.findByRoomAndActive(room);
 
-		// 1. ParticipantRound 먼저 삭제
+		// ParticipantRound -> Round -> Participant -> Room 순서로 삭제
 		for (Round round : rounds) {
 			participantRoundRepository.deleteByRound(round);
 		}
-
-		// 2. Round 삭제
 		roundRepository.deleteAll(rounds);
-
-		// 3. Participant 삭제 (isActive == true만)
 		participantRepository.deleteAll(participants);
-
-		// 4. Room 삭제
 		roomRepository.delete(room);
+
+		chatSocketService.gameEnded(roomCode);
 	}
 
 	@Transactional
@@ -188,5 +186,7 @@ public class RoundService {
 		round.setRoundStatus(RoundStatus.discussion);
 		round.setUpdatedAt(LocalDateTime.now());
 		roundRepository.save(round);
+
+		chatSocketService.roundStarted(request.roomCode(), request.roundNumber());
 	}
 }
