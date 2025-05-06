@@ -13,6 +13,7 @@ import com.ssafy.backend.global.enums.RoomStatus;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "rooms")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Room {
