@@ -18,6 +18,7 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
@@ -178,5 +179,21 @@ public class RoundService {
 		}
 
 		return new PlayerRoundInfoResponse(participants, word);
+	}
+
+	public void startRound(RoundStartRequest request) {
+		Room room = roomRepository.findByRoomCode(request.roomCode())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, request.roundNumber())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (round.getRoundStatus() != RoundStatus.waiting) {
+			throw new CustomException(ResponseCode.CONFLICT);
+		}
+
+		round.setRoundStatus(RoundStatus.discussion);
+		round.setUpdatedAt(LocalDateTime.now());
+		roundRepository.save(round);
 	}
 }
