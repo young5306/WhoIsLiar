@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { StreamManager } from 'openvidu-browser';
+import { api } from './Api';
 
 const APPLICATION_SERVER_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -28,6 +29,13 @@ export interface Message {
   sender: string;
   content: string;
   type: 'system' | 'chat';
+}
+
+export interface setRoundRequest {
+  roomCode: string;
+  roundNumber: number;
+  gameMode: string;
+  category: string;
 }
 
 // ck) 서버 통신
@@ -95,3 +103,45 @@ export const createSessionApi = async (
 //     throw error;
 //   }
 // };
+
+// 게임 시작
+// POST /api/rooms/game/start
+export const startGame = async (roomCode: string) => {
+  const res = await api.post(`/rooms/game/start`, { roomCode });
+  return res.data;
+};
+
+// 라운드 세팅
+// [POST] /api/rounds/setting
+export const setRound = async (params: setRoundRequest) => {
+  const res = await api.post(`/rounds/setting`, { params });
+  return res.data;
+};
+
+// 라운드 세팅 개인 정보 가져오기
+// /api/rounds/{roomCode}/{roundNumber}/player-info
+export const getPlayerInfo = async (roomCode: string, roundNumber: number) => {
+  const res = await api.get(`/rounds/${roomCode}/${roundNumber}/player-info`);
+  return res.data;
+};
+
+// 라운드 시작
+// /api/rounds/start
+export const startRound = async (roomCode: string, roundNumber: number) => {
+  const res = await api.post(`/rounds/start`, { roomCode, roundNumber });
+  return res.data;
+};
+
+// 게임 종료(라운드 삭제)
+// [DELETE] /api/rounds/{roomCode}/end
+export const endRound = async (roomCode: string) => {
+  const res = await api.delete(`/rounds/${roomCode}/end`);
+  return res.data;
+};
+
+// 방 나가기
+// [DELETE] /api/rooms/{roomCode}/out
+export const outRoom = async (roomCode: string) => {
+  const res = await api.delete(`/rooms/${roomCode}/out`);
+  return res.data;
+};
