@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.room.service;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.domain.chat.service.ChatSocketService;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
@@ -39,6 +40,7 @@ public class RoomService {
 	private final RoomRepository roomRepository;
 	private final SessionRepository sessionRepository;
 	private final ParticipantRepository participantRepository;
+	private final ChatSocketService chatSocketService;
 
 	private static final int ROOM_CODE_LENGTH = 6;
 	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -77,6 +79,8 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
+
+		chatSocketService.playerJoined(roomCode, SecurityUtils.getCurrentNickname());
 
 		RoomInfo roomInfo = RoomInfo.builder()
 			.roomName(room.getRoomName())
@@ -143,6 +147,8 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
+
+		chatSocketService.playerJoined(request.roomCode(), SecurityUtils.getCurrentNickname());
 	}
 
 	// 비밀번호를 입력하여 방 참여
@@ -177,6 +183,8 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
+
+		chatSocketService.playerJoined(request.roomCode(), SecurityUtils.getCurrentNickname());
 	}
 
 	// 방의 비밀번호가 올바른지 확인
@@ -307,6 +315,21 @@ public class RoomService {
 		} else {
 			throw new CustomException(ResponseCode.SERVER_ERROR);
 		}
+
+		chatSocketService.playerLeft(roomCode, nickname);
 	}
 
+	// 게임 시작(상태값 playing으로 변경)
+	public void startGame(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (room.getRoomStatus() == RoomStatus.playing) {
+			throw new CustomException(ResponseCode.ROOM_PLAYING);
+		}
+
+		room.startGame(RoomStatus.playing);
+
+		chatSocketService.gameStarted(roomCode);
+	}
 }

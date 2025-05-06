@@ -74,4 +74,9 @@ public class Room {
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
+
+	public void startGame(RoomStatus roomStatus) {
+		this.roomStatus = roomStatus;
+		this.updatedAt = LocalDateTime.now();
+	}
 }
