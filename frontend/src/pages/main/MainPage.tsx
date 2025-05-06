@@ -1,8 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import GameButton from '../../components/common/GameButton';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { useEffect } from 'react';
 
 const MainPage = () => {
   const navigate = useNavigate();
+  const { clearUserInfo } = useAuthStore();
+
+  useEffect(() => {
+    clearUserInfo();
+  }, [clearUserInfo]);
 
   const handleStartGame = () => {
     navigate('/login');
