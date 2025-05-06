@@ -14,18 +14,8 @@ public class StompEventListener {
 	@EventListener
 	public void handleSessionConnected(SessionConnectEvent event) {
 		StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
+		logger.info("************************************************");
 		logger.info("[WS CONNECT] sessionId={} user={}", sha.getSessionId(), sha.getUser());
-	}
-
-	@EventListener
-	public void handleSessionSubscribe(SessionSubscribeEvent event) {
-		StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-		logger.info("[WS SUBSCRIBE] destination={} sessionId={}", sha.getDestination(), sha.getSessionId());
-	}
-
-	@EventListener
-	public void handleSessionDisconnect(SessionDisconnectEvent event) {
-		StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-		logger.info("[WS DISCONNECT] sessionId={}", sha.getSessionId());
+		logger.info("************************************************");
 	}
 }
