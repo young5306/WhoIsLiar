@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.room.controller;
 
 import static com.ssafy.backend.global.common.ResponseUtil.*;
 
+import com.ssafy.backend.domain.room.dto.request.GameStartRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
@@ -164,6 +165,20 @@ public class RoomController {
 	@DeleteMapping("/{roomCode}/out")
 	public ResponseEntity<CommonResponse<Void>> leaveRoom(@PathVariable String roomCode) {
 		roomService.leaveRoom(roomCode);
+		return ok(null);
+	}
+
+	@PostMapping("/game/start")
+	@Operation(summary = "게임 시작", description = "방 코드에 해당하는 방의 게임을 시작합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "게임 시작 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+		@ApiResponse(responseCode = "404", description = "방을 찾을 수 없음"),
+		@ApiResponse(responseCode = "409", description = "이미 시작된 게임"),
+		@ApiResponse(responseCode = "500", description = "서버 오류")
+	})
+	public ResponseEntity<CommonResponse<Void>> startGame(@Valid @RequestBody GameStartRequest request) {
+		roomService.startGame(request.roomCode());
 		return ok(null);
 	}
 }
