@@ -25,3 +25,8 @@ cors:
 openvidu:
   url: ${OPENVIDU_URL}
   secret: ${OPENVIDU_SECRET}
+
+logging:
+  level:
+      # ServiceTimeAspect 클래스가 속한 패키지 전체를 DEBUG 로
+    com.ssafy.backend.global.aop.ServiceTimeAspect: DEBUG

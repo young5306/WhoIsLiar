@@ -13,6 +13,7 @@ import com.ssafy.backend.global.enums.RoomStatus;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "rooms")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Room {
@@ -72,5 +73,10 @@ public class Room {
 		this.roomStatus = roomStatus;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+	}
+
+	public void startGame(RoomStatus roomStatus) {
+		this.roomStatus = roomStatus;
+		this.updatedAt = LocalDateTime.now();
 	}
 }
