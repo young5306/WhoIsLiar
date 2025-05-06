@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.service.RoundService;
@@ -94,6 +95,26 @@ public class RoundController {
 	) {
 		PlayerRoundInfoResponse dto = roundService.getPlayerRoundSetup(roomCode, roundNumber);
 		return ok(dto);
+	}
+
+	@Operation(
+		summary = "라운드 토론 시작",
+		description = "해당 라운드의 상태를 DISCUSSION 으로 변경합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "상태 변경 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청(파라미터 유효성 오류)", content = @Content),
+		@ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드를 찾을 수 없음", content = @Content),
+		@ApiResponse(responseCode = "409", description = "이미 토론 중이거나 상태 변경 불가", content = @Content),
+		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
+	})
+	@PostMapping("/start")
+	public ResponseEntity<CommonResponse<Void>> startDiscussion(
+		@Valid @RequestBody RoundStartRequest request
+	) {
+		roundService.startRound(request);
+		return ok(null);
 	}
 }
 
