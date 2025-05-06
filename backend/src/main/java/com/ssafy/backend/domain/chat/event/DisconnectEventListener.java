@@ -39,7 +39,8 @@ public class DisconnectEventListener {
 
 		if (nickname == null || roomCode == null) return;
 
-		log.info("끊김 감지 - nickname: {}, roomCode: {}", nickname, roomCode);
+		log.info("************************************************");
+		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId() ,nickname, roomCode);
 
 		Room room = roomRepository.findByRoomCode(roomCode).orElse(null);
 		if (room == null || !room.getRoomStatus().equals(RoomStatus.playing)) return;
@@ -49,11 +50,12 @@ public class DisconnectEventListener {
 		Participant participant = participantRepository.findByRoomAndSession(room, session).orElse(null);
 		if (participant != null) {
 			participantRepository.delete(participant);
-			log.info("참가자 {} 방에서 제거됨", nickname);
+			log.info("[WS GameMessage] {}님이 퇴장하셨습니다.", nickname);
 		}
 
 		messagingTemplate.convertAndSend("/topic/room." + roomCode,
 			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.", ChatType.PLAYER_LEAVE));
+		log.info("************************************************");
 	}
 }
 

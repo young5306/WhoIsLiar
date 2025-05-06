@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.room.service;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
+import com.ssafy.backend.domain.chat.service.ChatSocketService;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
@@ -39,10 +40,12 @@ public class RoomService {
 	private final RoomRepository roomRepository;
 	private final SessionRepository sessionRepository;
 	private final ParticipantRepository participantRepository;
+	private final ChatSocketService chatSocketService;
 
 	private static final int ROOM_CODE_LENGTH = 6;
 	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+	// 방을 생성하고 호스트를 참가자로 등록
 	@Transactional
 	public RoomCreateResponse createRoom(RoomCreateRequest request) {
 
@@ -77,6 +80,8 @@ public class RoomService {
 			.build();
 		participantRepository.save(participant);
 
+		chatSocketService.playerJoined(roomCode, SecurityUtils.getCurrentNickname());
+
 		RoomInfo roomInfo = RoomInfo.builder()
 			.roomName(room.getRoomName())
 			.roomCode(room.getRoomCode())
@@ -95,6 +100,7 @@ public class RoomService {
 			.build();
 	}
 
+	// 중복되지 않는 방 코드를 생성
 	private String generateUniqueRoomCode() {
 		Random random = new Random();
 		String roomCode;
@@ -111,6 +117,7 @@ public class RoomService {
 		return roomCode;
 	}
 
+	// 방 코드로 공개 방에 참여
 	@Transactional
 	public void joinRoomByCode(RoomJoinByCodeRequest request) {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
@@ -140,8 +147,11 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
+
+		chatSocketService.playerJoined(request.roomCode(), SecurityUtils.getCurrentNickname());
 	}
 
+	// 비밀번호를 입력하여 방 참여
 	@Transactional
 	public void joinRoomByPassword(RoomJoinByPasswordRequest request) {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
@@ -173,14 +183,18 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
+
+		chatSocketService.playerJoined(request.roomCode(), SecurityUtils.getCurrentNickname());
 	}
 
+	// 방의 비밀번호가 올바른지 확인
 	public void checkPassword(Room room, String password) {
 		if (!room.getPassword().equals(password)) {
 			throw new CustomException(ResponseCode.FORBIDDEN);
 		}
 	}
 
+	// 전체 방 목록을 조회
 	@Transactional(readOnly = true)
 	public RoomsListResponse getRoomsList() {
 		List<Room> rooms = roomRepository.findAll();
@@ -204,6 +218,7 @@ public class RoomService {
 		return new RoomsListResponse(roomInfos);
 	}
 
+	// 방에 참가한 사용자 목록을 조회
 	@Transactional(readOnly = true)
 	public ParticipantsListResponse getParticipants(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
@@ -238,6 +253,7 @@ public class RoomService {
 		return new RoomsSearchResponse(result);
 	}
 
+	// 방의 상세 정보와 참가자 목록
 	@Transactional(readOnly = true)
 	public RoomDetailResponse getRoomDetail(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
@@ -268,5 +284,52 @@ public class RoomService {
 			.collect(Collectors.toList());
 
 		return new RoomDetailResponse(info, parts);
+	}
+
+	// 방 나가기
+	@Transactional
+	public void leaveRoom(String roomCode) {
+		String nickname = SecurityUtils.getCurrentNickname();
+
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		SessionEntity session = sessionRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Participant participant = participantRepository.findByRoomAndSession(room, session)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (room.getRoomStatus() == RoomStatus.waiting) {
+			// 참가자 제거
+			participantRepository.delete(participant);
+
+			// (남은 참가자 수 == 0) => 방 삭제
+			int remainingCount = participantRepository.countByRoom(room);
+			if (remainingCount == 0) {
+				roomRepository.delete(room); // 마지막 인원이면 방도 삭제
+			}
+		} else if (room.getRoomStatus() == RoomStatus.playing) {
+			// 게임 중이면 비활성화만
+			participant.setActive(false);
+		} else {
+			throw new CustomException(ResponseCode.SERVER_ERROR);
+		}
+
+		chatSocketService.playerLeft(roomCode, nickname);
+	}
+
+	// 게임 시작(상태값 playing으로 변경)
+	public void startGame(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (room.getRoomStatus() == RoomStatus.playing) {
+			throw new CustomException(ResponseCode.ROOM_PLAYING);
+		}
+
+		room.startGame(RoomStatus.playing);
+
+		chatSocketService.gameStarted(roomCode);
 	}
 }

@@ -22,8 +22,8 @@ public class ChatSocketController {
 
 	@MessageMapping("/chat.send/{roomCode}")
 	public void sendMessage(@DestinationVariable String roomCode, @Payload ChatMessage message) {
-		log.info("메시지 수신 - roomCode: {}, sender: {}, content: {}", roomCode, message.sender(), message.content());
-
+		// log.info("메시지 수신 - roomCode: {}, sender: {}, content: {}", roomCode, message.sender(), message.content());
+		log.info("[WS GameMessage][chat][{}] {}: {}", roomCode, message.sender(), message.content());
 		// /topic/room.{roomCode} 구독자에게 메시지 전송
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
 	}
@@ -36,6 +36,7 @@ public class ChatSocketController {
 			ChatType.GAME_START
 		);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		log.info("[WS GameMessage][SYSTEM][{}] 게임이 시작되었습니다.",roomCode);
 	}
 
 	@MessageMapping("/game.end/{roomCode}")
@@ -45,6 +46,7 @@ public class ChatSocketController {
 			"게임이 종료되었습니다.",
 			ChatType.GAME_END);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		log.info("[WS GameMessage][SYSTEM][{}] 게임이 종료되었습니다.",roomCode);
 	}
 
 	@MessageMapping("/game.forceend/{roomCode}")
@@ -54,6 +56,7 @@ public class ChatSocketController {
 			"게임이 강제 종료되었습니다.",
 			ChatType.GAME_FORCE_END);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		log.info("[WS GameMessage][SYSTEM][{}] 게임이 강제 종료되었습니다.",roomCode);
 	}
 
 	@MessageMapping("/round.start/{roomCode}")
@@ -63,6 +66,7 @@ public class ChatSocketController {
 			roundNumber + "라운드가 시작되었습니다.",
 			ChatType.ROUND_START);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		log.info("[WS GameMessage][SYSTEM][{}] {}라운드 진행 중, 게임이 강제 종료되었습니다.",roomCode, roundNumber);
 	}
 
 	@MessageMapping("/round.end/{roomCode}")
@@ -72,6 +76,7 @@ public class ChatSocketController {
 			roundNumber + "라운드가 종료되었습니다.",
 			ChatType.ROUND_END);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		log.info("[WS GameMessage][SYSTEM][{}] {}라운드가 종료되었습니다.",roomCode, roundNumber);
 	}
 
 	@MessageMapping("/player.leave/{roomCode}")
@@ -81,6 +86,7 @@ public class ChatSocketController {
 			nickname + "님이 퇴장했습니다.",
 			ChatType.PLAYER_LEAVE);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		log.info("[WS GameMessage][SYSTEM][{}] {}님이 퇴장했습니다.",roomCode, nickname);
 	}
 
 }

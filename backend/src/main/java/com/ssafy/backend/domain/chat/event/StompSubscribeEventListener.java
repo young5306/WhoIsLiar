@@ -26,7 +26,8 @@ public class StompSubscribeEventListener {
 		String destination = accessor.getDestination(); // ex: "/topic/room.n8SymH"
 		String sessionId = accessor.getSessionId();
 
-		log.info("구독 이벤트 감지 - destination: {}, sessionId: {}", destination, sessionId);
+		log.info("************************************************");
+		log.info("[WS SUBSCRIBE] 구독 이벤트 감지 - destination: {}, sessionId: {}", destination, sessionId);
 
 		// destination 유효성 확인
 		if (destination != null && destination.startsWith("/topic/room.")) {
@@ -37,6 +38,8 @@ public class StompSubscribeEventListener {
 			}
 
 			String message = nickname + "님이 입장하셨습니다.";
+			log.info("[WS GameMessage] {}님이 입장하셨습니다.", nickname);
+
 
 			ChatMessage systemMessage = new ChatMessage(
 				"SYSTEM",
@@ -46,5 +49,6 @@ public class StompSubscribeEventListener {
 
 			messagingTemplate.convertAndSend(destination, systemMessage);
 		}
+		log.info("************************************************");
 	}
 }
