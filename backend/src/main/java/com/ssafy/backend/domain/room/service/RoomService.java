@@ -240,7 +240,7 @@ public class RoomService {
 		var rooms = roomRepository.findByRoomNameContaining(roomName);
 		var result = rooms.stream()
 			.map(room -> {
-				int count = participantRepository.countByRoom(room) + 1;
+				int count = participantRepository.countByRoom(room);
 				return new RoomSearchResponse(
 					room.getRoomName(),
 					room.getSession().getNickname(),
