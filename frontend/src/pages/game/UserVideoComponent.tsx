@@ -24,7 +24,7 @@ const UserVideoComponent: React.FC<UserVideoComponentProps> = ({
       {streamManager !== undefined ? (
         <div
           className="streamcomponent w-full h-full "
-          style={{ transform: 'scaleX(-1) scale(1.2) translateY(-10px)' }}
+          style={{ transform: 'scaleX(-1) scale(1.5) translateY(-15px)' }}
         >
           {/* 비디오 컴포넌트에 streamManager 전달 */}
           <OpenViduVideoComponent streamManager={streamManager} />

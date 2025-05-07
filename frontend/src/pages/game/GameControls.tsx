@@ -26,7 +26,7 @@ const GameControls = ({
   onLeaveSession,
 }: GameControlsProps) => {
   const handleSettings = () => {
-    console.log('Settings');
+    // console.log('Settings');
   };
   return (
     <>

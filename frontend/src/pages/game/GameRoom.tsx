@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   OpenVidu,
   Publisher,
@@ -20,10 +21,12 @@ import UserVideoComponent from './UserVideoComponent';
 import GameButton from '../../components/common/GameButton';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
+
+import { loadModels } from '../../services/api/FaceApiService';
 import EmotionLog from './FaceApi';
 
 const GameRoom: React.FC = () => {
-  // const navigation = useNavigate();
+  const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [_myToken, setMyToken] = useState<string>('');
 
@@ -85,13 +88,25 @@ const GameRoom: React.FC = () => {
 
     if (roomCode) {
       setMySessionId(roomCode);
-      console.log('roomCode', roomCode);
+      // console.log('roomCode', roomCode);
     } else {
       setMySessionId('');
       // alert('게임방에 입장해주세요');
       // navigation('/room-list');
     }
   }, []);
+
+  useEffect(() => {
+    loadModels('/models')
+      .then(() => console.log('✅ face-api models loaded'))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (myUserName && mySessionId && session === undefined) {
+      joinSession();
+    }
+  }, [myUserName, mySessionId, session]);
 
   // ck) 세션ID 입력값 변경
   const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,7 +162,7 @@ const GameRoom: React.FC = () => {
         videoSource: undefined,
         publishAudio: isAudioEnabled,
         publishVideo: isVideoEnabled,
-        resolution: '1280x720',
+        resolution: '640x480',
         frameRate: 30,
         insertMode: 'APPEND',
         mirror: false,
@@ -219,6 +234,8 @@ const GameRoom: React.FC = () => {
     // ck) 카메라, 마이크 연결 끊기
     setCurrentVideoDevice(null);
     setCurrentMicDevice(null);
+
+    navigation('/room-list');
   }, [session, userInfo]);
 
   // ck) 사용자 세션 닫힐 때, 세션 정리(cleanup)
@@ -357,7 +374,7 @@ const GameRoom: React.FC = () => {
 
   return (
     <>
-      {session === undefined ? (
+      {/* {session === undefined ? (
         <div id="join">
           <div id="join-dialog" className="jumbotron vertical-center">
             <div className="text-white">GameRoom</div>
@@ -370,9 +387,9 @@ const GameRoom: React.FC = () => {
                 {myUserName}
               </div>
               <div className="flex justify-center">
-                <label>Session: </label>
-                {/* {mySessionId} */}
-                <input
+                <label>Session: </label> */}
+      {/* {mySessionId} */}
+      {/* <input
                   className="form-control w-30"
                   type="text"
                   id="sessionId"
@@ -385,7 +402,7 @@ const GameRoom: React.FC = () => {
             <GameButton text="시작하기" size="small" onClick={joinSession} />
           </div>
         </div>
-      ) : null}
+      ) : null} */}
 
       {session !== undefined ? (
         <>
@@ -423,12 +440,12 @@ const GameRoom: React.FC = () => {
 
               {/* my video */}
               <div className={`relative ${myPosition}`}>
-                <div className="w-full bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
-                  <div className="w-full h-full relative">
+                <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                  <div className="w-full min-h-[150px] max-h-[170px] relative">
                     <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                       나
                     </div>
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                       {publisher && isVideoEnabled ? (
                         <UserVideoComponent streamManager={publisher} />
                       ) : (
