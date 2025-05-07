@@ -93,8 +93,8 @@ const GameRoom: React.FC = () => {
       // console.log('roomCode', roomCode);
     } else {
       setMySessionId('');
-      // alert('게임방에 입장해주세요');
-      // navigation('/room-list');
+      alert('게임방에 입장해주세요');
+      navigation('/room-list');
     }
   }, []);
 
@@ -108,7 +108,7 @@ const GameRoom: React.FC = () => {
     if (myUserName && mySessionId && session === undefined) {
       joinSession();
     }
-  }, [myUserName, mySessionId, session]);
+  }, [myUserName, mySessionId]);
 
   // // ck) 세션ID 입력값 변경
   // const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,12 +213,7 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  // ck) 세션 퇴장
-  const leaveSession = useCallback(async () => {
-    if (session) {
-      session.disconnect();
-    }
-
+  const outGameRoom = async () => {
     try {
       if (roomCode) {
         await outRoom(roomCode);
@@ -226,6 +221,13 @@ const GameRoom: React.FC = () => {
       }
     } catch (error) {
       console.error('게임 종료 실패: ', error);
+    }
+  };
+
+  // ck) 세션 퇴장
+  const leaveSession = useCallback(() => {
+    if (session) {
+      session.disconnect();
     }
 
     OV.current = null;
@@ -248,8 +250,10 @@ const GameRoom: React.FC = () => {
     setCurrentMicDevice(null);
 
     setRoomCode('');
+    outGameRoom();
+    console.log('종료된건가?');
     navigation('/room-list');
-  }, [session, userInfo, roomCode]);
+  }, [session, userInfo]);
 
   // ck) 사용자 세션 닫힐 때, 세션 정리(cleanup)
   useEffect(() => {
