@@ -8,6 +8,7 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
+import com.ssafy.backend.domain.room.dto.request.SelectCategoryRequest;
 import com.ssafy.backend.domain.room.dto.response.ParticipantInfo;
 import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
@@ -331,5 +332,15 @@ public class RoomService {
 		room.startGame(RoomStatus.playing);
 
 		chatSocketService.gameStarted(roomCode);
+	}
+
+	// 카테고리 선택
+	public void selectCategory(SelectCategoryRequest request) {
+		Room room = roomRepository.findByRoomCode(request.roomCode())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		room.selectCategory(request.category());
+
+		chatSocketService.categorySelected(request.roomCode(), request.category());
 	}
 }
