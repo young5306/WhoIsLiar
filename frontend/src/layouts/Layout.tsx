@@ -45,7 +45,7 @@ const Layout = () => {
       />
 
       {/* 컨텐츠 영역 */}
-      <div className="relative w-full h-full p-8 z-10">
+      <div className="relative w-full h-full pt-8 z-10">
         <Outlet />
       </div>
     </div>
