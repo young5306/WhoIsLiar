@@ -1,12 +1,13 @@
 import { useRef, useEffect, useState } from 'react';
 import {
-  loadModels,
+  // loadModels,
   detectExpressions,
   Emotion,
   EMOTION_STYLE,
   FaceApiResult,
 } from '../../services/api/FaceApiService';
 import { StreamManager } from 'openvidu-browser';
+import { isFaceApiModelLoaded } from '../../services/api/FaceApiService';
 
 interface EmotionLogProps {
   streamManager: StreamManager;
@@ -35,26 +36,30 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
     const init = async () => {
       if (!videoRef.current || !streamManager?.stream?.getMediaStream) return;
 
-      await loadModels('/models');
+      // await loadModels('/models');
 
       const mediaStream = streamManager.stream.getMediaStream();
       videoRef.current.srcObject = mediaStream;
 
       await videoRef.current.play();
-      setIsReady(true);
 
-      const detectLoop = async () => {
-        if (videoRef.current) {
-          const res = await detectExpressions(videoRef.current);
-          setEmotionResult(res);
-        }
-        requestAnimationFrame(detectLoop);
-      };
+      if (isFaceApiModelLoaded()) {
+        setIsReady(true);
+      }
 
-      detectLoop();
+      // const detectLoop = async () => {
+      //   if (videoRef.current) {
+      //     const res = await detectExpressions(videoRef.current);
+      //     setEmotionResult(res);
+      //   }
+      //   requestAnimationFrame(detectLoop);
+      // };
+
+      // detectLoop();
     };
 
-    init();
+    setTimeout(init, 100);
+    // init();
 
     // clean up (unmount)
     return () => {
@@ -65,6 +70,20 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
       }
     };
   }, [streamManager]);
+
+  useEffect(() => {
+    if (!isReady || !videoRef.current) return;
+
+    const interval = setInterval(async () => {
+      // ! => non-null assertion operator
+      const res = await detectExpressions(videoRef.current!);
+      if (res) {
+        setEmotionResult(res);
+      }
+    }, 2000); // 2초
+
+    return () => clearInterval(interval);
+  }, [isReady]);
 
   useEffect(() => {
     if (!emotionResult) return;
@@ -155,11 +174,12 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
     <div className="flex gap-4">
       <video
         ref={videoRef}
+        autoPlay
+        muted
+        playsInline
         style={{
           display: 'none',
         }}
-        muted
-        playsInline
       />
       <div className="w-[190px]"></div>
       <div className="max-h-[170px] min-h-[160px] w-[152px] min-w-[152px] rounded-xl px-2 py-1 bg-[#320000] text-red-600 flex">
