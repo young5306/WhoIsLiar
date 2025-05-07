@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
+import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.global.common.CommonResponse;
 
@@ -115,6 +117,30 @@ public class RoundController {
 	) {
 		roundService.startRound(request);
 		return ok(null);
+	}
+
+	@Operation(summary = "투표 제출", description = "해당 라운드에 대한 투표를 제출합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "투표가 성공적으로 제출되었습니다."),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+		@ApiResponse(responseCode = "401", description = "인증 필요"),
+		@ApiResponse(responseCode = "403", description = "권한 없음"),
+		@ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음")
+	})
+	@PostMapping("/{roomCode}/{roundNumber}/votes")
+	public ResponseEntity<CommonResponse<VoteResponseDto>> vote(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode,
+
+		@PathVariable
+		@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
+		int roundNumber,
+
+		@Valid @RequestBody VoteRequestDto request
+	) {
+		VoteResponseDto dto = roundService.vote(roomCode, roundNumber, request);
+		return ok(dto);
 	}
 }
 
