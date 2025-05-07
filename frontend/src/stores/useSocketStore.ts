@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { Client as StompClient } from '@stomp/stompjs';
 
 export type SocketMessage = {
   sender: string;
