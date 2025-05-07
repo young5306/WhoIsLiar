@@ -18,14 +18,24 @@ export interface FaceApiResult {
   topEmotion: { emotion: Emotion; probability: number }; // 최고 확률의 감정
 }
 
+let faceApiModelIsLoaded = false;
+
 // face-api.js 얼굴 인식 모델 로드
 export const loadModels = async (modelUrl: string): Promise<void> => {
+  if (faceApiModelIsLoaded) return;
+
   await Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl), // 얼굴 탐지 모델
     faceapi.nets.faceExpressionNet.loadFromUri(modelUrl), // 감정 예측 모델
     faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl), // 얼굴 랜드마크(얼굴 특정 지점) 모델
   ]);
+
+  faceApiModelIsLoaded = true;
 };
+
+export function isFaceApiModelLoaded() {
+  return faceApiModelIsLoaded;
+}
 
 // 감정 추출 함수
 export const detectExpressions = async (
