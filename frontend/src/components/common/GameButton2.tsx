@@ -18,7 +18,7 @@ const GameButton2 = ({ text, onClick }: GameButton2Props) => {
           hover:brightness-140
           active:brightness-90
           transition
-          px-6 py-2 display-medium
+          px-6 py-2 display-small
           cursor-pointer
         "
       >

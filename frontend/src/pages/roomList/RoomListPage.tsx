@@ -158,7 +158,7 @@ const RoomListPage = () => {
   };
 
   return (
-    <div className="w-screen h-screen mt-20 p-20 py-10">
+    <div className="w-screen h-screen mt-10 px-40 py-8">
       <div className="absolute top-4 right-4 flex items-center gap-4">
         <div className="text-gray-0 headline-medium">
           {userInfo?.nickname}님 안녕하세요!
@@ -167,10 +167,10 @@ const RoomListPage = () => {
       </div>
       <div className="flex items-end justify-between mb-5">
         <div className="flex items-center gap-2">
-          <h1 className="display-medium text-gray-0">방 목록</h1>
+          <h1 className="display-small text-gray-0">방 목록</h1>
           {/* 새로고침 아이콘 버튼 */}
           <button onClick={handleRefresh} className="cursor-pointer">
-            <img src="/assets/renew.png" alt="갱신" className="w-12" />
+            <img src="/assets/renew.png" alt="갱신" className="w-10" />
           </button>
         </div>
 
@@ -212,16 +212,16 @@ const RoomListPage = () => {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="방 제목 검색"
-            className="headline-medium bg-transparent outline-none border-b border-gray-0 text-gray-0 placeholder-gray-0/20 w-[70%]"
+            className="headline-medium py-2 bg-transparent outline-none border-b border-gray-0 text-gray-0 placeholder-gray-0/20 w-[70%]"
           />
         </div>
       </div>
 
-      <div className="max-h-[550px] overflow-y-auto custom-scrollbar">
+      <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
         {rooms.map((room, idx) => (
           <div
             key={idx}
-            className="border-3 border-transparent hover:border-primary-600 flex items-center justify-between px-4 py-2 my-3 bg-gray-0/20 rounded-lg headline-large w-full"
+            className="border-3 border-transparent hover:border-primary-600 flex items-center justify-between px-4 py-1 my-3 bg-gray-0/20 rounded-lg headline-medium w-full"
           >
             <div className="flex items-center w-full text-gray-0">
               <span className="w-20 text-center mr-8">{idx + 1}</span>
@@ -233,7 +233,7 @@ const RoomListPage = () => {
 
               <div className="flex justify-between flex-1 items-center">
                 <div className="w-30 flex items-center justify-start">
-                  <img src="assets/people-white.svg" className="w-9 mr-2" />
+                  <img src="assets/people-white.svg" className="w-8 mr-2" />
                   <span>{room.playerCount}/6</span>
                 </div>
                 <span className="w-30 text-center">
@@ -250,9 +250,9 @@ const RoomListPage = () => {
 
                 <div className="w-12 flex justify-center">
                   {room.isSecret ? (
-                    <img src="assets/lock.svg" className="w-9" />
+                    <img src="assets/lock.svg" className="w-8" />
                   ) : (
-                    <div className="w-5" />
+                    <div className="w-8" />
                   )}
                 </div>
 

@@ -61,7 +61,11 @@ const InputModal = ({
           inputMode={numeric ? 'numeric' : undefined}
           pattern={numeric ? '\\d{4}' : '[A-Za-z0-9]{6}'}
           maxLength={numeric ? 4 : 6}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            const input = e.target.value;
+            const filtered = numeric ? input.replace(/[^0-9]/g, '') : input;
+            setValue(filtered);
+          }}
           placeholder={placeholder}
           className="w-full h-[70px] headline-medium px-3 mb-8 rounded-lg bg-gray-0/20 outline-none placeholder-gray-300 text-gray-0
                      border-3 border-primary-600 focus:ring-2 focus:ring-primary-600/60"
