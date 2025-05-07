@@ -61,18 +61,26 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
       setRoomCode(roomCode);
       onClose();
       navigate(`/waiting-room?roomCode=${roomCode}`);
-    } catch (err) {
-      notify({ type: 'error', text: '방 생성 중 오류가 발생했습니다.' });
+    } catch (err: any) {
+      const st = err?.response?.status;
+      if (st === 409) {
+        notify({
+          type: 'error',
+          text: '이미 다른 방에 참여 중이거나 생성한 방이 존재합니다.',
+        });
+      } else {
+        notify({ type: 'error', text: '방 생성 중 오류가 발생했습니다.' });
+      }
     }
   };
 
   return (
     <div
-      className="fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="text-primary-600 relative bg-gray-900 border-1 border-primary-600 rounded-xl w-[530px] p-6"
+        className="text-primary-600 relative bg-gray-900 border-1 border-primary-600 rounded-xl w-[450px] px-6 py-4"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -82,7 +90,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
           <img
             src="assets/toolTip.png"
             alt="도움말"
-            className="w-8 h-8 cursor-pointer"
+            className="w-6 h-6 cursor-pointer"
           />
         </button>
 
@@ -139,27 +147,27 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
         <h2 className="display-medium text-center mb-4">방 만들기</h2>
 
         <div className="mb-4">
-          <h3 className="headline-large mb-2">화면모드</h3>
+          <h3 className="headline-medium mb-2">화면모드</h3>
           <div className="flex justify-center gap-4">
             <button
               onClick={() => setVideoMode('VIDEO')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+              className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/videoMode.png"
                 alt="비디오 모드"
-                className="w-30 mx-auto"
+                className="w-20 mx-auto"
               />
               <p className="body-medium mt-2 text-primary-600">비디오 모드</p>
             </button>
             <button
               onClick={() => setVideoMode('BLIND')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+              className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/blindMode.png"
                 alt="블라인드 모드"
-                className="w-30 mx-auto"
+                className="w-20 mx-auto"
               />
               <p className="body-medium mt-2 text-primary-600">블라인드 모드</p>
             </button>
@@ -167,49 +175,50 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
         </div>
 
         <div className="mb-4">
-          <h3 className="headline-large mb-2">게임모드</h3>
+          <h3 className="headline-medium mb-2">게임모드</h3>
           <div className="flex justify-center gap-4">
             <button
               onClick={() => setGameMode('DEFAULT')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+              className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/defaultMode.png"
                 alt="일반 모드"
-                className="w-30 mx-auto"
+                className="w-20 mx-auto"
               />
               <p className="body-medium mt-2 text-primary-600">일반 모드</p>
             </button>
             <button
               onClick={() => setGameMode('FOOL')}
-              className={`flex-1 p-2 rounded-md border-3 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+              className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
             >
               <img
                 src="assets/foolMode.png"
                 alt="바보 모드"
-                className="w-30 mx-auto"
+                className="w-20 mx-auto"
               />
               <p className="body-medium mt-2 text-primary-600">바보 모드</p>
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 mb-3 text-primary-600 headline-large">
+        <div className="flex flex-col gap-2 mb-3 text-primary-600 headline-medium">
           <div className="flex items-center gap-4">
-            <label className="w-28">방 제목</label>
+            <label className="w-25">방 제목</label>
             <input
               type="text"
               placeholder="방 제목 입력 (최대 15자)"
+              maxLength={15}
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              className={`w-full flex-1 border-3 rounded-lg p-2 headline-medium placeholder-[#734AA1] bg-gray-900/20 outline-none 
+              className={`w-full flex-1 border-2 rounded-lg px-2 py-1 headline-small placeholder-[#734AA1] bg-gray-900/20 outline-none 
                 ${roomName ? 'border-primary-600' : 'border-[#734AA1]'} 
                 focus:border-primary-600`}
             />
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="w-28">비밀번호</label>
+            <label className="w-25">비밀번호</label>
 
             <input
               type="checkbox"
@@ -222,7 +231,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             {/* 커스텀 체크 박스 */}
             <div
               onClick={() => setIsSecret((prev) => !prev)}
-              className={`w-6 h-6 border-3 rounded-sm cursor-pointer flex items-center justify-center
+              className={`w-6 h-6 border-2 rounded-sm cursor-pointer flex items-center justify-center
                 ${isSecret ? 'border-primary-600' : 'border-[#734AA1]'}`}
             >
               {isSecret && (
@@ -237,8 +246,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
               maxLength={4}
               placeholder="비밀번호 4자리 숫자 입력"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`flex-1 min-w-0 border-3 rounded-lg p-2 headline-medium placeholder-[#734AA1] bg-gray-900/20 outline-none
+              onChange={(e) => {
+                const onlyNums = e.target.value.replace(/[^0-9]/g, '');
+                setPassword(onlyNums);
+              }}
+              className={`flex-1 min-w-0 border-2 rounded-lg px-2 py-1 headline-small placeholder-[#734AA1] bg-gray-900/20 outline-none
                 ${isSecret ? '' : 'invisible pointer-events-none'}
                 ${password ? 'border-primary-600' : 'border-[#734AA1]'}
                 focus:border-primary-600`}
@@ -246,13 +258,13 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="w-28">라운드</label>
+            <label className="w-25">라운드</label>
             <div className="flex justify-between flex-1">
               {[3, 4, 5].map((num) => (
                 <button
                   key={num}
                   onClick={() => setRoundCount(num)}
-                  className={`w-25 h-12 flex items-center justify-center rounded-md border-3 headline-medium cursor-pointer ${
+                  className={`w-22 h-9 flex items-center justify-center rounded-md border-2 headline-small cursor-pointer ${
                     roundCount === num
                       ? 'border-primary-600 text-primary-600'
                       : 'border-[#734AA1] text-[#734AA1]'
@@ -265,11 +277,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
           </div>
         </div>
 
-        <div className="mt-6 flex gap-4">
+        <div className="mt-3 flex gap-2">
           <div className="flex-1">
             <GameButton2 text="취소" onClick={onClose} />
           </div>
-          <div className="flex-2">
+          <div>
             <GameButton2 text="방 만들기" onClick={handleCreate} />
           </div>
         </div>
