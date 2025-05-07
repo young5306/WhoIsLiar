@@ -28,6 +28,7 @@
     "axios": "^1.7.9",
     "event-source-polyfill": "^1.0.31",
     "face-api.js": "^0.22.2",
+    "framer-motion": "^12.10.0",
     "lodash": "^4.17.21",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.475.0",
