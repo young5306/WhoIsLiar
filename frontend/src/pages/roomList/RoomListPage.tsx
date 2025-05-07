@@ -12,11 +12,14 @@ import { useRoomStore } from '../../stores/useRoomStore';
 import { notify } from '../../components/common/Toast';
 import InputModal from '../../components/modals/InputModal';
 import { Crown } from 'lucide-react';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { logoutApi } from '../../services/api/AuthService';
 
 const RoomListPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const handleOpenCreateModal = () => setIsCreateModalOpen(true);
   const handleCloseCreateModal = () => setIsCreateModalOpen(false);
 
@@ -25,19 +28,49 @@ const RoomListPage = () => {
   const [selectedRoomCode, setSelectedRoomCode] = useState<string>(''); // 비밀방 roomCode
 
   const { setRoomCode } = useRoomStore();
+  const { userInfo, clearUserInfo } = useAuthStore();
   const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+      clearUserInfo();
+      navigate('/');
+      notify({ type: 'success', text: '로그아웃되었습니다.' });
+    } catch (error) {
+      notify({ type: 'error', text: '로그아웃 중 오류가 발생했습니다.' });
+    }
+  };
+
   const fetchRooms = async (roomName?: string) => {
+    if (isLoading) return;
+
+    setIsLoading(true);
     try {
       const rooms = await getRoomList(roomName);
       setRooms(rooms);
     } catch (err) {
-      alert('방 목록을 불러오는데 실패했습니다.');
+      console.error('방 목록 조회 실패:', err);
+      notify({ type: 'error', text: '방 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRooms();
+    let isMounted = true;
+
+    const loadRooms = async () => {
+      if (isMounted) {
+        await fetchRooms();
+      }
+    };
+
+    loadRooms();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSearch = () => {
@@ -116,6 +149,12 @@ const RoomListPage = () => {
 
   return (
     <div className="w-screen h-screen mt-20 p-20 py-10">
+      <div className="absolute top-4 right-4 flex items-center gap-4">
+        <div className="text-gray-0 headline-medium">
+          {userInfo?.nickname}님 안녕하세요!
+        </div>
+        <GameButton text="로그아웃" size="small" onClick={handleLogout} />
+      </div>
       <div className="flex items-end justify-between mb-5">
         <div className="flex items-center gap-2">
           <h1 className="display-medium text-gray-0">방 목록</h1>

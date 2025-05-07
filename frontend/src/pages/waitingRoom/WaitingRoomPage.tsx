@@ -5,42 +5,14 @@ import { useRoomStore } from '../../stores/useRoomStore';
 import { VideoOff, Video, Mic, MicOff, Crown, Copy, Check } from 'lucide-react';
 import { getRoomData } from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useNavigate } from 'react-router-dom';
+import { notify } from '../../components/common/Toast';
+import { outRoom } from '../../services/api/GameService';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import { useSocketStore } from '../../stores/useSocketStore';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('random');
-
-  const categories = [
-    { label: '랜덤', id: 'random' },
-    { label: '물건', id: 'object' },
-    { label: '인물', id: 'person' },
-    { label: '음식', id: 'food' },
-    { label: '나라', id: 'country' },
-    { label: '스포츠', id: 'sports' },
-    { label: '직업', id: 'job' },
-    { label: '동물', id: 'animal' },
-    { label: '노래', id: 'song' },
-    { label: '장소', id: 'place' },
-    { label: '영화/드라마', id: 'movie' },
-    { label: '브랜드', id: 'brand' },
-  ];
-
-  const { userInfo } = useAuthStore();
-
-  const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
-  const [isMicOn, setIsMicOn] = useState<boolean>(true);
-  const [audioLevel, setAudioLevel] = useState<number>(0);
-  const [barHeights, setBarHeights] = useState<number[]>(Array(20).fill(2));
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const [chatMessages, setChatMessages] = useState<
-    Array<{ sender: string; content: string; chatType: string }>
-  >([]);
-  const [chatInput, setChatInput] = useState<string>('');
-  const chatInputRef = useRef<HTMLInputElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [roomData, setRoomData] = useState<{
     roomInfo: {
       roomName: string;
@@ -59,7 +31,45 @@ const WaitingRoomContent = () => {
       isActive: boolean;
     }>;
   } | null>(null);
+
+  const categories = [
+    { label: '랜덤', id: 'random' },
+    { label: '물건', id: 'object' },
+    { label: '인물', id: 'person' },
+    { label: '음식', id: 'food' },
+    { label: '나라', id: 'country' },
+    { label: '스포츠', id: 'sports' },
+    { label: '직업', id: 'job' },
+    { label: '동물', id: 'animal' },
+    { label: '노래', id: 'song' },
+    { label: '장소', id: 'place' },
+    { label: '영화/드라마', id: 'movie' },
+    { label: '브랜드', id: 'brand' },
+  ];
+
+  const { userInfo } = useAuthStore();
+  const { roomCode: contextRoomCode, clearRoomCode } = useRoomStore();
+  const isHost = userInfo?.nickname === roomData?.roomInfo.hostNickname;
+
+  const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
+  const [isMicOn, setIsMicOn] = useState<boolean>(true);
+  const [audioLevel, setAudioLevel] = useState<number>(0);
+  const [barHeights, setBarHeights] = useState<number[]>(Array(20).fill(2));
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const [chatMessages, setChatMessages] = useState<
+    Array<{ sender: string; content: string; chatType: string }>
+  >([]);
+  const [chatInput, setChatInput] = useState<string>('');
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const { subscription, setSubscription, clearSubscription } = useSocketStore();
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -229,7 +239,7 @@ const WaitingRoomContent = () => {
     };
   }, []); // 빈 의존성 배열로 컴포넌트 마운트 시 한 번만 실행
 
-  const { roomCode: contextRoomCode } = useRoomStore();
+  const navigate = useNavigate();
   const {
     connect,
     send: contextSend,
@@ -256,9 +266,6 @@ const WaitingRoomContent = () => {
       return;
     }
 
-    // 웹소켓 연결
-    let subscription: any = null;
-
     const setupWebSocket = () => {
       connect(contextRoomCode);
 
@@ -266,26 +273,33 @@ const WaitingRoomContent = () => {
         // 이미 구독이 있다면 해제
         if (subscription) {
           subscription.unsubscribe();
+          clearSubscription();
         }
 
         // 새로운 구독 설정
-        subscription = stompClient.subscribe(
+        const newSubscription = stompClient.subscribe(
           `/topic/room.${contextRoomCode}`,
-          (frame) => {
+          async (frame) => {
             const message = JSON.parse(frame.body);
             // 중복 메시지 체크
             setChatMessages((prev) => {
-              // const isDuplicate = prev.some(
-              //   (msg) =>
-              //     msg.sender === message.sender &&
-              //     msg.content === message.content &&
-              //     msg.chatType === message.chatType
-              // );
-              // if (isDuplicate) return prev;
               return [...prev, message];
             });
+
+            // 시스템 메시지일 경우 참여자 정보 최신화
+            if (message.chatType === 'SYSTEM') {
+              try {
+                const response = await getRoomData(contextRoomCode);
+                setRoomData(response);
+              } catch (error) {
+                console.error('Failed to fetch room data:', error);
+              }
+            }
           }
         );
+
+        // 구독 정보를 전역 store에 저장
+        setSubscription(newSubscription);
 
         // 서버에 입장 메시지 전송
         contextSend('입장했습니다.', 'System', 'SYSTEM');
@@ -296,11 +310,16 @@ const WaitingRoomContent = () => {
 
     // cleanup 함수
     return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
+      // 구독은 해제하지 않음 (게임방에서도 사용하기 위해)
     };
-  }, [contextRoomCode, connect, isConnected, stompClient, contextSend]);
+  }, [
+    contextRoomCode,
+    connect,
+    isConnected,
+    stompClient,
+    contextSend,
+    clearSubscription,
+  ]);
 
   const toggleCamera = async () => {
     if (isCameraOn) {
@@ -380,17 +399,61 @@ const WaitingRoomContent = () => {
     }
   };
 
+  const handleLeaveRoom = async () => {
+    try {
+      if (contextRoomCode) {
+        await outRoom(contextRoomCode);
+        // 구독 해제
+        if (subscription) {
+          subscription.unsubscribe();
+          clearSubscription();
+        }
+        clearRoomCode();
+        notify({ type: 'success', text: '방을 나갔습니다.' });
+        navigate('/room-list');
+      }
+    } catch (error) {
+      notify({ type: 'error', text: '방을 나가는데 실패했습니다.' });
+    }
+  };
+
+  // 뒤로가기 이벤트 처리
+  useEffect(() => {
+    // 현재 페이지를 히스토리에 추가
+    window.history.pushState(null, '', window.location.href);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      // 뒤로가기 시도 시 현재 페이지를 다시 히스토리에 추가
+      window.history.pushState(null, '', window.location.href);
+      setIsConfirmModalOpen(true);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   return (
-    <div className="w-screen h-screen flex overflow-hidden p-20 py-10">
+    <div className="w-screen h-screen flex overflow-hidden p-10">
       {/* Left section */}
-      <div className="flex-1 flex-col px-10 h-[calc(100vh-8rem)]">
+      <div className="flex-1 min-w-0 flex flex-col px-4 h-[calc(100vh-5rem)]">
         {/* Header */}
-        <div className="flex items-center mb-8">
-          <div className="text-white text-2xl font-bold bg-gray-800/50 backdrop-blur-sm px-6 py-1 rounded-xl">
+        <div className="flex items-center mb-4">
+          <div className="text-white text-xl font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-1 rounded-xl">
             {roomData?.roomInfo.roomName || '게임방'}
           </div>
-          <div className="flex items-center gap-2 ml-4 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <span className="text-white body-medium">
+          <div className="flex items-center gap-2 ml-3 bg-gray-800/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+            <span className="text-white text-sm">
               Code: {roomData?.roomInfo.roomCode || '로딩중...'}
             </span>
             <button
@@ -398,36 +461,36 @@ const WaitingRoomContent = () => {
               className="text-white hover:text-rose-500 transition-colors duration-200 cursor-pointer"
             >
               {copied ? (
-                <Check className="w-5 h-5" />
+                <Check className="w-4 h-4" />
               ) : (
-                <Copy className="w-5 h-5" />
+                <Copy className="w-4 h-4" />
               )}
             </button>
           </div>
         </div>
 
         {/* Player count */}
-        <div className="flex items-center gap-2 mb-8">
+        <div className="flex items-center gap-2 mb-4">
           <div className="flex items-center gap-2">
             <img
               src="/assets/people-fill.svg"
               alt="people-fill"
-              width={36}
-              height={36}
+              width={20}
+              height={20}
               className="text-rose-600"
             />
-            <div className="text-primary-600 headline-medium">플레이어</div>
+            <div className="text-primary-600 text-base">플레이어</div>
           </div>
-          <div className="text-primary-600 headline-large ml-4">
+          <div className="text-primary-600 text-lg ml-3">
             {roomData ? `${roomData.roomInfo.playerCount}/6` : '로딩중...'}
           </div>
         </div>
 
         {/* Player and analysis section */}
-        <div className="flex mb-8 gap-6">
+        <div className="flex mb-4 gap-4">
           {/* Player profile */}
           <div className="flex flex-col">
-            <div className="w-72 h-60 rounded-2xl overflow-hidden bg-gray-800 mb-2 relative">
+            <div className="w-48 h-48 xl:w-48 xl:h-48 2xl:w-60 2xl:h-60 rounded-2xl overflow-hidden bg-gray-800 mb-2 relative">
               {isCameraOn ? (
                 <video
                   ref={videoRef}
@@ -436,19 +499,15 @@ const WaitingRoomContent = () => {
                   muted
                   className="w-full h-full object-cover"
                   style={{ transform: 'scaleX(-1)' }}
-                  onError={(e) => console.error('Video error:', e)}
-                  onLoadedMetadata={() => console.log('Video metadata loaded')}
-                  onPlay={() => console.log('Video started playing')}
-                  onCanPlay={() => console.log('Video can play')}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                  <VideoOff size={64} className="text-gray-400" />
+                  <VideoOff size={32} className="text-gray-400" />
                 </div>
               )}
-              <div className="absolute top-3 left-3">
-                <div className="bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                  <span className="text-white text-base font-['FUNFLOW_SURVIVOR_KR']">
+              <div className="absolute top-1 left-1">
+                <div className="bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  <span className="text-white text-xs">
                     {userInfo?.nickname}
                   </span>
                 </div>
@@ -456,9 +515,9 @@ const WaitingRoomContent = () => {
             </div>
 
             {/* Camera and mic controls */}
-            <div className="flex justify-center gap-4 mt-2">
+            <div className="flex justify-center gap-2 mt-1">
               <button
-                className={`rounded-full p-2 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
+                className={`rounded-full p-1 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
                   isCameraOn
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-gray-700/80 hover:bg-gray-600'
@@ -466,13 +525,13 @@ const WaitingRoomContent = () => {
                 onClick={toggleCamera}
               >
                 {isCameraOn ? (
-                  <Video className="w-6 h-6 text-white" />
+                  <Video className="w-4 h-4 text-white" />
                 ) : (
-                  <VideoOff className="w-6 h-6 text-white" />
+                  <VideoOff className="w-4 h-4 text-white" />
                 )}
               </button>
               <button
-                className={`rounded-full p-2 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
+                className={`rounded-full p-1 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
                   isMicOn
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-gray-700/80 hover:bg-gray-600'
@@ -480,17 +539,18 @@ const WaitingRoomContent = () => {
                 onClick={toggleMic}
               >
                 {isMicOn ? (
-                  <Mic className="w-6 h-6 text-white" />
+                  <Mic className="w-4 h-4 text-white" />
                 ) : (
-                  <MicOff className="w-6 h-6 text-white" />
+                  <MicOff className="w-4 h-4 text-white" />
                 )}
               </button>
             </div>
           </div>
 
           {/* Emotion analysis box */}
-          <div className="w-80 h-80 rounded-2xl flex flex-col items-center justify-center p-4 bg-gray-900/70 backdrop-blur-sm">
-            <div className="w-full h-48 mb-4 relative">
+          <div className="w-96 h-48 xl:w-[28rem] xl:h-60 2xl:w-[32rem] 2xl:h-60 mb-4 relative flex items-center bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
+            {/* Audio visualization */}
+            <div className="w-2/3 h-full relative">
               <svg
                 viewBox="0 0 100 100"
                 xmlns="http://www.w3.org/2000/svg"
@@ -526,7 +586,7 @@ const WaitingRoomContent = () => {
                 {barHeights.map((height, i) => {
                   const barWidth = 3;
                   const gap = 2;
-                  const x = i * (barWidth + gap) + 5;
+                  const x = i * (barWidth + gap);
 
                   return (
                     <rect
@@ -560,7 +620,9 @@ const WaitingRoomContent = () => {
                 />
               </svg>
             </div>
-            <div className="text-center text-rose-600 text-base font-['FUNFLOW_SURVIVOR_KR'] leading-normal space-y-2">
+
+            {/* Status text */}
+            <div className="w-1/3 pl-4 text-rose-600 body-medium space-y-2">
               <p>음성 레벨: {Math.round(audioLevel)}</p>
               <p>{isMicOn ? '마이크 활성화' : '마이크 비활성화'}</p>
               <p>{isCameraOn ? '카메라 활성화' : '카메라 비활성화'}</p>
@@ -568,28 +630,28 @@ const WaitingRoomContent = () => {
           </div>
 
           {/* Player list */}
-          <div className="ml-6 bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 w-80 h-80">
-            <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] mb-3 border-b border-gray-700 pb-2">
+          <div className="ml-2 bg-gray-800/50 backdrop-blur-sm rounded-xl p-2 w-48 h-48 xl:w-60 xl:h-60 2xl:w-60 2xl:h-60">
+            <div className="text-white text-sm mb-1 border-b border-gray-700 pb-1">
               참여자 ({roomData?.participants.length || 0}/6)
             </div>
-            <div className="grid grid-cols-2 grid-rows-3 gap-2 h-[calc(100%-40px)]">
+            <div className="grid grid-cols-2 grid-rows-3 gap-1 h-[calc(100%-24px)]">
               {roomData?.participants.map((participant) => (
                 <div
                   key={participant.participantId}
-                  className="flex items-center gap-2 hover:bg-gray-700/50 p-2 rounded-lg transition-colors duration-200"
+                  className="flex items-center gap-1 hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200"
                 >
                   {participant.nickName === roomData.roomInfo.hostNickname ? (
-                    <Crown className="w-6 h-6 text-yellow-500" />
+                    <Crown className="w-4 h-4 text-yellow-500" />
                   ) : (
                     <img
                       src="/assets/people-fill.svg"
                       alt="participant"
-                      width={24}
-                      height={24}
+                      width={14}
+                      height={14}
                       className="text-rose-600"
                     />
                   )}
-                  <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] truncate">
+                  <div className="text-white text-xs truncate">
                     {participant.nickName}
                   </div>
                 </div>
@@ -599,38 +661,53 @@ const WaitingRoomContent = () => {
         </div>
 
         {/* Category section */}
-        <div className="flex flex-col w-250">
-          <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <img
                 src="/assets/category.svg"
                 alt="category"
-                width={36}
-                height={36}
+                width={20}
+                height={20}
               />
-              <div className="text-primary-600 headline-large">
-                제시어 카테고리
-              </div>
+              <div className="text-primary-600 text-base">제시어 카테고리</div>
             </div>
-            <GameButton
-              text="게임시작"
-              onClick={() => {
-                console.log('Selected category:', selectedCategory);
-              }}
-            />
+            <div className="flex gap-2">
+              <GameButton
+                text="방 나가기"
+                size="small"
+                onClick={() => setIsConfirmModalOpen(true)}
+              />
+              <GameButton
+                text="게임시작"
+                size="small"
+                onClick={() => {
+                  if (isHost) {
+                    navigate('/game-room');
+                  } else {
+                    notify({
+                      type: 'error',
+                      text: '방장만 게임을 시작할 수 있습니다.',
+                    });
+                  }
+                }}
+              />
+            </div>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6">
-            <div className="grid grid-cols-4 gap-x-12 gap-y-6">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
+            <div className="grid grid-cols-4 gap-x-4 gap-y-3">
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`text-center text-xl font-['FUNFLOW_SURVIVOR_KR'] cursor-pointer transition-all duration-200
+                  onClick={() => isHost && setSelectedCategory(category.id)}
+                  className={`text-center text-sm cursor-pointer transition-all duration-200
                     ${
                       selectedCategory === category.id
-                        ? 'text-rose-500 font-bold scale-110 [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
-                        : 'text-gray-300 hover:text-white hover:scale-105'
+                        ? 'text-rose-500 font-bold scale-105 [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
+                        : isHost
+                          ? 'text-gray-300 hover:text-white hover:scale-105'
+                          : 'text-gray-500 cursor-not-allowed'
                     }
                   `}
                 >
@@ -643,23 +720,23 @@ const WaitingRoomContent = () => {
       </div>
 
       {/* Right section - Chat */}
-      <div className="w-1/4 ml-6 flex flex-col">
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex flex-col h-[calc(100vh-8rem)]">
-          <div className="text-white text-lg font-['FUNFLOW_SURVIVOR_KR'] mb-3 border-b border-gray-700 pb-2">
+      <div className="w-64 min-w-[220px] max-w-xs ml-4 flex flex-col flex-shrink-0">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 flex flex-col h-[calc(100vh-5rem)]">
+          <div className="text-white text-sm mb-2 border-b border-gray-700 pb-1">
             채팅
           </div>
           <div
             className="relative flex-1"
-            style={{ height: 'calc(100% - 120px)' }}
+            style={{ height: 'calc(100% - 80px)' }}
           >
             <div
               ref={chatContainerRef}
-              className="absolute inset-0 space-y-4 overflow-y-auto pr-2 custom-scrollbar"
+              className="absolute inset-0 space-y-1 overflow-y-auto pr-1 custom-scrollbar"
             >
               {chatMessages.map((msg, index) => (
                 <div key={index} className="flex flex-col">
                   <span
-                    className={`font-bold ${
+                    className={`font-bold text-xs ${
                       msg.sender === 'System'
                         ? 'text-primary-500'
                         : msg.sender === userInfo?.nickname
@@ -670,13 +747,13 @@ const WaitingRoomContent = () => {
                     {msg.sender}
                   </span>
                   <span
-                    className={
+                    className={`text-xs ${
                       msg.sender === 'System'
                         ? 'text-rose-500'
                         : msg.sender === userInfo?.nickname
                           ? 'text-green-500'
                           : 'text-white'
-                    }
+                    }`}
                   >
                     {msg.content}
                   </span>
@@ -684,19 +761,19 @@ const WaitingRoomContent = () => {
               ))}
             </div>
           </div>
-          <form onSubmit={handleSendMessage} className="mt-4">
-            <div className="flex gap-2">
+          <form onSubmit={handleSendMessage} className="mt-2">
+            <div className="flex gap-1">
               <input
                 ref={chatInputRef}
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder="채팅을 입력하세요."
-                className="flex-1 bg-gray-700/50 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="flex-1 h-10 bg-gray-700/50 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
               <button
                 type="submit"
-                className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200"
               >
                 전송
               </button>
@@ -704,6 +781,15 @@ const WaitingRoomContent = () => {
           </form>
         </div>
       </div>
+
+      {/* 확인 모달 */}
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleLeaveRoom}
+        title="방 나가기"
+        message="정말로 방을 나가시겠습니까?"
+      />
     </div>
   );
 };

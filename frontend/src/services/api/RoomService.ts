@@ -106,3 +106,8 @@ export const getRoomScores = async (
   const res = await api.get(`/api/rooms/${roomCode}/scores`);
   return res.data.data;
 };
+
+export const getRoomParticipants = async (roomCode: string) => {
+  const res = await api.get(`/rooms/${roomCode}/participants`);
+  return res.data.data;
+};
