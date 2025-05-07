@@ -2,7 +2,9 @@ package com.ssafy.backend.domain.round.service;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -25,6 +27,8 @@ import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
+import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
+import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
@@ -227,6 +231,83 @@ public class RoundService {
 		return new VoteResponseDto(
 			self.getId(),
 			request.targetParticipantId()
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public VoteResultsResponseDto getVoteResults(String roomCode, int roundNumber) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String nickname = SecurityUtils.getCurrentNickname();
+		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
+
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		Map<Long, Integer> countMap = new HashMap<>();
+		int skipCount = 0;
+		for (ParticipantRound pr : prList) {
+			Participant target = pr.getTargetParticipant();
+			if (target == null) {
+				skipCount++;
+			} else {
+				long tid = target.getId();
+				countMap.put(tid, countMap.getOrDefault(tid, 0) + 1);
+			}
+		}
+
+		for (ParticipantRound pr : prList) {
+			long pid = pr.getParticipant().getId();
+			countMap.putIfAbsent(pid, 0);
+		}
+
+		List<Integer> nonSkipCounts = countMap.values().stream().toList();
+		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
+		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
+
+		boolean skipFlag;
+		if (nonSkipCounts.isEmpty()) {
+			skipFlag = true;
+		} else if (skipCount >= maxCount) {
+			skipFlag = true;
+		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else {
+			skipFlag = false;
+		}
+
+		List<Result> results = countMap.entrySet().stream()
+			.map(e -> new Result(e.getKey(), e.getValue()))
+			.collect(Collectors.toList());
+
+		Participant liar = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.map(ParticipantRound::getParticipant)
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+
+		String liarNickname = liar.getSession().getNickname();
+		Long liarId = liar.getId();
+
+		Long selectedId = null;
+		Boolean detected = null;
+		if (!skipFlag) {
+			selectedId = countMap.entrySet().stream()
+				.max(Map.Entry.comparingByValue())
+				.get().getKey();
+			detected = selectedId.equals(liarId);
+		}
+
+		return new VoteResultsResponseDto(
+			results,
+			skipFlag,
+			selectedId,
+			detected,
+			skipFlag ? null : liarNickname,
+			skipFlag ? null : liarId
 		);
 	}
 }
