@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
+import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
@@ -166,6 +168,29 @@ public class RoundController {
 		return ok(dto);
 	}
 
+	@Operation(
+		summary = "라운드 단어 추측 제출",
+		description = "해당 라운드에 대해 guessText를 받아 정답 판정 후 승자를 결정하고 저장합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "추측 처리 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (validation 실패)"),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드 없음")
+	})
+	@PostMapping("/{roomCode}/{roundNumber}/guess")
+	public ResponseEntity<CommonResponse<GuessResponseDto>> submitGuess(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode,
 
+		@PathVariable
+		@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
+		int roundNumber,
+
+		@Valid @RequestBody GuessRequestDto request
+	) {
+		GuessResponseDto dto = roundService.submitGuess(roomCode, roundNumber, request);
+		return ok(dto);
+	}
 }
 
