@@ -25,6 +25,7 @@ import GameControls from './GameControls';
 
 import { loadModels } from '../../services/api/FaceApiService';
 import EmotionLog from './FaceApi';
+// import { VideoOff } from 'lucide-react';
 
 const GameRoom: React.FC = () => {
   const navigation = useNavigate();
@@ -92,7 +93,7 @@ const GameRoom: React.FC = () => {
       setMySessionId(roomCode);
       // console.log('roomCode', roomCode);
     } else {
-      setMySessionId('');
+      setMySessionId('1111');
       // alert('게임방에 입장해주세요');
       // navigation('/room-list');
     }
@@ -108,7 +109,7 @@ const GameRoom: React.FC = () => {
     if (myUserName && mySessionId && session === undefined) {
       joinSession();
     }
-  }, [myUserName, mySessionId, session]);
+  }, [myUserName, mySessionId]);
 
   // // ck) 세션ID 입력값 변경
   // const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,12 +214,7 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  // ck) 세션 퇴장
-  const leaveSession = useCallback(async () => {
-    if (session) {
-      session.disconnect();
-    }
-
+  const outGameRoom = async () => {
     try {
       if (roomCode) {
         await outRoom(roomCode);
@@ -226,6 +222,13 @@ const GameRoom: React.FC = () => {
       }
     } catch (error) {
       console.error('게임 종료 실패: ', error);
+    }
+  };
+
+  // ck) 세션 퇴장
+  const leaveSession = useCallback(() => {
+    if (session) {
+      session.disconnect();
     }
 
     OV.current = null;
@@ -248,8 +251,10 @@ const GameRoom: React.FC = () => {
     setCurrentMicDevice(null);
 
     setRoomCode('');
+    outGameRoom();
+    console.log('종료된건가?');
     navigation('/room-list');
-  }, [session, userInfo, roomCode]);
+  }, [session, userInfo]);
 
   // ck) 사용자 세션 닫힐 때, 세션 정리(cleanup)
   useEffect(() => {
@@ -278,6 +283,7 @@ const GameRoom: React.FC = () => {
       const newVideoState = !isVideoEnabled;
       publisher.publishVideo(newVideoState);
       setIsVideoEnabled(newVideoState);
+      // setCurrentVideoDevice(null);
     }
   };
 
@@ -370,11 +376,11 @@ const GameRoom: React.FC = () => {
     _totalParticipants: number
   ): string => {
     const positions = {
-      1: 'col-span-2 col-start-2 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[-60px]',
-      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[-60px]',
-      3: 'col-span-2 col-start-2 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]',
+      1: 'col-span-2 col-start-1 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px] mt-[15px]',
+      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[15px]',
+      3: 'col-span-2 col-start-1 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
       4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
-      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[-100px]',
+      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]',
       // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
     };
     return positions[index as keyof typeof positions] || '';
@@ -419,7 +425,7 @@ const GameRoom: React.FC = () => {
 
       {session !== undefined ? (
         <>
-          <div className="w-full h-full flex flex-col">
+          <div className="w-full h-full flex flex-col px-8">
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
                 round={gameState.round}
@@ -442,6 +448,11 @@ const GameRoom: React.FC = () => {
                       </div>
                       <div className="w-full h-full flex items-center justify-center">
                         <UserVideoComponent streamManager={sub} />
+                        {/* {sub.isVideoEnabled ? (
+                        <UserVideoComponent streamManager={sub} />
+                        ) : (
+                          <VideoOff />
+                        )} */}
                       </div>
                     </div>
                   </div>
@@ -477,7 +488,7 @@ const GameRoom: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-2 mb-[-20px] text-white">
+            <div className="mb-2 mt-1 text-white">
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}
