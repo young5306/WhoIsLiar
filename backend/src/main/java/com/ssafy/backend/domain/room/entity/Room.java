@@ -79,4 +79,9 @@ public class Room {
 		this.roomStatus = roomStatus;
 		this.updatedAt = LocalDateTime.now();
 	}
+
+	public void selectCategory(Category category) {
+		this.category = category;
+		this.updatedAt = LocalDateTime.now();
+	}
 }

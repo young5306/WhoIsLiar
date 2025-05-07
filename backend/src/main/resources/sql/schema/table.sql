@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS rooms (
     round_count INT NOT NULL,
     video_mode ENUM('VIDEO', 'BLIND') NOT NULL,
     game_mode ENUM('DEFAULT','FOOL') NOT NULL,
-    category ENUM('랜덤', '음식', '동물', '영화/드라마', '인물', '스포츠', '노래', '브랜드') NOT NULL DEFAULT '랜덤',
+    category ENUM('랜덤', '음식', '동물', '장소', '물건', '나라', '직업', '영화_드라마', '인물', '스포츠', '노래', '브랜드') NOT NULL DEFAULT '랜덤',
     room_status ENUM('waiting', 'playing', 'finished') NOT NULL DEFAULT 'waiting',
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
