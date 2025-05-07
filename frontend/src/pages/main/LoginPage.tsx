@@ -22,7 +22,10 @@ const LoginPage = () => {
       if (st === 409) {
         notify({ type: 'error', text: '이미 사용 중인 닉네임입니다.' });
       } else if (st === 400) {
-        notify({ type: 'warning', text: '닉네임을 입력해주세요.' });
+        notify({
+          type: 'warning',
+          text: '한글, 영문, 숫자 2~10자를 입력해주세요.',
+        });
       } else {
         notify({ type: 'error', text: '로그인 중 문제가 발생했습니다.' });
       }
@@ -33,7 +36,7 @@ const LoginPage = () => {
     <div className="flex flex-col items-center gap-6 h-screen justify-center">
       <h2 className="display-medium text-primary-600">닉네임 입력</h2>
       <InputField
-        placeholder="닉네임 (최대 10자)"
+        placeholder="닉네임 (2~10자)"
         value={nickname}
         onChange={(e) => setNickname(e.target.value)}
         onEnter={handleLogin}

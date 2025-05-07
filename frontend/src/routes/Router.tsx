@@ -9,6 +9,7 @@ import GameRoom from '../pages/game/GameRoom';
 // import Wait2Game from '../pages/game/waitToGameTest';
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
 import RoomListPage from '../pages/roomList/RoomListPage';
+import ModalTestPage from '../pages/gameModal/ModalTestPage';
 
 const Router = () => {
   return (
@@ -27,6 +28,7 @@ const Router = () => {
         <Route path="/wait2game" element={<Wait2Game />} /> */}
       </Route>
       <Route path="/rule-book" element={<RuleBookPage />} />
+      <Route path="/modal" element={<ModalTestPage />} />
     </Routes>
   );
 };
