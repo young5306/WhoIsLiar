@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 // import { getRoomScores } from '../../services/api/RoomService';
-import { ScoreResponse } from '../../services/api/RoomService';
+import { ScoreResponse } from '../../services/api/GameService';
 import { useRoomStore } from '../../stores/useRoomStore';
 // import { notify } from '../common/Toast';
 

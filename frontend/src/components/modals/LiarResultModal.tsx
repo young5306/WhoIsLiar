@@ -4,7 +4,7 @@ import {
   submitWordGuess,
   // getVoteResult,
   VoteResultResponse,
-} from '../../services/api/RoomService';
+} from '../../services/api/GameService';
 import { useRoomStore } from '../../stores/useRoomStore';
 import GameButton2 from '../common/GameButton2';
 import { notify } from '../common/Toast';

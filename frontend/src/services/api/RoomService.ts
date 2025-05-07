@@ -21,34 +21,6 @@ export interface RoomSummary {
   status: 'waiting' | 'playing';
 }
 
-export interface VoteResultItem {
-  targetNickname: string;
-  voteCount: number;
-}
-
-export interface VoteResultResponse {
-  results: VoteResultItem[]; // 득표자 정보
-  skip: boolean;
-  selected: string; // 최다 득표자 닉네임
-  detected: boolean; // 라이어 적발 여부
-  liarNickname: string; // 라이어의 닉네임
-  liarId: number;
-}
-
-export interface WordGuessResponse {
-  correct: boolean;
-  winner: 'LIAR' | 'CIVILIAN';
-}
-
-export interface ScoreItem {
-  participantNickname: string;
-  totalScore: number;
-}
-
-export interface ScoreResponse {
-  scores: ScoreItem[];
-}
-
 export const createRoom = async (param: createRoomRequest) => {
   const res = await api.post('/rooms', param);
   return res.data;
@@ -76,37 +48,6 @@ export const joinRoomByPassword = async (
 
 export const getRoomData = async (roomCode: string) => {
   const res = await api.get(`/rooms/${roomCode}`);
-  return res.data.data;
-};
-
-export const getVoteResult = async (
-  roomCode: string,
-  roundNumber: number
-): Promise<VoteResultResponse> => {
-  const res = await api.get(
-    `/api/rooms/${roomCode}/rounds/${roundNumber}/votes/results`
-  );
-  return res.data.data;
-};
-
-export const submitWordGuess = async (
-  roomCode: string,
-  roundNumber: number,
-  guessText: string
-): Promise<WordGuessResponse> => {
-  const res = await api.post(
-    `/api/rooms/${roomCode}/rounds/${roundNumber}/guess`,
-    {
-      guessText,
-    }
-  );
-  return res.data.data;
-};
-
-export const getRoomScores = async (
-  roomCode: string
-): Promise<ScoreResponse> => {
-  const res = await api.get(`/api/rooms/${roomCode}/scores`);
   return res.data.data;
 };
 
