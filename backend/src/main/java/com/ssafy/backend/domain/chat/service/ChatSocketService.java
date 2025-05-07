@@ -72,7 +72,7 @@ public class ChatSocketService {
 	}
 
 	public void categorySelected(String roomCode, Category category) {
-		sendAfterCommit(roomCode, category + "이(가) 선택되었습니다.", ChatType.CATEGORY_SELECTED);
+		sendAfterCommit(roomCode, category.name(), ChatType.CATEGORY_SELECTED);
 	}
 }
 
