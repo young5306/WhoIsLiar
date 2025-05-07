@@ -8,6 +8,8 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { notify } from '../../components/common/Toast';
 import { outRoom } from '../../services/api/GameService';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import { useSocketStore } from '../../stores/useSocketStore';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('random');
@@ -46,6 +48,7 @@ const WaitingRoomContent = () => {
   ];
 
   const { userInfo } = useAuthStore();
+  const { roomCode: contextRoomCode, clearRoomCode } = useRoomStore();
   const isHost = userInfo?.nickname === roomData?.roomInfo.hostNickname;
 
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
@@ -64,6 +67,9 @@ const WaitingRoomContent = () => {
   const chatInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const { subscription, setSubscription, clearSubscription } = useSocketStore();
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -233,7 +239,6 @@ const WaitingRoomContent = () => {
     };
   }, []); // 빈 의존성 배열로 컴포넌트 마운트 시 한 번만 실행
 
-  const { roomCode: contextRoomCode } = useRoomStore();
   const navigate = useNavigate();
   const {
     connect,
@@ -261,9 +266,6 @@ const WaitingRoomContent = () => {
       return;
     }
 
-    // 웹소켓 연결
-    let subscription: any = null;
-
     const setupWebSocket = () => {
       connect(contextRoomCode);
 
@@ -271,10 +273,11 @@ const WaitingRoomContent = () => {
         // 이미 구독이 있다면 해제
         if (subscription) {
           subscription.unsubscribe();
+          clearSubscription();
         }
 
         // 새로운 구독 설정
-        subscription = stompClient.subscribe(
+        const newSubscription = stompClient.subscribe(
           `/topic/room.${contextRoomCode}`,
           async (frame) => {
             const message = JSON.parse(frame.body);
@@ -295,6 +298,9 @@ const WaitingRoomContent = () => {
           }
         );
 
+        // 구독 정보를 전역 store에 저장
+        setSubscription(newSubscription);
+
         // 서버에 입장 메시지 전송
         contextSend('입장했습니다.', 'System', 'SYSTEM');
       }
@@ -304,11 +310,16 @@ const WaitingRoomContent = () => {
 
     // cleanup 함수
     return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
+      // 구독은 해제하지 않음 (게임방에서도 사용하기 위해)
     };
-  }, [contextRoomCode, connect, isConnected, stompClient, contextSend]);
+  }, [
+    contextRoomCode,
+    connect,
+    isConnected,
+    stompClient,
+    contextSend,
+    clearSubscription,
+  ]);
 
   const toggleCamera = async () => {
     if (isCameraOn) {
@@ -392,6 +403,12 @@ const WaitingRoomContent = () => {
     try {
       if (contextRoomCode) {
         await outRoom(contextRoomCode);
+        // 구독 해제
+        if (subscription) {
+          subscription.unsubscribe();
+          clearSubscription();
+        }
+        clearRoomCode();
         notify({ type: 'success', text: '방을 나갔습니다.' });
         navigate('/room-list');
       }
@@ -399,6 +416,32 @@ const WaitingRoomContent = () => {
       notify({ type: 'error', text: '방을 나가는데 실패했습니다.' });
     }
   };
+
+  // 뒤로가기 이벤트 처리
+  useEffect(() => {
+    // 현재 페이지를 히스토리에 추가
+    window.history.pushState(null, '', window.location.href);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      // 뒤로가기 시도 시 현재 페이지를 다시 히스토리에 추가
+      window.history.pushState(null, '', window.location.href);
+      setIsConfirmModalOpen(true);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   return (
     <div className="w-screen h-screen flex overflow-hidden p-10">
@@ -633,20 +676,27 @@ const WaitingRoomContent = () => {
               <GameButton
                 text="방 나가기"
                 size="small"
-                onClick={handleLeaveRoom}
+                onClick={() => setIsConfirmModalOpen(true)}
               />
               <GameButton
                 text="게임시작"
                 size="small"
                 onClick={() => {
-                  console.log('Selected category:', selectedCategory);
+                  if (isHost) {
+                    navigate('/game-room');
+                  } else {
+                    notify({
+                      type: 'error',
+                      text: '방장만 게임을 시작할 수 있습니다.',
+                    });
+                  }
                 }}
               />
             </div>
           </div>
 
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
-            <div className="grid grid-cols-3 gap-x-4 gap-y-3">
+            <div className="grid grid-cols-4 gap-x-4 gap-y-3">
               {categories.map((category) => (
                 <button
                   key={category.id}
@@ -731,6 +781,15 @@ const WaitingRoomContent = () => {
           </form>
         </div>
       </div>
+
+      {/* 확인 모달 */}
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleLeaveRoom}
+        title="방 나가기"
+        message="정말로 방을 나가시겠습니까?"
+      />
     </div>
   );
 };
