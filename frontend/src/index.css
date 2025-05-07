@@ -176,3 +176,16 @@
   font-weight: normal;
   font-style: normal;
 }
+
+@keyframes spin-once-counter {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-once-counter {
+  animation: spin-once-counter 0.5s ease-in-out;
+}

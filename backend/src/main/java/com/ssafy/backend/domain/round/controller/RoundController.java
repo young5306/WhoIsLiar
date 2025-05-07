@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.backend.domain.round.dto.request.EndRoundRequestDto;
 import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
+import com.ssafy.backend.domain.round.dto.request.TurnUpdateRequestDto;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
@@ -211,6 +213,40 @@ public class RoundController {
 	) {
 		ScoresResponseDto dto = roundService.getScores(roomCode);
 		return ok(dto);
+	}
+
+	@Operation(
+		summary = "라운드 종료",
+		description = "요청 받은 roomCode, roundNumber에 해당하는 라운드를 finished 상태로 전환합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "라운드 상태가 finished로 변경되었습니다."),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (validation 실패)"),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드를 찾을 수 없습니다.")
+	})
+	@PostMapping("/end")
+	public ResponseEntity<CommonResponse<Void>> finishRound(
+		@Valid @RequestBody EndRoundRequestDto request
+	) {
+		roundService.finishRound(request);
+		return ok(null);
+	}
+
+	@Operation(
+		summary = "라운드 턴 업데이트",
+		description = "해당 round의 turn을 +1 한 뒤 저장합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "턴이 성공적으로 업데이트되었습니다."),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (validation 실패)"),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드를 찾을 수 없습니다.")
+	})
+	@PostMapping("/turn/update")
+	public ResponseEntity<CommonResponse<Void>> updateTurn(
+		@Valid @RequestBody TurnUpdateRequestDto request
+	) {
+		roundService.updateTurn(request);
+		return ok(null);
 	}
 }
 
