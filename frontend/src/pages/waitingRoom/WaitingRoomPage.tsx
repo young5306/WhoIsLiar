@@ -10,6 +10,7 @@ import { notify } from '../../components/common/Toast';
 import { outRoom } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { useSocketStore } from '../../stores/useSocketStore';
+import Timer, { TimerRef } from '../../components/common/Timer';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('random');
@@ -68,7 +69,6 @@ const WaitingRoomContent = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
   const { subscription, setSubscription, clearSubscription } = useSocketStore();
 
   const updateVitalData = useCallback(() => {
@@ -454,28 +454,53 @@ const WaitingRoomContent = () => {
     };
   }, []);
 
+  const timerRef = useRef<TimerRef>(null);
+  // 타이머 시작 함수
+  const startTimer = () => {
+    timerRef.current?.startTimer(60); // 10초 타이머 시작
+  };
+  // 타이머 종료 시 실행될 콜백
+  const handleTimeEnd = () => {
+    console.log('타이머가 종료되었습니다!');
+    // 여기에 타이머 종료 후 실행할 로직 추가
+  };
+
   return (
     <div className="w-screen h-screen flex overflow-hidden p-10">
       {/* Left section */}
       <div className="flex-1 min-w-0 flex flex-col px-4 h-[calc(100vh-5rem)]">
         {/* Header */}
-        <div className="flex items-center mb-4">
-          <div className="text-white text-xl font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-1 rounded-xl">
-            {roomData?.roomInfo.roomName || '게임방'}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="text-white text-xl font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-1 rounded-xl">
+              {roomData?.roomInfo.roomName || '게임방'}
+            </div>
+            <div className="flex items-center gap-2 ml-3 bg-gray-800/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+              <span className="text-white text-sm">
+                Code: {roomData?.roomInfo.roomCode || '로딩중...'}
+              </span>
+              <button
+                onClick={copyRoomCode}
+                className="text-white hover:text-rose-500 transition-colors duration-200 cursor-pointer"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 ml-3 bg-gray-800/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-            <span className="text-white text-sm">
-              Code: {roomData?.roomInfo.roomCode || '로딩중...'}
-            </span>
+
+          {/* 타이머 추가 */}
+          <div className="flex items-center gap-2">
+            <Timer ref={timerRef} onTimeEnd={handleTimeEnd} size="large" />
+            {/* 테스트용 버튼 */}
             <button
-              onClick={copyRoomCode}
-              className="text-white hover:text-rose-500 transition-colors duration-200 cursor-pointer"
+              onClick={startTimer}
+              className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200"
             >
-              {copied ? (
-                <Check className="w-4 h-4" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
+              10초 시작
             </button>
           </div>
         </div>
@@ -526,9 +551,9 @@ const WaitingRoomContent = () => {
             </div>
 
             {/* Camera and mic controls */}
-            <div className="flex justify-center gap-2 mt-1">
+            <div className="flex justify-center gap-3 mt-2">
               <button
-                className={`rounded-full p-1 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
+                className={`rounded-full p-2.5 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
                   isCameraOn
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-gray-700/80 hover:bg-gray-600'
@@ -536,13 +561,13 @@ const WaitingRoomContent = () => {
                 onClick={toggleCamera}
               >
                 {isCameraOn ? (
-                  <Video className="w-4 h-4 text-white" />
+                  <Video className="w-6 h-6 text-white" />
                 ) : (
-                  <VideoOff className="w-4 h-4 text-white" />
+                  <VideoOff className="w-6 h-6 text-white" />
                 )}
               </button>
               <button
-                className={`rounded-full p-1 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
+                className={`rounded-full p-2.5 transition-colors duration-200 hover:bg-opacity-90 cursor-pointer ${
                   isMicOn
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-gray-700/80 hover:bg-gray-600'
@@ -550,9 +575,9 @@ const WaitingRoomContent = () => {
                 onClick={toggleMic}
               >
                 {isMicOn ? (
-                  <Mic className="w-4 h-4 text-white" />
+                  <Mic className="w-6 h-6 text-white" />
                 ) : (
-                  <MicOff className="w-4 h-4 text-white" />
+                  <MicOff className="w-6 h-6 text-white" />
                 )}
               </button>
             </div>
@@ -706,13 +731,13 @@ const WaitingRoomContent = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
-            <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4">
+            <div className="grid grid-cols-4 gap-x-4 gap-y-4">
               {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => isHost && setSelectedCategory(category.id)}
-                  className={`text-center text-sm cursor-pointer transition-all duration-200
+                  className={`text-center text-base cursor-pointer transition-all duration-200
                     ${
                       selectedCategory === category.id
                         ? 'text-rose-500 font-bold scale-105 [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'

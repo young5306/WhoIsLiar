@@ -62,4 +62,14 @@ public class Round {
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
+
+	public void setWinner(Winner winner) {
+		this.winner = winner;
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	public void incrementTurn() {
+		this.turn++;
+		this.updatedAt = LocalDateTime.now();
+	}
 }

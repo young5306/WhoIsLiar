@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  // FormEvent,
-} from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   OpenVidu,
   Publisher,
@@ -14,28 +8,24 @@ import {
   StreamEvent,
   ExceptionEvent,
 } from 'openvidu-browser';
-// import gameRoom from './GameRoom.module.css';
-// import { data, useNavigate } from 'react-router-dom';
 import {
   getToken,
   Subscriber,
   GameState,
   PlayerState,
-  // Message,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
 import UserVideoComponent from './UserVideoComponent';
-// import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import GameButton from '../../components/common/GameButton';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
-import GameChat from './GameChat';
+import EmotionLog from './FaceApi';
 
 const GameRoom: React.FC = () => {
   // const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
-  const [myToken, setMyToken] = useState<string>('');
+  const [_myToken, setMyToken] = useState<string>('');
 
   // ck) 세션 ID는 세션을 식별하는 문자열, 입장 코드?와 비슷한 역할을 하는듯 (중복되면 안되고, 같은 세션 이이디 입력한 사람은 같은 방에 접속되며, 만약 세션 아이디가 존재하지 않는다면 새로 생성해서 세션을 오픈할 수 있게끔 한다.) -> 어떻게 생성하고 바꿀지 고민 필요
   // const [mySessionId, setMySessionId] = useState('SessionA');
@@ -47,11 +37,6 @@ const GameRoom: React.FC = () => {
   // ck) << OpenVidu >>
   // ck) 현재 연결된 세션
   const [session, setSession] = useState<Session | undefined>(undefined);
-
-  // // // ck) 메인으로 표시될 비디오 스트림 (다른 메인도 표시해줄지 아니면 본인것을 메인으로 간주할지?)
-  // const [mainStreamManager, setMainStreamManager] = useState<
-  //   StreamManager | undefined
-  // >(undefined);
 
   // ck) 본인의 카메라/마이크 스트림
   const [publisher, setPublisher] = useState<Publisher | undefined>(undefined);
@@ -86,6 +71,7 @@ const GameRoom: React.FC = () => {
 
   const { userInfo } = useAuthStore();
   const { roomCode } = useRoomStore();
+
   useEffect(() => {
     if (userInfo?.nickname) {
       setMyUserName(userInfo.nickname);
@@ -105,19 +91,12 @@ const GameRoom: React.FC = () => {
       // alert('게임방에 입장해주세요');
       // navigation('/room-list');
     }
-  }, [userInfo, roomCode]);
+  }, []);
 
   // ck) 세션ID 입력값 변경
   const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMySessionId(e.target.value);
   };
-
-  // // // ck) 메인 비디오 스트림 변경
-  // const handleMainVideoStream = (stream: StreamManager) => {
-  //   if (mainStreamManager !== stream) {
-  //     setMainStreamManager(stream);
-  //   }
-  // };
 
   // ck) 구독자 삭제
   const deleteSubscriber = (streamManager: StreamManager) => {
@@ -160,7 +139,7 @@ const GameRoom: React.FC = () => {
 
     try {
       // ck) getToken 분리
-      const token = await getToken(mySessionId, myToken);
+      const token = await getToken(mySessionId);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
@@ -168,7 +147,7 @@ const GameRoom: React.FC = () => {
         videoSource: undefined,
         publishAudio: isAudioEnabled,
         publishVideo: isVideoEnabled,
-        resolution: '640x480',
+        resolution: '1280x720',
         frameRate: 30,
         insertMode: 'APPEND',
         mirror: false,
@@ -209,21 +188,9 @@ const GameRoom: React.FC = () => {
         null;
 
       setSession(mySession);
-      // setMainStreamManager(publisherObj);
       setPublisher(publisherObj);
       setCurrentVideoDevice(currentVideoDevice);
       setCurrentMicDevice(currentMicDevice);
-      // setGameState((prev) => ({
-      //   ...prev,
-      //   message: [
-      //     ...prev.message,
-      //     {
-      //       sender: 'system',
-      //       content: '',
-      //       type: '',
-      //     },
-      //   ],
-      // }));
     } catch (error) {
       console.error('세션 연결 중 오류 발생:', error);
     }
@@ -373,11 +340,11 @@ const GameRoom: React.FC = () => {
     _totalParticipants: number
   ): string => {
     const positions = {
-      1: 'col-span-2 col-start-2 row-span-2 row-start-2 max-h-[180px] min-w-[200px] max-w-[250px] mt-[-60px]',
-      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[180px] min-w-[200px] max-w-[250px] mt-[-60px]',
-      3: 'col-span-2 col-start-2 row-span-2 row-start-6 max-h-[180px] min-w-[200px] max-w-[250px]',
-      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[180px] min-w-[200px] max-w-[250px] ml-[20px]',
-      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[180px] min-w-[200px] max-w-[250px] ml-[130px]',
+      1: 'col-span-2 col-start-2 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[-60px]',
+      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[-60px]',
+      3: 'col-span-2 col-start-2 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]',
+      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
+      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[-100px]',
       // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
     };
     return positions[index as keyof typeof positions] || '';
@@ -386,27 +353,10 @@ const GameRoom: React.FC = () => {
   // const myPosition =
   //   'col-span-1 col-start-3 row-span-1 row-start-4 min-h-[150px]';
   const myPosition =
-    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[180px] min-w-[200px] max-w-[250px]';
+    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
   return (
     <>
-      {/* waitingRoom에서 RoomID를 받아서 그걸 SessionID에 저장 후 be에 보내기 */}
-      {/* const [mySessionId, setMySessionId] = useState('SessionA'); */}
-
-      {/* 
-      ck) 
-      - (상황) : 이미 사람들이 방 정보를 입력하고 대기실에 접속한 상태에서 openvidu연결을 대기하는 것임.
-      - 게임시작을 누르자마자 session을 발급 받고 openvidu 입장시키기. 
-      - session을 정말 게임ing 화면을 진입하는데 사용해야 할듯
-      - 사용자가 session 커스텀 불가(openvidu 기존 코드에서는 커스텀할 수 있었음.). 
-      - 공유할 필요도 없음. 
-      - (게임 대기실에 입장하는 코드와 별개로 생각해야 할듯)
-
-      => 따라서 session이 없는 상태는 대기실에 있는 상태 / session이 있는 상태는 게임 진행중인 상태
-       */}
-
-      {/* <div className="container"> */}
-      {/* 세션이 없을 때: 참가 폼 */}
       {session === undefined ? (
         <div id="join">
           <div id="join-dialog" className="jumbotron vertical-center">
@@ -437,15 +387,10 @@ const GameRoom: React.FC = () => {
         </div>
       ) : null}
 
-      {/* 세션이 있을 때: 비디오 및 컨트롤 */}
-
       {session !== undefined ? (
         <>
           <div className="w-full h-full flex flex-col">
-            <div className=" text-white w-full h-full grid grid-cols-7">
-              {/* <div className="border-white border-2 text-white w-full h-full grid grid-cols-7"> */}
-              {/* <div className="bg-black text-white w-full h-full grid grid-cols-6"> */}
-              {/* GameInfo 영역 */}
+            <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
                 round={gameState.round}
                 turn={gameState.turn}
@@ -455,16 +400,13 @@ const GameRoom: React.FC = () => {
               />
 
               {/* Video 영역 */}
-              {/* <div className="w-screen h-screen grid grid-cols-6 grid-rows-6 gap-4 flex-grow"> */}
               {subscribers.map((sub, index) => (
                 <div
                   key={sub.id || index}
                   className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
                 >
-                  <div className="w-full h-full bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg">
-                    {/* subs video */}
+                  <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                     <div className="w-full h-full relative">
-                      {/* name */}
                       <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                         {sub.nickname}
                       </div>
@@ -473,39 +415,34 @@ const GameRoom: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  <div className="absolute bottom-1 mb-2 left-1 z-20">
+                    <EmotionLog streamManager={sub} name={sub.nickname} />
+                  </div>
                 </div>
               ))}
-              <div className="relative grid col-start-3 min-w-[1500px] row-span-6 row-start-2 ml-[100px] mt-[-100px]">
-                <GameChat />
-              </div>
 
               {/* my video */}
               <div className={`relative ${myPosition}`}>
-                {/* <div className="flex justify-center items-center place-items-center relative"> */}
-                <div className="w-full h-full bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                <div className="w-full bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                   <div className="w-full h-full relative">
                     <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                       나
                     </div>
-
-                    {/* <div className="w-full h-full flex items-center justify-center"> */}
                     <div className="w-full h-full flex items-center justify-center">
-                      {publisher !== undefined ? (
-                        isVideoEnabled ? (
-                          // <div
-                          //   className="stream-container col-md-6 col-xs-6"
-                          //   onClick={() => handleMainVideoStream(publisher)}
-                          // >
-                          // </div>
-
-                          <UserVideoComponent streamManager={publisher} />
-                        ) : (
-                          <div className="text-5xl font-bold">Me</div>
-                        )
-                      ) : null}
-                      {/* <div className="text-5xl font-bold">Me</div> */}
+                      {publisher && isVideoEnabled ? (
+                        <UserVideoComponent streamManager={publisher} />
+                      ) : (
+                        <div className="text-5xl font-bold w-full max-h-[170px] min-h-[150px] flex justify-center items-center">
+                          Me
+                        </div>
+                      )}
                     </div>
                   </div>
+                </div>
+                <div className="absolute bottom-1 mb-2 left-1 z-20">
+                  {publisher && (
+                    <EmotionLog streamManager={publisher} name="나" />
+                  )}
                 </div>
               </div>
             </div>
@@ -523,8 +460,6 @@ const GameRoom: React.FC = () => {
           </div>
         </>
       ) : null}
-      {/* </div> */}
-      {/* </div> */}
     </>
   );
 };

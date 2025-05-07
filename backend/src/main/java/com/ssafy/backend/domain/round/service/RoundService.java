@@ -1,6 +1,7 @@
 package com.ssafy.backend.domain.round.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +22,16 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.dto.request.EndRoundRequestDto;
+import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
+import com.ssafy.backend.domain.round.dto.request.TurnUpdateRequestDto;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
+import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
@@ -38,6 +44,7 @@ import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
 import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.enums.RoundStatus;
+import com.ssafy.backend.global.enums.Winner;
 import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
@@ -309,5 +316,100 @@ public class RoundService {
 			skipFlag ? null : liarNickname,
 			skipFlag ? null : liarId
 		);
+	}
+
+	public GuessResponseDto submitGuess(String roomCode,
+		int roundNumber,
+		GuessRequestDto req) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String targetWord = switch (room.getGameMode()) {
+			case DEFAULT -> round.getWord1();
+			case FOOL    -> round.getWord2();
+		};
+
+		boolean correct = req.guessText().equalsIgnoreCase(targetWord);
+
+		Winner winnerEnum;
+		if (room.getGameMode() == GameMode.DEFAULT) {
+			winnerEnum = correct ? Winner.liar : Winner.civil;
+		} else {
+			winnerEnum = correct ? Winner.civil : Winner.liar;
+		}
+
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		if (winnerEnum == Winner.civil) {
+			prList.stream()
+				.filter(pr -> !pr.isLiar())
+				.forEach(pr -> pr.addScore(100));
+		} else {
+			prList.stream()
+				.filter(ParticipantRound::isLiar)
+				.forEach(pr -> pr.addScore(100));
+		}
+		participantRoundRepository.saveAll(prList);
+
+		round.setWinner(winnerEnum);
+		roundRepository.save(round);
+
+		return new GuessResponseDto(correct, winnerEnum.name());
+	}
+
+	/**
+	 * 방별 누적 점수 조회
+	 */
+	@Transactional(readOnly = true)
+	public ScoresResponseDto getScores(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		List<Round> rounds = roundRepository.findByRoom(room);
+
+		List<ParticipantRound> allPRs = new ArrayList<>();
+		for (Round r : rounds) {
+			allPRs.addAll(participantRoundRepository.findByRound(r));
+		}
+
+		Map<String, Integer> scoreMap = new HashMap<>();
+		for (ParticipantRound pr : allPRs) {
+			String nick = pr.getParticipant().getSession().getNickname();
+			scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+		}
+
+		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
+			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
+			.collect(Collectors.toList());
+
+		return new ScoresResponseDto(entries);
+	}
+
+	public void finishRound(EndRoundRequestDto req) {
+		Room room = roomRepository.findByRoomCode(req.roomCode())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, req.roundNumber())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		round.setRoundStatus(RoundStatus.finished);
+		round.setUpdatedAt(LocalDateTime.now());
+
+		roundRepository.save(round);
+	}
+
+	public void updateTurn(TurnUpdateRequestDto req) {
+		Room room = roomRepository.findByRoomCode(req.roomCode())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, req.roundNumber())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		round.incrementTurn();
+
+		roundRepository.save(round);
 	}
 }
