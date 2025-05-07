@@ -286,11 +286,22 @@ const WaitingRoomContent = () => {
               return [...prev, message];
             });
 
-            // 시스템 메시지일 경우 참여자 정보 최신화
-            if (message.chatType === 'SYSTEM') {
+            // 시스템 메시지나 참여자 입/퇴장 메시지일 경우 참여자 정보 최신화
+            if (
+              // message.chatType === 'SYSTEM' ||
+              message.chatType === 'PLAYER_JOIN' ||
+              message.chatType === 'PLAYER_LEAVE'
+            ) {
               try {
                 const response = await getRoomData(contextRoomCode);
                 setRoomData(response);
+                // 채팅 메시지가 스크롤되도록 약간의 지연 후 스크롤
+                setTimeout(() => {
+                  if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop =
+                      chatContainerRef.current.scrollHeight;
+                  }
+                }, 100);
               } catch (error) {
                 console.error('Failed to fetch room data:', error);
               }
