@@ -10,7 +10,7 @@ import { notify } from '../../components/common/Toast';
 import { outRoom } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { useSocketStore } from '../../stores/useSocketStore';
-import Timer, { TimerRef } from '../../components/common/Timer';
+// import Timer, { TimerRef } from '../../components/common/Timer';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('random');
@@ -420,7 +420,9 @@ const WaitingRoomContent = () => {
           subscription.unsubscribe();
           clearSubscription();
         }
+        // 룸 스토어 초기화
         clearRoomCode();
+        setRoomData(null);
         notify({ type: 'success', text: '방을 나갔습니다.' });
         navigate('/room-list');
       }
