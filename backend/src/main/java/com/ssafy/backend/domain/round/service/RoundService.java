@@ -22,8 +22,10 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.dto.request.EndRoundRequestDto;
 import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
+import com.ssafy.backend.domain.round.dto.request.TurnUpdateRequestDto;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
@@ -384,5 +386,30 @@ public class RoundService {
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);
+	}
+
+	public void finishRound(EndRoundRequestDto req) {
+		Room room = roomRepository.findByRoomCode(req.roomCode())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, req.roundNumber())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		round.setRoundStatus(RoundStatus.finished);
+		round.setUpdatedAt(LocalDateTime.now());
+
+		roundRepository.save(round);
+	}
+
+	public void updateTurn(TurnUpdateRequestDto req) {
+		Room room = roomRepository.findByRoomCode(req.roomCode())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, req.roundNumber())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		round.incrementTurn();
+
+		roundRepository.save(round);
 	}
 }

@@ -67,4 +67,9 @@ public class Round {
 		this.winner = winner;
 		this.updatedAt = LocalDateTime.now();
 	}
+
+	public void incrementTurn() {
+		this.turn++;
+		this.updatedAt = LocalDateTime.now();
+	}
 }
