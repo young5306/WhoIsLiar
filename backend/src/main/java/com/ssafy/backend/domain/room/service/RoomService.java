@@ -25,6 +25,8 @@ import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class RoomService {
 
 	private final RoomRepository roomRepository;
@@ -295,14 +298,21 @@ public class RoomService {
 			throw new CustomException(ResponseCode.UNAUTHORIZED);
 		}
 
+
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		log.info("방 못찾음");
 
 		SessionEntity session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		log.info("세션 못찾음");
+
 		Participant participant = participantRepository.findByRoomAndSession(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		log.info("참가자 못찾음");
 
 		if (room.getRoomStatus() == RoomStatus.waiting) {
 			// 참가자 제거
