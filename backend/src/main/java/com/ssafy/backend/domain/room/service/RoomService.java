@@ -297,6 +297,7 @@ public class RoomService {
 		if (nickname == null) {
 			throw new CustomException(ResponseCode.UNAUTHORIZED);
 		}
+		System.out.println(nickname);
 
 
 		Room room = roomRepository.findByRoomCode(roomCode)
