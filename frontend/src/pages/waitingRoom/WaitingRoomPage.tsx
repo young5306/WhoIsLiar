@@ -467,7 +467,7 @@ const WaitingRoomContent = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex overflow-hidden p-4">
+    <div className="w-screen h-screen flex overflow-hidden px-10 py-4">
       {/* Left section */}
       <div className="flex-1 min-w-0 flex flex-col px-4 h-[calc(100vh-5rem)]">
         {/* Header */}
