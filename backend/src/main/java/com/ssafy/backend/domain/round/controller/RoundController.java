@@ -17,6 +17,7 @@ import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
@@ -190,6 +191,25 @@ public class RoundController {
 		@Valid @RequestBody GuessRequestDto request
 	) {
 		GuessResponseDto dto = roundService.submitGuess(roomCode, roundNumber, request);
+		return ok(dto);
+	}
+
+	@Operation(
+		summary = "방별 누적 점수 조회",
+		description = "해당 방의 지금까지 참가자별 총 점수를 조회합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "해당 방의 전체 점수를 조회했습니다."),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (roomCode validation 실패)"),
+		@ApiResponse(responseCode = "404", description = "방을 찾을 수 없습니다.")
+	})
+	@GetMapping("/{roomCode}/score")
+	public ResponseEntity<CommonResponse<ScoresResponseDto>> getScores(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode
+	) {
+		ScoresResponseDto dto = roundService.getScores(roomCode);
 		return ok(dto);
 	}
 }

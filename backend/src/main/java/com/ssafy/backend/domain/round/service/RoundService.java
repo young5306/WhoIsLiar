@@ -1,6 +1,7 @@
 package com.ssafy.backend.domain.round.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
@@ -354,5 +356,33 @@ public class RoundService {
 		roundRepository.save(round);
 
 		return new GuessResponseDto(correct, winnerEnum.name());
+	}
+
+	/**
+	 * 방별 누적 점수 조회
+	 */
+	@Transactional(readOnly = true)
+	public ScoresResponseDto getScores(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		List<Round> rounds = roundRepository.findByRoom(room);
+
+		List<ParticipantRound> allPRs = new ArrayList<>();
+		for (Round r : rounds) {
+			allPRs.addAll(participantRoundRepository.findByRound(r));
+		}
+
+		Map<String, Integer> scoreMap = new HashMap<>();
+		for (ParticipantRound pr : allPRs) {
+			String nick = pr.getParticipant().getSession().getNickname();
+			scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+		}
+
+		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
+			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
+			.collect(Collectors.toList());
+
+		return new ScoresResponseDto(entries);
 	}
 }
