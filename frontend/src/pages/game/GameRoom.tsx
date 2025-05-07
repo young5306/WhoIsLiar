@@ -14,6 +14,7 @@ import {
   Subscriber,
   GameState,
   PlayerState,
+  outRoom,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -74,6 +75,7 @@ const GameRoom: React.FC = () => {
 
   const { userInfo } = useAuthStore();
   const { roomCode } = useRoomStore();
+  const setRoomCode = useRoomStore((state) => state.setRoomCode);
 
   useEffect(() => {
     if (userInfo?.nickname) {
@@ -212,10 +214,20 @@ const GameRoom: React.FC = () => {
   };
 
   // ck) 세션 퇴장
-  const leaveSession = useCallback(() => {
+  const leaveSession = useCallback(async () => {
     if (session) {
       session.disconnect();
     }
+
+    try {
+      if (roomCode) {
+        await outRoom(roomCode);
+        console.log('게임 종료');
+      }
+    } catch (error) {
+      console.error('게임 종료 실패: ', error);
+    }
+
     OV.current = null;
     setSession(undefined);
     setSubscribers([]);
@@ -235,8 +247,9 @@ const GameRoom: React.FC = () => {
     setCurrentVideoDevice(null);
     setCurrentMicDevice(null);
 
+    setRoomCode('');
     navigation('/room-list');
-  }, [session, userInfo]);
+  }, [session, userInfo, roomCode]);
 
   // ck) 사용자 세션 닫힐 때, 세션 정리(cleanup)
   useEffect(() => {
