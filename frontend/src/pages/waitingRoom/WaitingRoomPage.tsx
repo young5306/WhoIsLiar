@@ -21,10 +21,11 @@ const WaitingRoomContent = () => {
       isSecret: boolean;
       playerCount: number;
       roundCount: number;
-      mode: string;
       category: string;
       hostNickname: string;
       status: string;
+      videoMode: string;
+      gameMode: string;
     };
     participants: Array<{
       participantId: number;
@@ -471,12 +472,12 @@ const WaitingRoomContent = () => {
       <div className="flex-1 min-w-0 flex flex-col px-4 h-[calc(100vh-5rem)]">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <div className="text-white text-xl font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-1 rounded-xl">
+          <div className="flex items-center gap-4">
+            <div className="text-white text-2xl font-bold bg-gray-800/50 backdrop-blur-sm px-5 py-2 rounded-xl">
               {roomData?.roomInfo.roomName || '게임방'}
             </div>
-            <div className="flex items-center gap-2 ml-3 bg-gray-800/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-              <span className="text-white text-sm">
+            <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <span className="text-white text-base">
                 Code: {roomData?.roomInfo.roomCode || '로딩중...'}
               </span>
               <button
@@ -484,11 +485,41 @@ const WaitingRoomContent = () => {
                 className="text-white hover:text-rose-500 transition-colors duration-200 cursor-pointer"
               >
                 {copied ? (
-                  <Check className="w-4 h-4" />
+                  <Check className="w-5 h-5" />
                 ) : (
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-5 h-5" />
                 )}
               </button>
+            </div>
+            {/* 화면 모드 표시 */}
+            <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <img
+                src={`/assets/${roomData?.roomInfo.videoMode === 'VIDEO' ? 'videoMode' : 'blindMode'}.png`}
+                alt="video-mode"
+                width={28}
+                height={28}
+                className="text-rose-600"
+              />
+              <span className="text-white text-base font-medium">
+                {roomData?.roomInfo.videoMode === 'VIDEO'
+                  ? '비디오 모드'
+                  : '블라인드 모드'}
+              </span>
+            </div>
+            {/* 게임 모드 표시 */}
+            <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <img
+                src={`/assets/${roomData?.roomInfo.gameMode === 'DEFAULT' ? 'defaultMode' : 'foolMode'}.png`}
+                alt="game-mode"
+                width={28}
+                height={28}
+                className="text-rose-600"
+              />
+              <span className="text-white text-base font-medium">
+                {roomData?.roomInfo.gameMode === 'DEFAULT'
+                  ? '일반 모드'
+                  : '바보 모드'}
+              </span>
             </div>
           </div>
 
@@ -498,9 +529,9 @@ const WaitingRoomContent = () => {
             {/* 테스트용 버튼 */}
             <button
               onClick={startTimer}
-              className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200"
+              className="bg-primary-500 hover:bg-primary-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200 cursor-pointer"
             >
-              10초 시작
+              테스트용
             </button>
           </div>
         </div>
@@ -698,7 +729,7 @@ const WaitingRoomContent = () => {
 
         {/* Category section */}
         <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-2">
               <img
                 src="/assets/category.svg"
@@ -714,20 +745,13 @@ const WaitingRoomContent = () => {
                 size="small"
                 onClick={() => setIsConfirmModalOpen(true)}
               />
-              <GameButton
-                text="게임시작"
-                size="small"
-                onClick={() => {
-                  if (isHost) {
-                    navigate('/game-room');
-                  } else {
-                    notify({
-                      type: 'error',
-                      text: '방장만 게임을 시작할 수 있습니다.',
-                    });
-                  }
-                }}
-              />
+              {isHost && (
+                <GameButton
+                  text="게임시작"
+                  size="small"
+                  onClick={() => navigate('/game-room')}
+                />
+              )}
             </div>
           </div>
 
