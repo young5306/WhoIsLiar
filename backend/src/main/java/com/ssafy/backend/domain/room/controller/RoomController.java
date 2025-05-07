@@ -6,6 +6,7 @@ import com.ssafy.backend.domain.room.dto.request.GameStartRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
+import com.ssafy.backend.domain.room.dto.request.SelectCategoryRequest;
 import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
@@ -179,6 +180,12 @@ public class RoomController {
 	})
 	public ResponseEntity<CommonResponse<Void>> startGame(@Valid @RequestBody GameStartRequest request) {
 		roomService.startGame(request.roomCode());
+		return ok(null);
+	}
+
+	@PostMapping("/category")
+	public ResponseEntity<CommonResponse<Void>> selectCategory(@RequestBody SelectCategoryRequest request) {
+		roomService.selectCategory(request);
 		return ok(null);
 	}
 }
