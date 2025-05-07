@@ -31,8 +31,6 @@ const LiarResultModal = ({ onClose }: Props) => {
 
     // 더미 데이터 사용
     const dummy: VoteResultResponse = {
-      roomCode: 'abc123',
-      roundNumber: 2,
       results: [
         { targetNickname: 'user_05', voteCount: 3 },
         { targetNickname: 'user_02', voteCount: 2 },
@@ -40,12 +38,15 @@ const LiarResultModal = ({ onClose }: Props) => {
       selected: 'user_05',
       detected: false,
       liarNickname: 'user_05',
+      liarId: 7,
+      skip: false,
     };
     setResult(dummy);
   }, [roomCode]);
 
   if (!result) return null;
-  const { roundNumber, detected, liarNickname } = result;
+  const { detected, liarNickname } = result;
+  const roundNumber = 3; // 로컬 스토리지에서 들고 와야함
 
   const handleSubmit = async () => {
     if (!input.trim()) {

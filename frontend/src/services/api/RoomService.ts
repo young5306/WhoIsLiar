@@ -27,22 +27,25 @@ export interface VoteResultItem {
 }
 
 export interface VoteResultResponse {
-  roomCode: string;
-  roundNumber: number;
   results: VoteResultItem[]; // 득표자 정보
+  skip: boolean;
   selected: string; // 최다 득표자 닉네임
   detected: boolean; // 라이어 적발 여부
   liarNickname: string; // 라이어의 닉네임
+  liarId: number;
+}
+
+export interface WordGuessResponse {
+  correct: boolean;
+  winner: 'LIAR' | 'CIVILIAN';
 }
 
 export interface ScoreItem {
-  nickname: string;
+  participantNickname: string;
   totalScore: number;
 }
 
 export interface ScoreResponse {
-  roomCode: string;
-  roundNumber: number;
   scores: ScoreItem[];
 }
 
@@ -90,14 +93,14 @@ export const submitWordGuess = async (
   roomCode: string,
   roundNumber: number,
   guessText: string
-) => {
+): Promise<WordGuessResponse> => {
   const res = await api.post(
     `/api/rooms/${roomCode}/rounds/${roundNumber}/guess`,
     {
       guessText,
     }
   );
-  return res.data;
+  return res.data.data;
 };
 
 export const getRoomScores = async (

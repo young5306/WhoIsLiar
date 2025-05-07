@@ -33,22 +33,20 @@ const ScoreModal = ({ type, onClose }: ScoreModalProps) => {
     // fetchScores();
 
     const dummyResponse: ScoreResponse = {
-      roomCode: 'abc123',
-      roundNumber: 3,
       scores: [
-        { nickname: 'user_01', totalScore: 45 },
-        { nickname: 'user_02', totalScore: 30 },
-        { nickname: 'user_03', totalScore: 20 },
-        { nickname: 'user_04', totalScore: 45 },
-        { nickname: 'user_05', totalScore: 30 },
-        { nickname: 'user_06', totalScore: 20 },
+        { participantNickname: 'user_01', totalScore: 45 },
+        { participantNickname: 'user_02', totalScore: 30 },
+        { participantNickname: 'user_03', totalScore: 20 },
+        { participantNickname: 'user_04', totalScore: 45 },
+        { participantNickname: 'user_05', totalScore: 30 },
+        { participantNickname: 'user_06', totalScore: 20 },
       ],
     };
     setScoreData(dummyResponse);
   }, [roomCode]);
 
   const titleImage = titleImageMap[type];
-  const roundNumber = scoreData?.roundNumber;
+  const roundNumber = 3; // 로컬 스토리지에서 가져옴
   const scores = scoreData?.scores || [];
 
   return (
@@ -74,7 +72,7 @@ const ScoreModal = ({ type, onClose }: ScoreModalProps) => {
 
         <ul className="space-y-2">
           {scores.map((s, idx) => (
-            <li key={s.nickname} className="flex items-center gap-2">
+            <li key={s.participantNickname} className="flex items-center gap-2">
               {/* 메달 아이콘 영역 */}
               <div className="w-6 flex justify-center">
                 {idx < 3 && (
@@ -93,7 +91,7 @@ const ScoreModal = ({ type, onClose }: ScoreModalProps) => {
                     alt="player-icon"
                     className="w-5 h-5 mr-1"
                   />
-                  <span>{s.nickname}</span>
+                  <span>{s.participantNickname}</span>
                 </div>
                 <span>{s.totalScore}점</span>
               </div>
