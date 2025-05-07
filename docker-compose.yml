@@ -4,6 +4,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: backend:latest
     container_name: backend
     restart: always
     env_file:
@@ -19,6 +20,7 @@ services:
     build:
       context: ./frontend 
       dockerfile: Dockerfile
+    image: frontend:latest
     container_name: frontend
     restart: always
     env_file:

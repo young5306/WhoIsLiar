@@ -40,6 +40,9 @@ public class Round {
 	@Column(length = 10)
 	private Winner winner;
 
+	@Column(name = "turn", nullable = false)
+	private int turn;
+
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
@@ -48,14 +51,20 @@ public class Round {
 
 	@Builder
 	public Round(Room room, int roundNumber, String word1, String word2, RoundStatus roundStatus, Winner winner,
-		LocalDateTime createdAt, LocalDateTime updatedAt) {
+		int turn, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.room = room;
 		this.roundNumber = roundNumber;
 		this.word1 = word1;
 		this.word2 = word2;
 		this.roundStatus = roundStatus;
 		this.winner = winner;
+		this.turn = turn;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+	}
+
+	public void setWinner(Winner winner) {
+		this.winner = winner;
+		this.updatedAt = LocalDateTime.now();
 	}
 }

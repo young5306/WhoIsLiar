@@ -56,4 +56,8 @@ public class ParticipantRound {
 	public void setTargetParticipant(Participant targetParticipant) {
 		this.targetParticipant = targetParticipant;
 	}
+
+	public void addScore(int delta) {
+		this.score += delta;
+	}
 }

@@ -88,7 +88,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         chatType,
       };
 
-      console.log('메시지 전송:', message);
       clientRef.current.publish({
         destination: `/app/chat.send/${currentRoomCodeRef.current}`,
         body: JSON.stringify(message),

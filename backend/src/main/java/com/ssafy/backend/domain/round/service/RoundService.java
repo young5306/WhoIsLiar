@@ -1,8 +1,11 @@
 package com.ssafy.backend.domain.round.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -19,12 +22,17 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
+import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
+import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
+import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
@@ -34,6 +42,7 @@ import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
 import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.enums.RoundStatus;
+import com.ssafy.backend.global.enums.Winner;
 import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
@@ -228,5 +237,152 @@ public class RoundService {
 			self.getId(),
 			request.targetParticipantId()
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public VoteResultsResponseDto getVoteResults(String roomCode, int roundNumber) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String nickname = SecurityUtils.getCurrentNickname();
+		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
+
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		Map<Long, Integer> countMap = new HashMap<>();
+		int skipCount = 0;
+		for (ParticipantRound pr : prList) {
+			Participant target = pr.getTargetParticipant();
+			if (target == null) {
+				skipCount++;
+			} else {
+				long tid = target.getId();
+				countMap.put(tid, countMap.getOrDefault(tid, 0) + 1);
+			}
+		}
+
+		for (ParticipantRound pr : prList) {
+			long pid = pr.getParticipant().getId();
+			countMap.putIfAbsent(pid, 0);
+		}
+
+		List<Integer> nonSkipCounts = countMap.values().stream().toList();
+		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
+		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
+
+		boolean skipFlag;
+		if (nonSkipCounts.isEmpty()) {
+			skipFlag = true;
+		} else if (skipCount >= maxCount) {
+			skipFlag = true;
+		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else {
+			skipFlag = false;
+		}
+
+		List<Result> results = countMap.entrySet().stream()
+			.map(e -> new Result(e.getKey(), e.getValue()))
+			.collect(Collectors.toList());
+
+		Participant liar = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.map(ParticipantRound::getParticipant)
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+
+		String liarNickname = liar.getSession().getNickname();
+		Long liarId = liar.getId();
+
+		Long selectedId = null;
+		Boolean detected = null;
+		if (!skipFlag) {
+			selectedId = countMap.entrySet().stream()
+				.max(Map.Entry.comparingByValue())
+				.get().getKey();
+			detected = selectedId.equals(liarId);
+		}
+
+		return new VoteResultsResponseDto(
+			results,
+			skipFlag,
+			selectedId,
+			detected,
+			skipFlag ? null : liarNickname,
+			skipFlag ? null : liarId
+		);
+	}
+
+	public GuessResponseDto submitGuess(String roomCode,
+		int roundNumber,
+		GuessRequestDto req) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String targetWord = switch (room.getGameMode()) {
+			case DEFAULT -> round.getWord1();
+			case FOOL    -> round.getWord2();
+		};
+
+		boolean correct = req.guessText().equalsIgnoreCase(targetWord);
+
+		Winner winnerEnum;
+		if (room.getGameMode() == GameMode.DEFAULT) {
+			winnerEnum = correct ? Winner.liar : Winner.civil;
+		} else {
+			winnerEnum = correct ? Winner.civil : Winner.liar;
+		}
+
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		if (winnerEnum == Winner.civil) {
+			prList.stream()
+				.filter(pr -> !pr.isLiar())
+				.forEach(pr -> pr.addScore(100));
+		} else {
+			prList.stream()
+				.filter(ParticipantRound::isLiar)
+				.forEach(pr -> pr.addScore(100));
+		}
+		participantRoundRepository.saveAll(prList);
+
+		round.setWinner(winnerEnum);
+		roundRepository.save(round);
+
+		return new GuessResponseDto(correct, winnerEnum.name());
+	}
+
+	/**
+	 * 방별 누적 점수 조회
+	 */
+	@Transactional(readOnly = true)
+	public ScoresResponseDto getScores(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		List<Round> rounds = roundRepository.findByRoom(room);
+
+		List<ParticipantRound> allPRs = new ArrayList<>();
+		for (Round r : rounds) {
+			allPRs.addAll(participantRoundRepository.findByRound(r));
+		}
+
+		Map<String, Integer> scoreMap = new HashMap<>();
+		for (ParticipantRound pr : allPRs) {
+			String nick = pr.getParticipant().getSession().getNickname();
+			scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+		}
+
+		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
+			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
+			.collect(Collectors.toList());
+
+		return new ScoresResponseDto(entries);
 	}
 }

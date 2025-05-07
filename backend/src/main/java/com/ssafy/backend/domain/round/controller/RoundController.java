@@ -11,11 +11,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
+import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
+import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.global.common.CommonResponse;
 
@@ -140,6 +144,72 @@ public class RoundController {
 		@Valid @RequestBody VoteRequestDto request
 	) {
 		VoteResponseDto dto = roundService.vote(roomCode, roundNumber, request);
+		return ok(dto);
+	}
+
+	@Operation(summary = "투표 결과 조회", description = "해당 라운드의 투표 결과를 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "투표 결과를 성공적으로 조회했습니다."),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+		@ApiResponse(responseCode = "401", description = "인증 필요"),
+		@ApiResponse(responseCode = "403", description = "권한 없음"),
+		@ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음")
+	})
+	@GetMapping("/{roomCode}/{roundNumber}/votes/results")
+	public ResponseEntity<CommonResponse<VoteResultsResponseDto>> getVoteResults(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode,
+
+		@PathVariable
+		@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
+		int roundNumber
+	) {
+		VoteResultsResponseDto dto = roundService.getVoteResults(roomCode, roundNumber);
+		return ok(dto);
+	}
+
+	@Operation(
+		summary = "라운드 단어 추측 제출",
+		description = "해당 라운드에 대해 guessText를 받아 정답 판정 후 승자를 결정하고 저장합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "추측 처리 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (validation 실패)"),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드 없음")
+	})
+	@PostMapping("/{roomCode}/{roundNumber}/guess")
+	public ResponseEntity<CommonResponse<GuessResponseDto>> submitGuess(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode,
+
+		@PathVariable
+		@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
+		int roundNumber,
+
+		@Valid @RequestBody GuessRequestDto request
+	) {
+		GuessResponseDto dto = roundService.submitGuess(roomCode, roundNumber, request);
+		return ok(dto);
+	}
+
+	@Operation(
+		summary = "방별 누적 점수 조회",
+		description = "해당 방의 지금까지 참가자별 총 점수를 조회합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "해당 방의 전체 점수를 조회했습니다."),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 (roomCode validation 실패)"),
+		@ApiResponse(responseCode = "404", description = "방을 찾을 수 없습니다.")
+	})
+	@GetMapping("/{roomCode}/score")
+	public ResponseEntity<CommonResponse<ScoresResponseDto>> getScores(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode
+	) {
+		ScoresResponseDto dto = roundService.getScores(roomCode);
 		return ok(dto);
 	}
 }
