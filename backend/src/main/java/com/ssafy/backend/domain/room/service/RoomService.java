@@ -291,6 +291,9 @@ public class RoomService {
 	@Transactional
 	public void leaveRoom(String roomCode) {
 		String nickname = SecurityUtils.getCurrentNickname();
+		if (nickname == null) {
+			throw new CustomException(ResponseCode.UNAUTHORIZED);
+		}
 
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -305,9 +308,9 @@ public class RoomService {
 			// 참가자 제거
 			participantRepository.delete(participant);
 
-			// (남은 참가자 수 == 0) => 방 삭제
-			int remainingCount = participantRepository.countByRoom(room);
-			if (remainingCount == 0) {
+			// (남은 활성 참가자 수 == 0) => 방 삭제
+			int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
+			if (activeCount  == 0) {
 				roomRepository.delete(room); // 마지막 인원이면 방도 삭제
 			}
 		} else if (room.getRoomStatus() == RoomStatus.playing) {
