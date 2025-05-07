@@ -5,8 +5,7 @@ import RuleBookPage from '../pages/main/RuleBookPage';
 import LoginPage from '../pages/main/LoginPage';
 
 import GameRoom from '../pages/game/GameRoom';
-// import LiarGame from '../pages/game/LiarGame';
-// import Wait2Game from '../pages/game/waitToGameTest';
+
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
 import RoomListPage from '../pages/roomList/RoomListPage';
 import ModalTestPage from '../pages/gameModal/ModalTestPage';
@@ -23,9 +22,6 @@ const Router = () => {
 
         {/* openvidu */}
         <Route path="/game-room" element={<GameRoom />} />
-        {/* openvidu-test */}
-        {/* <Route path="/liar-game" element={<LiarGame />} />
-        <Route path="/wait2game" element={<Wait2Game />} /> */}
       </Route>
       <Route path="/rule-book" element={<RuleBookPage />} />
       <Route path="/modal" element={<ModalTestPage />} />
