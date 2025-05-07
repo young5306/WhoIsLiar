@@ -88,7 +88,7 @@ public class AuthService {
 				throw new CustomException(ResponseCode.UNAUTHORIZED);
 			}
 			s.setLastActiveAt(LocalDateTime.now());
-			log.info("토큰검증 성공: nickname={}, token={}", s.getNickname(), token);
+			// log.info("토큰검증 성공: nickname={}, token={}", s.getNickname(), token);
 			return s;
 		} catch (CustomException ex) {
 			log.warn("토큰검증 실패: token={}, 이유={}", token, ex.getResponseCode());
