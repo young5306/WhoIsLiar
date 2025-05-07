@@ -3,17 +3,18 @@ import GameButton from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { useRoomStore } from '../../stores/useRoomStore';
 import { VideoOff, Video, Mic, MicOff, Crown, Copy, Check } from 'lucide-react';
-import { getRoomData } from '../../services/api/RoomService';
+import { getRoomData, setRoomCategory } from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { notify } from '../../components/common/Toast';
-import { outRoom } from '../../services/api/GameService';
+import { outRoom, startGame } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { useSocketStore } from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
 
 const WaitingRoomContent = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('random');
+  const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
+  const [displayCategory, setDisplayCategory] = useState<string>('랜덤');
   const [roomData, setRoomData] = useState<{
     roomInfo: {
       roomName: string;
@@ -35,18 +36,18 @@ const WaitingRoomContent = () => {
   } | null>(null);
 
   const categories = [
-    { label: '랜덤', id: 'random' },
-    { label: '물건', id: 'object' },
-    { label: '인물', id: 'person' },
-    { label: '음식', id: 'food' },
-    { label: '나라', id: 'country' },
-    { label: '스포츠', id: 'sports' },
-    { label: '직업', id: 'job' },
-    { label: '동물', id: 'animal' },
-    { label: '노래', id: 'song' },
-    { label: '장소', id: 'place' },
-    { label: '영화/드라마', id: 'movie' },
-    { label: '브랜드', id: 'brand' },
+    { label: '랜덤', id: '랜덤' },
+    { label: '물건', id: '물건' },
+    { label: '인물', id: '인물' },
+    { label: '음식', id: '음식' },
+    { label: '나라', id: '나라' },
+    { label: '스포츠', id: '스포츠' },
+    { label: '직업', id: '직업' },
+    { label: '동물', id: '동물' },
+    { label: '노래', id: '노래' },
+    { label: '장소', id: '장소' },
+    { label: '영화/드라마', id: '영화_드라마' },
+    { label: '브랜드', id: '브랜드' },
   ];
 
   const { userInfo } = useAuthStore();
@@ -254,6 +255,7 @@ const WaitingRoomContent = () => {
         try {
           const response = await getRoomData(contextRoomCode);
           setRoomData(response);
+          setDisplayCategory(response.roomInfo.category || '랜덤');
         } catch (error) {
           console.error('Failed to fetch room data:', error);
         }
@@ -284,12 +286,20 @@ const WaitingRoomContent = () => {
             const message = JSON.parse(frame.body);
             // 중복 메시지 체크
             setChatMessages((prev) => {
+              // CATEGORY_SELECTED 메시지는 채팅창에 표시하지 않음
+              if (message.chatType === 'CATEGORY_SELECTED') {
+                return prev;
+              }
               return [...prev, message];
             });
 
+            // 카테고리 선택 메시지 처리
+            if (message.chatType === 'CATEGORY_SELECTED') {
+              setDisplayCategory(message.content);
+            }
+
             // 시스템 메시지나 참여자 입/퇴장 메시지일 경우 참여자 정보 최신화
             if (
-              // message.chatType === 'SYSTEM' ||
               message.chatType === 'PLAYER_JOIN' ||
               message.chatType === 'PLAYER_LEAVE'
             ) {
@@ -414,12 +424,15 @@ const WaitingRoomContent = () => {
   const handleLeaveRoom = async () => {
     try {
       if (contextRoomCode) {
-        await outRoom(contextRoomCode);
-        // 구독 해제
+        // 구독 해제를 먼저 수행
         if (subscription) {
           subscription.unsubscribe();
           clearSubscription();
         }
+
+        // 그 다음 방 나가기 API 호출
+        await outRoom(contextRoomCode);
+
         // 룸 스토어 초기화
         clearRoomCode();
         setRoomData(null);
@@ -439,13 +452,17 @@ const WaitingRoomContent = () => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = '';
+      return '';
     };
 
     const handlePopState = (e: PopStateEvent) => {
       e.preventDefault();
       // 뒤로가기 시도 시 현재 페이지를 다시 히스토리에 추가
       window.history.pushState(null, '', window.location.href);
-      setIsConfirmModalOpen(true);
+      notify({
+        type: 'warning',
+        text: '게임 중에는 뒤로가기를 할 수 없습니다.',
+      });
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -467,6 +484,18 @@ const WaitingRoomContent = () => {
   //   console.log('타이머가 종료되었습니다!');
   //   // 여기에 타이머 종료 후 실행할 로직 추가
   // };
+
+  const handleCategorySelect = async (categoryId: string) => {
+    if (isHost && contextRoomCode) {
+      try {
+        await setRoomCategory(contextRoomCode, categoryId);
+        setSelectedCategory(categoryId);
+        notify({ type: 'success', text: '카테고리가 변경되었습니다.' });
+      } catch (error) {
+        notify({ type: 'error', text: '카테고리 변경에 실패했습니다.' });
+      }
+    }
+  };
 
   return (
     <div className="w-screen h-screen flex overflow-hidden px-10 py-4">
@@ -730,14 +759,26 @@ const WaitingRoomContent = () => {
         {/* Category section */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center gap-2">
-              <img
-                src="/assets/category.svg"
-                alt="category"
-                width={20}
-                height={20}
-              />
-              <div className="text-primary-600 text-base">제시어 카테고리</div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2">
+                <img
+                  src="/assets/category.svg"
+                  alt="category"
+                  width={20}
+                  height={20}
+                />
+                <div className="text-primary-600 text-base">
+                  제시어 카테고리
+                </div>
+              </div>
+              <div className="bg-rose-500/10 border border-rose-500/20 px-6 py-2 rounded-lg">
+                <div className="flex flex-col items-center">
+                  <div className="text-rose-500 text-sm mb-1">제시어</div>
+                  <div className="text-rose-500 text-xl font-bold">
+                    {displayCategory}
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2">
               <GameButton
@@ -749,7 +790,19 @@ const WaitingRoomContent = () => {
                 <GameButton
                   text="게임시작"
                   size="small"
-                  onClick={() => navigate('/game-room')}
+                  onClick={async () => {
+                    try {
+                      if (contextRoomCode) {
+                        await startGame(contextRoomCode);
+                        navigate('/game-room');
+                      }
+                    } catch (error) {
+                      notify({
+                        type: 'error',
+                        text: '게임 시작에 실패했습니다.',
+                      });
+                    }
+                  }}
                 />
               )}
             </div>
@@ -760,13 +813,13 @@ const WaitingRoomContent = () => {
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => isHost && setSelectedCategory(category.id)}
+                  onClick={() => handleCategorySelect(category.id)}
                   className={`text-center text-base cursor-pointer transition-all duration-200
                     ${
-                      selectedCategory === category.id
-                        ? 'text-rose-500 font-bold scale-105 [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
+                      category.id === displayCategory
+                        ? 'text-rose-500 font-bold scale-105 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
                         : isHost
-                          ? 'text-gray-300 hover:text-white hover:scale-105'
+                          ? 'text-gray-300 hover:text-white hover:scale-105 hover:bg-gray-700/50 px-3 py-1.5 rounded-lg'
                           : 'text-gray-500 cursor-not-allowed'
                     }
                   `}
@@ -807,7 +860,7 @@ const WaitingRoomContent = () => {
                     {msg.sender}
                   </span>
                   <span
-                    className={`text-xs ${
+                    className={`text-xs break-words ${
                       msg.sender === 'System'
                         ? 'text-rose-500'
                         : msg.sender === userInfo?.nickname
