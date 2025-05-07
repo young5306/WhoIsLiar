@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { motion, useSpring, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface TimerProps {
   onTimeEnd?: () => void;

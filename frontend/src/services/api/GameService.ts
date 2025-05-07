@@ -1,6 +1,5 @@
 import { api } from './Api';
 import { StreamManager } from 'openvidu-browser';
-import { api } from './Api';
 
 export interface Subscriber extends StreamManager {
   id: string;
