@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS rounds (
     word2 VARCHAR(50) NOT NULL,
     round_status ENUM('waiting', 'hint', 'discussion', 'voting', 'finished') NOT NULL,
     winner ENUM('civil', 'liar'),
+    turn INT NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
