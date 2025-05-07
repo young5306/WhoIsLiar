@@ -48,7 +48,17 @@ const RoomListPage = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  const handleRefresh = () => fetchRooms(search || undefined);
+  const handleRefresh = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const img = e.currentTarget.querySelector('img');
+    if (!img) return;
+
+    img.classList.add('animate-spin-once-counter');
+    setTimeout(() => {
+      img.classList.remove('animate-spin-once-counter');
+    }, 500);
+
+    fetchRooms(search || undefined);
+  };
 
   // 공통 대기방 이동
   const goToWaitingRoom = (roomCode: string) => {
