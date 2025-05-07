@@ -17,7 +17,7 @@ public class BrokerInboundLoggingInterceptor implements ChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		if (accessor != null) {
-			logger.info("[BROKER IN]  {} ▶ {}", accessor.getCommand(), message.getPayload());
+			// logger.info("[BROKER IN]  {} ▶ {}", accessor.getCommand(), message.getPayload());
 		}
 		return message;
 	}

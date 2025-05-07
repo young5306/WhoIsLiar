@@ -25,6 +25,8 @@ import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class RoomService {
 
 	private final RoomRepository roomRepository;
@@ -291,23 +294,34 @@ public class RoomService {
 	@Transactional
 	public void leaveRoom(String roomCode) {
 		String nickname = SecurityUtils.getCurrentNickname();
+		if (nickname == null) {
+			throw new CustomException(ResponseCode.UNAUTHORIZED);
+		}
+		System.out.println(nickname);
+
 
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		log.info("방 못찾음");
+
 		SessionEntity session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		log.info("세션 못찾음");
+
 		Participant participant = participantRepository.findByRoomAndSession(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		log.info("참가자 못찾음");
 
 		if (room.getRoomStatus() == RoomStatus.waiting) {
 			// 참가자 제거
 			participantRepository.delete(participant);
 
-			// (남은 참가자 수 == 0) => 방 삭제
-			int remainingCount = participantRepository.countByRoom(room);
-			if (remainingCount == 0) {
+			// (남은 활성 참가자 수 == 0) => 방 삭제
+			int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
+			if (activeCount  == 0) {
 				roomRepository.delete(room); // 마지막 인원이면 방도 삭제
 			}
 		} else if (room.getRoomStatus() == RoomStatus.playing) {

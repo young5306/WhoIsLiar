@@ -20,4 +20,5 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	@Query("SELECT p FROM Participant p WHERE p.room = :room AND p.isActive = true")
 	List<Participant> findByRoomAndActive(@Param("room") Room room);
 
+	int countByRoomAndIsActiveTrue(Room room);
 }
