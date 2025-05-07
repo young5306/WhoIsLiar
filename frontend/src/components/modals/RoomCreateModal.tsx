@@ -77,12 +77,12 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
       >
         <button
           onClick={() => setIsHelpOpen(true)}
-          className="absolute top-2 left-2"
+          className="absolute top-3 left-3"
         >
           <img
             src="assets/toolTip.png"
             alt="도움말"
-            className="w-5 h-5 cursor-pointer"
+            className="w-8 h-8 cursor-pointer"
           />
         </button>
 
@@ -92,25 +92,43 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             onClick={() => setIsHelpOpen(false)}
           >
             <div
-              className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[300px] text-sm"
+              className="bg-gray-0 text-gray-900 p-6 rounded-xl w-[450px] headline-small"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="body-medium mb-2">도움말</h3>
-              <p>
-                비디오 모드는 화면을 공유하는 모드, 블라인드 모드는 화면을
-                공유하지 않는 모드입니다.
+              <h3 className="mb-5">도움말</h3>
+
+              <p className="leading-relaxed mb-5">
+                모드, 방 제목, 라운드 수는 <strong>필수</strong> 항목이며,
                 <br />
-                <br />
-                일반 모드는 라이어에게 라이어임을 알리고 제시어를 제공하지 않는
-                모드, 바보 모드는 라이어에게 라이어임을 알리지 않고 다른
-                제시어를 제공하는 모드입니다.
-                <br />
-                <br />
-                방제목과 라운드 수는 필수, 비밀번호 설정은 선택 항목입니다.
+                비밀번호 설정은 <strong>선택</strong> 항목입니다.
               </p>
+
+              <div className="mb-4">
+                <p className="mb-1 text-point-rulebook2">[화면 모드]</p>
+                <p className="leading-relaxed">
+                  <strong>비디오 모드</strong>는 화면을 공유하는 모드이며,
+                  <br />
+                  <strong>블라인드 모드</strong>는 화면을 공유하지 않는
+                  모드입니다.
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <p className="mb-1 text-point-rulebook2">[제시어 모드]</p>
+                <p className="leading-relaxed">
+                  <strong>일반 모드</strong>는 라이어에게 라이어임을 알리고
+                  <br />
+                  제시어를 제공하지 않는 모드입니다.
+                  <br />
+                  <strong>바보 모드</strong>는 라이어에게 라이어임을 알리지 않고
+                  <br />
+                  다른 제시어를 제공하는 모드입니다.
+                </p>
+              </div>
+
               <button
                 onClick={() => setIsHelpOpen(false)}
-                className="mt-4 text-gray-500 cursor-pointer"
+                className="mt-5 text-gray-500 hover:text-gray-700"
               >
                 닫기
               </button>
