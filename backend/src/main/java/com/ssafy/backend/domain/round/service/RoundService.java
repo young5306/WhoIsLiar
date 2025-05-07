@@ -20,9 +20,11 @@ import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepositor
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
+import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
+import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
@@ -188,5 +190,43 @@ public class RoundService {
 		roundRepository.save(round);
 
 		chatSocketService.roundStarted(request.roomCode(), request.roundNumber());
+	}
+
+	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String nickname = SecurityUtils.getCurrentNickname();
+		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
+
+		SessionEntity session = sessionRepository.findByNickname(nickname)
+			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
+
+		Participant self = participantRepository.findByRoomAndSession(room, session)
+			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
+
+		ParticipantRound pr = participantRoundRepository
+			.findByRoundAndParticipant_Id(round, self.getId())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		if (request.targetParticipantId() != null) {
+			Participant target = participantRepository.findById(request.targetParticipantId())
+				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+			if (!target.getRoom().equals(room)) {
+				throw new CustomException(ResponseCode.INVALID_REQUEST);
+			}
+			pr.setTargetParticipant(target);
+		} else {
+			pr.setTargetParticipant(null);
+		}
+		participantRoundRepository.save(pr);
+
+		return new VoteResponseDto(
+			self.getId(),
+			request.targetParticipantId()
+		);
 	}
 }

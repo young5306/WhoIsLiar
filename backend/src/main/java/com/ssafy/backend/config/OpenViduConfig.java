@@ -1,4 +1,4 @@
-package com.ssafy.backend.domain.openvidu.config;
+package com.ssafy.backend.config;
 
 import io.openvidu.java.client.OpenVidu;
 import org.springframework.beans.factory.annotation.Value;

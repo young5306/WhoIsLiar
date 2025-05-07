@@ -52,4 +52,8 @@ public class ParticipantRound {
 		this.score = score;
 		this.createdAt = createdAt;
 	}
+
+	public void setTargetParticipant(Participant targetParticipant) {
+		this.targetParticipant = targetParticipant;
+	}
 }
