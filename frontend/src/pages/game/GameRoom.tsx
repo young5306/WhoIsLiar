@@ -18,7 +18,7 @@ import {
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
 import UserVideoComponent from './UserVideoComponent';
-import GameButton from '../../components/common/GameButton';
+// import GameButton from '../../components/common/GameButton';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
 
@@ -108,10 +108,10 @@ const GameRoom: React.FC = () => {
     }
   }, [myUserName, mySessionId, session]);
 
-  // ck) 세션ID 입력값 변경
-  const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMySessionId(e.target.value);
-  };
+  // // ck) 세션ID 입력값 변경
+  // const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setMySessionId(e.target.value);
+  // };
 
   // ck) 구독자 삭제
   const deleteSubscriber = (streamManager: StreamManager) => {
