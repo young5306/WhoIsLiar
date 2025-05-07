@@ -171,7 +171,7 @@ export const getVoteResult = async (
   roundNumber: number
 ): Promise<VoteResultResponse> => {
   const res = await api.get(
-    `/api/rooms/${roomCode}/rounds/${roundNumber}/votes/results`
+    `/rounds/${roomCode}/rounds/${roundNumber}/votes/results`
   );
   return res.data.data;
 };
@@ -182,7 +182,7 @@ export const submitWordGuess = async (
   guessText: string
 ): Promise<WordGuessResponse> => {
   const res = await api.post(
-    `/api/rooms/${roomCode}/rounds/${roundNumber}/guess`,
+    `/rounds/${roomCode}/rounds/${roundNumber}/guess`,
     {
       guessText,
     }
@@ -193,6 +193,6 @@ export const submitWordGuess = async (
 export const getRoomScores = async (
   roomCode: string
 ): Promise<ScoreResponse> => {
-  const res = await api.get(`/api/rooms/${roomCode}/scores`);
+  const res = await api.get(`/rounds/${roomCode}/scores`);
   return res.data.data;
 };
