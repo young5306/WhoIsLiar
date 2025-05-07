@@ -455,16 +455,16 @@ const WaitingRoomContent = () => {
     };
   }, []);
 
-  const timerRef = useRef<TimerRef>(null);
-  // 타이머 시작 함수
-  const startTimer = () => {
-    timerRef.current?.startTimer(60); // 10초 타이머 시작
-  };
-  // 타이머 종료 시 실행될 콜백
-  const handleTimeEnd = () => {
-    console.log('타이머가 종료되었습니다!');
-    // 여기에 타이머 종료 후 실행할 로직 추가
-  };
+  // const timerRef = useRef<TimerRef>(null);
+  // // 타이머 시작 함수
+  // const startTimer = () => {
+  //   timerRef.current?.startTimer(60); // 10초 타이머 시작
+  // };
+  // // 타이머 종료 시 실행될 콜백
+  // const handleTimeEnd = () => {
+  //   console.log('타이머가 종료되었습니다!');
+  //   // 여기에 타이머 종료 후 실행할 로직 추가
+  // };
 
   return (
     <div className="w-screen h-screen flex overflow-hidden px-10 py-4">
@@ -523,17 +523,15 @@ const WaitingRoomContent = () => {
             </div>
           </div>
 
-          {/* 타이머 추가 */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Timer ref={timerRef} onTimeEnd={handleTimeEnd} size="large" />
-            {/* 테스트용 버튼 */}
             <button
               onClick={startTimer}
               className="bg-primary-500 hover:bg-primary-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200 cursor-pointer"
             >
               테스트용
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Player count */}
@@ -554,7 +552,7 @@ const WaitingRoomContent = () => {
         </div>
 
         {/* Player and analysis section */}
-        <div className="flex mb-4 gap-4">
+        <div className="flex mb-10 gap-4">
           {/* Player profile */}
           <div className="flex flex-col">
             <div className="w-48 h-48 xl:w-48 xl:h-48 2xl:w-60 2xl:h-60 rounded-2xl overflow-hidden bg-gray-800 mb-2 relative">
@@ -780,7 +778,7 @@ const WaitingRoomContent = () => {
       </div>
 
       {/* Right section - Chat */}
-      <div className="w-64 min-w-[220px] max-w-xs ml-4 flex flex-col flex-shrink-0">
+      <div className="w-64 min-w-80 max-w-xs ml-4 flex flex-col flex-shrink-0">
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 flex flex-col h-[calc(100vh-5rem)]">
           <div className="text-white text-sm mb-2 border-b border-gray-700 pb-1">
             채팅
@@ -796,7 +794,7 @@ const WaitingRoomContent = () => {
               {chatMessages.map((msg, index) => (
                 <div key={index} className="flex flex-col">
                   <span
-                    className={`font-bold text-xs ${
+                    className={`font-bold body-medium ${
                       msg.sender === 'System'
                         ? 'text-primary-500'
                         : msg.sender === userInfo?.nickname
