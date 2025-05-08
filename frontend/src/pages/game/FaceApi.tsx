@@ -80,7 +80,7 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
       if (res) {
         setEmotionResult(res);
       }
-    }, 2000); // 2초
+    }, 1000); // 1.5초
 
     return () => clearInterval(interval);
   }, [isReady]);
@@ -134,11 +134,11 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
   useEffect(() => {
     const emotionCounts: Record<Emotion, number> = {
       happy: 0,
+      surprised: 0,
       sad: 0,
       angry: 0,
       fearful: 0,
       disgusted: 0,
-      surprised: 0,
       neutral: 0,
     };
 
@@ -158,7 +158,7 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
 
     const sorted = Object.entries(emotionCounts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 1) as [Emotion, number][];
+      .slice(0, 2) as [Emotion, number][];
 
     setTopEmotions(sorted);
   }, [emotionLog]);
@@ -216,7 +216,7 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
                 </h3> */}
 
                 {topEmotions.length > 0 && (
-                  <div className="text-sm text-gray-700 mb-2">
+                  <div className="text-[13px] text-gray-700 mb-2">
                     {topEmotions.map(([emotion, count]) => (
                       <span
                         key={emotion}

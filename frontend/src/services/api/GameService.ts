@@ -115,7 +115,7 @@ export const startGame = async (roomCode: string) => {
 // 라운드 세팅
 // [POST] /api/rounds/setting
 export const setRound = async (params: setRoundRequest) => {
-  const res = await api.post(`/rounds/setting`, { params });
+  const res = await api.post(`/rounds/setting`, params);
   return res.data;
 };
 

@@ -2,14 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import GameButton from '../../components/common/GameButton';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useEffect } from 'react';
+import { useRoomStore } from '../../stores/useRoomStore';
 
 const MainPage = () => {
   const navigate = useNavigate();
   const { clearUserInfo } = useAuthStore();
+  const { clearRoomCode } = useRoomStore();
 
   useEffect(() => {
     clearUserInfo();
-  }, [clearUserInfo]);
+    clearRoomCode();
+  }, [clearUserInfo, clearRoomCode]);
 
   const handleStartGame = () => {
     navigate('/login');

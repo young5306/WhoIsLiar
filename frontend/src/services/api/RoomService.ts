@@ -55,3 +55,15 @@ export const getRoomParticipants = async (roomCode: string) => {
   const res = await api.get(`/rooms/${roomCode}/participants`);
   return res.data.data;
 };
+
+// POST /api/rooms/setting
+// Content-Type: application/json
+
+// {
+// 	"roomCode": "abcd12",
+// 	"category": "음식"
+// }
+export const setRoomCategory = async (roomCode: string, category: string) => {
+  const res = await api.post('/rooms/category', { roomCode, category });
+  return res.data;
+};
