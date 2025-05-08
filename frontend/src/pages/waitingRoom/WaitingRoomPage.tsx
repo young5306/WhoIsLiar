@@ -305,7 +305,7 @@ const WaitingRoomContent = () => {
                   .then(() => {
                     navigate('/game-room');
                   })
-                  .catch((error) => {
+                  .catch(() => {
                     notify({
                       type: 'error',
                       text: '게임 시작에 실패했습니다.',
