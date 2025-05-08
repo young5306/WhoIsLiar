@@ -23,4 +23,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	int countByRoomAndIsActiveTrue(Room room);
 
 	List<Participant> findByRoomAndIsActiveTrueOrderByCreatedAtAsc(Room room);
+
+	boolean existsBySessionAndIsActiveTrue(SessionEntity session);
 }
