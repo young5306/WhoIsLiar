@@ -290,6 +290,21 @@ public class RoundService {
 			countMap.putIfAbsent(pid, 0);
 		}
 
+		Map<Long, String> nicknameMap = prList.stream()
+			.collect(Collectors.toMap(
+				pr -> pr.getParticipant().getId(),
+				pr -> pr.getParticipant().getSession().getNickname()
+			));
+
+		List<Result> results = countMap.entrySet().stream()
+			.map(e -> new Result(
+				nicknameMap.get(e.getKey()),
+				e.getValue()
+			))
+			.collect(Collectors.toList());
+
+		results.add(new Result(null, skipCount));
+
 		List<Integer> nonSkipCounts = countMap.values().stream().toList();
 		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
 		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
@@ -304,10 +319,6 @@ public class RoundService {
 		} else {
 			skipFlag = false;
 		}
-
-		List<Result> results = countMap.entrySet().stream()
-			.map(e -> new Result(e.getKey(), e.getValue()))
-			.collect(Collectors.toList());
 
 		Participant liar = prList.stream()
 			.filter(ParticipantRound::isLiar)
