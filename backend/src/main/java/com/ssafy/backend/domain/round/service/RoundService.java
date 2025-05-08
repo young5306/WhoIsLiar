@@ -90,26 +90,35 @@ public class RoundService {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		GameMode gameMode = room.getGameMode();
+		Category category = room.getCategory();
+
+		int nextRoundNumber = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.map(r -> r.getRoundNumber() + 1)
+			.orElse(1);
+
 		List<CategoryWord> candidates =
-			request.category() == Category.랜덤
+			category  == Category.랜덤
 				? categoryWordRepository.findAll()
-				: categoryWordRepository.findByCategory(request.category());
+				: categoryWordRepository.findByCategory(category );
 		if (candidates.isEmpty()) {
 			throw new CustomException(ResponseCode.NOT_FOUND);
 		}
 
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = "";
-		if (request.gameMode() == GameMode.FOOL) {
-			w2 = gptService.getSimilarWord(w1, room.getCategory().name());
+		if (gameMode  == GameMode.FOOL) {
+			w2 = gptService.getSimilarWord(w1, category.name());
 		}
 
 		Round round = Round.builder()
 			.room(room)
-			.roundNumber(request.roundNumber())
+			.roundNumber(nextRoundNumber)
 			.word1(w1)
 			.word2(w2)
 			.roundStatus(RoundStatus.waiting)
+			.turn(1)
 			.winner(null)
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
@@ -140,14 +149,16 @@ public class RoundService {
 				.build();
 			participantRoundRepository.save(pr);
 		}
+
+		chatSocketService.roundSet(request.roomCode(), nextRoundNumber);
 	}
 
 	@Transactional(readOnly = true)
-	public PlayerRoundInfoResponse getPlayerRoundSetup(String roomCode, int roundNumber) {
+	public PlayerRoundInfoResponse getPlayerRoundInfo(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+		Round round = roundRepository.findTopByRoomOrderByRoundNumberDesc(room)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String nickname = SecurityUtils.getCurrentNickname();
@@ -163,10 +174,11 @@ public class RoundService {
 
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
 
-		List<PlayerPositionDto> participants = prList.stream()
-			.map(pr -> new PlayerPositionDto(
-				pr.getParticipant().getId(),
-				pr.getOrder()))
+		List<PlayerRoundInfoResponse.PlayerPositionInfo> positions = prList.stream()
+			.map(pr -> new PlayerRoundInfoResponse.PlayerPositionInfo(
+				pr.getParticipant().getSession().getNickname(),
+				pr.getOrder()
+			))
 			.collect(Collectors.toList());
 
 		boolean isLiar = prList.stream()
@@ -182,7 +194,12 @@ public class RoundService {
 			word = isLiar ? round.getWord2() : round.getWord1();
 		}
 
-		return new PlayerRoundInfoResponse(participants, word);
+		return new PlayerRoundInfoResponse(
+			round.getRoundNumber(),
+			room.getRoundCount(),
+			positions,
+			word
+		);
 	}
 
 	public void startRound(RoundStartRequest request) {
@@ -210,10 +227,10 @@ public class RoundService {
 		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		String nickname = SecurityUtils.getCurrentNickname();
-		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
+		String myNickname = SecurityUtils.getCurrentNickname();
+		if (myNickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
 
-		SessionEntity session = sessionRepository.findByNickname(nickname)
+		SessionEntity session = sessionRepository.findByNickname(myNickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
 
 		Participant self = participantRepository.findByRoomAndSession(room, session)
@@ -223,6 +240,7 @@ public class RoundService {
 			.findByRoundAndParticipant_Id(round, self.getId())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		String targetNickname = null;
 		if (request.targetParticipantId() != null) {
 			Participant target = participantRepository.findById(request.targetParticipantId())
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -230,14 +248,15 @@ public class RoundService {
 				throw new CustomException(ResponseCode.INVALID_REQUEST);
 			}
 			pr.setTargetParticipant(target);
+			targetNickname = target.getSession().getNickname();
 		} else {
 			pr.setTargetParticipant(null);
 		}
 		participantRoundRepository.save(pr);
 
 		return new VoteResponseDto(
-			self.getId(),
-			request.targetParticipantId()
+			myNickname,
+			targetNickname
 		);
 	}
 

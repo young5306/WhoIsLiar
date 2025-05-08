@@ -11,4 +11,6 @@ import com.ssafy.backend.domain.round.entity.Round;
 public interface RoundRepository extends JpaRepository<Round, Long> {
 	List<Round> findByRoom(Room room);
 	Optional<Round> findByRoomAndRoundNumber(Room room, int roundNumber);
+
+	Optional<Round> findTopByRoomOrderByRoundNumberDesc(Room room);
 }
