@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { Client } from '@stomp/stompjs';
-
 interface ChatMessage {
   sender: string;
   content: string;
