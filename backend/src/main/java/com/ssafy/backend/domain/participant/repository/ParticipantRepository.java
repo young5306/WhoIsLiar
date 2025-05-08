@@ -21,4 +21,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	List<Participant> findByRoomAndActive(@Param("room") Room room);
 
 	int countByRoomAndIsActiveTrue(Room room);
+
+	List<Participant> findByRoomAndIsActiveTrueOrderByCreatedAtAsc(Room room);
 }
