@@ -308,7 +308,7 @@ public class RoomService {
 		if(room.getRoomStatus()==RoomStatus.playing){
 			participant.setActive(false);
 		}else{
-			participantRepository.delete(participant);
+			participantRepository.deleteById(participant.getId());
 		}
 
 		if(wasHost){
@@ -316,7 +316,7 @@ public class RoomService {
 				.findByRoomAndIsActiveTrueOrderByCreatedAtAsc(room);
 
 			if(remain.isEmpty()){
-				roomRepository.delete(room);
+				roomRepository.deleteById(room.getId());
 			}else{
 				SessionEntity newHost = remain.get(0).getSession();
 				room.setSession(newHost);
@@ -326,7 +326,7 @@ public class RoomService {
 		}else{
 			int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
 			if(activeCount == 0){
-				roomRepository.delete(room);
+				roomRepository.deleteById(room.getId());
 			}
 		}
 

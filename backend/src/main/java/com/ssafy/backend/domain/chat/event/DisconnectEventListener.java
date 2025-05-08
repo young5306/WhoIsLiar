@@ -58,7 +58,7 @@ public class DisconnectEventListener {
 			log.info("[WS GameMessage] {}님이 퇴장하셨습니다.", nickname);
 
 			if (room.getRoomStatus() == RoomStatus.waiting) {
-				participantRepository.delete(participant);
+				participantRepository.deleteById(participant.getId());
 			} else {
 				participant.setActive(false);
 			}
@@ -69,7 +69,7 @@ public class DisconnectEventListener {
 					.findByRoomAndIsActiveTrueOrderByCreatedAtAsc(room);
 
 				if (remain.isEmpty()) {
-					roomRepository.delete(room);
+					roomRepository.deleteById(room.getId());
 				} else {
 					SessionEntity newHost = remain.get(0).getSession();
 					room.setSession(newHost);
@@ -79,7 +79,7 @@ public class DisconnectEventListener {
 			}else{
 				int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
 				if(activeCount == 0){
-					roomRepository.delete(room);
+					roomRepository.deleteById(room.getId());
 				}
 			}
 
