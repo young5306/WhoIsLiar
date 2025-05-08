@@ -453,26 +453,29 @@ const WaitingRoomContent = () => {
   const handleLeaveRoom = async () => {
     try {
       if (contextRoomCode) {
-        // 구독 해제를 먼저 수행
-        if (subscription) {
-          subscription.unsubscribe();
-          clearSubscription();
+        // 방 나가기 API 호출
+        const response = await outRoom(contextRoomCode);
+
+        // API 호출이 성공한 경우에만 네비게이션 실행
+        if (response) {
+          // 구독 해제
+          if (subscription) {
+            subscription.unsubscribe();
+            clearSubscription();
+          }
+
+          // 룸 스토어 초기화
+          clearRoomCode();
+          setRoomData(null);
+
+          // 웹소켓 연결 해제
+          if (isConnected && stompClient?.connected) {
+            stompClient.deactivate();
+          }
+
+          notify({ type: 'success', text: '방을 나갔습니다.' });
+          navigate('/room-list');
         }
-
-        // 룸 스토어 초기화 (API 호출 전에 먼저 수행)
-        clearRoomCode();
-        setRoomData(null);
-
-        // 그 다음 방 나가기 API 호출
-        await outRoom(contextRoomCode);
-
-        // 웹소켓 연결 해제 (API 호출 후에 수행)
-        if (isConnected && stompClient?.connected) {
-          stompClient.deactivate();
-        }
-
-        notify({ type: 'success', text: '방을 나갔습니다.' });
-        navigate('/room-list');
       }
     } catch (error) {
       notify({ type: 'error', text: '방을 나가는데 실패했습니다.' });
