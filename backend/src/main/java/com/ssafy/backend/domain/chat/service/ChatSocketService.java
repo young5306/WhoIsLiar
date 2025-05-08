@@ -59,6 +59,14 @@ public class ChatSocketService {
 		sendAfterCommit(roomCode, roundNumber + "라운드가 종료되었습니다.", ChatType.ROUND_END);
 	}
 
+	public void categorySelected(String roomCode, Category category) {
+		sendAfterCommit(roomCode, category.name(), ChatType.CATEGORY_SELECTED);
+	}
+
+	public void roundSet(String roomCode, int roundNumber) {
+		sendAfterCommit(roomCode, roundNumber + "라운드 세팅이 완료되었습니다.", ChatType.ROUND_SET);
+	}
+
 	public void sendTurnStart(String roomCode, String nickname, int turnDurationSeconds) {
 		sendSystemMessage(roomCode, nickname + "님의 발언 차례입니다. (" + turnDurationSeconds + "초)", ChatType.TURN_START);
 	}
@@ -71,8 +79,8 @@ public class ChatSocketService {
 		sendSystemMessage(roomCode, "모든 플레이어의 차례가 끝났습니다.", ChatType.ROUND_END);
 	}
 
-	public void categorySelected(String roomCode, Category category) {
-		sendAfterCommit(roomCode, category.name(), ChatType.CATEGORY_SELECTED);
+	public void sendTurnSkip(String roomCode, String nickname) {
+		sendSystemMessage(roomCode, nickname + "님이 차례를 스킵하였습니다.", ChatType.TURN_SKIP);
 	}
 }
 
