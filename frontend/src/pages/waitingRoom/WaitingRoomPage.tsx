@@ -22,8 +22,7 @@ import useSocketStore from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
 
 const WaitingRoomContent = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
-  console.log(selectedCategory);
+  // const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
 
   const [displayCategory, setDisplayCategory] = useState<string>('랜덤');
   const [roomData, setRoomData] = useState<{
@@ -335,7 +334,10 @@ const WaitingRoomContent = () => {
                   }
                 }, 100);
               } catch (error) {
-                console.error('Failed to fetch room data:', error);
+                notify({
+                  type: 'error',
+                  text: '방 정보를 가져오는데 실패했습니다.',
+                });
               }
             }
           }
@@ -464,26 +466,29 @@ const WaitingRoomContent = () => {
   const handleLeaveRoom = async () => {
     try {
       if (contextRoomCode) {
-        // 구독 해제를 먼저 수행
-        if (subscription) {
-          subscription.unsubscribe();
-          clearSubscription();
+        // 방 나가기 API 호출
+        const response = await outRoom(contextRoomCode);
+
+        // API 호출이 성공한 경우에만 네비게이션 실행
+        if (response) {
+          // 구독 해제
+          if (subscription) {
+            subscription.unsubscribe();
+            clearSubscription();
+          }
+
+          // 룸 스토어 초기화
+          clearRoomCode();
+          setRoomData(null);
+
+          // 웹소켓 연결 해제
+          if (isConnected && stompClient?.connected) {
+            stompClient.deactivate();
+          }
+
+          notify({ type: 'success', text: '방을 나갔습니다.' });
+          navigate('/room-list');
         }
-
-        // 룸 스토어 초기화 (API 호출 전에 먼저 수행)
-        clearRoomCode();
-        setRoomData(null);
-
-        // 그 다음 방 나가기 API 호출
-        await outRoom(contextRoomCode);
-
-        // 웹소켓 연결 해제 (API 호출 후에 수행)
-        if (isConnected && stompClient?.connected) {
-          stompClient.deactivate();
-        }
-
-        notify({ type: 'success', text: '방을 나갔습니다.' });
-        navigate('/room-list');
       }
     } catch (error) {
       notify({ type: 'error', text: '방을 나가는데 실패했습니다.' });
@@ -505,7 +510,7 @@ const WaitingRoomContent = () => {
     if (isHost && contextRoomCode) {
       try {
         await setRoomCategory(contextRoomCode, categoryId);
-        setSelectedCategory(categoryId);
+        // setSelectedCategory(categoryId);
         notify({ type: 'success', text: '카테고리가 변경되었습니다.' });
       } catch (error) {
         notify({ type: 'error', text: '카테고리 변경에 실패했습니다.' });
@@ -531,11 +536,11 @@ const WaitingRoomContent = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex overflow-hidden px-10 py-4">
+    <div className="w-screen h-screen flex overflow-hidden px-[4%]">
       {/* Left section */}
-      <div className="flex-1 min-w-0 flex flex-col px-4 h-[calc(100vh-5rem)]">
+      <div className="flex-1 min-w-0 flex flex-col px-[1%] h-[98vh]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-[1vh]">
           <div className="flex items-center gap-4">
             <div className="text-white text-2xl font-bold bg-gray-800/50 backdrop-blur-sm px-5 py-2 rounded-xl">
               {roomData?.roomInfo.roomName || '게임방'}
@@ -592,6 +597,15 @@ const WaitingRoomContent = () => {
                 {roomData?.roomInfo.roundCount} 라운드
               </span>
             </div>
+            {/* 제시어 카테고리 표시 */}
+            <div className="bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-rose-500 text-sm">제시어</span>
+                <span className="text-rose-500 text-base font-bold">
+                  {displayCategory}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* <div className="flex items-center gap-2">
@@ -623,10 +637,10 @@ const WaitingRoomContent = () => {
         </div>
 
         {/* Player and analysis section */}
-        <div className="flex mb-10 gap-4">
+        <div className="flex mb-[2vh] gap-[1vw]">
           {/* Player profile */}
           <div className="flex flex-col">
-            <div className="w-48 h-48 xl:w-48 xl:h-48 2xl:w-60 2xl:h-60 rounded-2xl overflow-hidden bg-gray-800 mb-2 relative">
+            <div className="w-[20vh] h-[20vh] xl:w-[25vh] xl:h-[25vh] 2xl:w-[30vh] 2xl:h-[30vh] rounded-2xl overflow-hidden bg-gray-800 mb-[1vh] relative">
               {isCameraOn ? (
                 <video
                   ref={videoRef}
@@ -684,7 +698,7 @@ const WaitingRoomContent = () => {
           </div>
 
           {/* Emotion analysis box */}
-          <div className="w-96 h-48 xl:w-[28rem] xl:h-60 2xl:w-[32rem] 2xl:h-60 mb-4 relative flex items-center bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
+          <div className="w-[40vw] h-[20vh] xl:w-[45vw] xl:h-[25vh] 2xl:w-[50vw] 2xl:h-[30vh] mb-[2vh] relative flex items-center bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
             {/* Audio visualization */}
             <div className="w-2/3 h-full relative">
               <svg
@@ -766,7 +780,7 @@ const WaitingRoomContent = () => {
           </div>
 
           {/* Player list */}
-          <div className="ml-2 bg-gray-800/50 backdrop-blur-sm rounded-xl p-2 w-48 h-48 xl:w-60 xl:h-60 2xl:w-60 2xl:h-60">
+          <div className="ml-[1vw] bg-gray-800/50 backdrop-blur-sm rounded-xl p-2 w-[20vh] h-[20vh] xl:w-[25vh] xl:h-[25vh] 2xl:w-[30vh] 2xl:h-[30vh]">
             <div className="text-white text-sm mb-1 border-b border-gray-700 pb-1">
               참여자 ({roomData?.participants.length || 0}/6)
             </div>
@@ -798,8 +812,8 @@ const WaitingRoomContent = () => {
 
         {/* Category section */}
         <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center mb-[2vh] justify-between">
+            <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <img
                   src="/assets/category.svg"
@@ -809,14 +823,6 @@ const WaitingRoomContent = () => {
                 />
                 <div className="text-primary-600 text-base">
                   제시어 카테고리
-                </div>
-              </div>
-              <div className="bg-rose-500/10 border border-rose-500/20 px-6 py-2 rounded-lg">
-                <div className="flex flex-col items-center">
-                  <div className="text-rose-500 text-sm mb-1">제시어</div>
-                  <div className="text-rose-500 text-xl font-bold">
-                    {displayCategory}
-                  </div>
                 </div>
               </div>
             </div>
@@ -861,8 +867,8 @@ const WaitingRoomContent = () => {
       </div>
 
       {/* Right section - Chat */}
-      <div className="w-64 min-w-80 max-w-xs ml-4 flex flex-col flex-shrink-0">
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 flex flex-col h-[calc(100vh-5rem)]">
+      <div className="w-[20vw] min-w-[10vw] max-w-[25vw] ml-[1vw] flex flex-col flex-shrink-0">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 flex flex-col h-[92vh]">
           <div className="text-white text-sm mb-2 border-b border-gray-700 pb-1">
             채팅
           </div>
@@ -876,28 +882,34 @@ const WaitingRoomContent = () => {
             >
               {chatMessages.map((msg, index) => (
                 <div key={index} className="flex flex-col">
-                  <span
-                    className={`font-bold body-medium ${
-                      msg.sender === 'System'
-                        ? 'text-primary-500'
-                        : msg.sender === userInfo?.nickname
-                          ? 'text-green-500'
-                          : 'text-white'
-                    }`}
-                  >
-                    {msg.sender}
-                  </span>
-                  <span
-                    className={`text-xs break-words ${
-                      msg.sender === 'System'
-                        ? 'text-rose-500'
-                        : msg.sender === userInfo?.nickname
-                          ? 'text-green-500'
-                          : 'text-white'
-                    }`}
-                  >
-                    {msg.content}
-                  </span>
+                  {msg.sender === 'SYSTEM' ? (
+                    <div className="flex justify-center my-2">
+                      <span className="text-purple-400 text-xs font-medium bg-purple-500/10 border border-purple-500/20 px-4 py-1.5 rounded-full shadow-lg">
+                        {msg.content}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <span
+                        className={`font-bold body-medium ${
+                          msg.sender === userInfo?.nickname
+                            ? 'text-green-500'
+                            : 'text-white'
+                        }`}
+                      >
+                        {msg.sender}
+                      </span>
+                      <span
+                        className={`text-xs break-words ${
+                          msg.sender === userInfo?.nickname
+                            ? 'text-green-500'
+                            : 'text-white'
+                        }`}
+                      >
+                        {msg.content}
+                      </span>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
