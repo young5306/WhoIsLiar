@@ -7,7 +7,7 @@ import { getRoomData, setRoomCategory } from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { notify } from '../../components/common/Toast';
-import { outRoom, startGame } from '../../services/api/GameService';
+import { outRoom, startGame, setRound } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { useSocketStore } from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
@@ -298,6 +298,22 @@ const WaitingRoomContent = () => {
               setDisplayCategory(message.content);
             }
 
+            // 게임 시작 메시지 처리
+            if (message.chatType === 'GAME_START') {
+              if (contextRoomCode && !isHost) {
+                startGame(contextRoomCode)
+                  .then(() => {
+                    navigate('/game-room');
+                  })
+                  .catch((error) => {
+                    notify({
+                      type: 'error',
+                      text: '게임 시작에 실패했습니다.',
+                    });
+                  });
+              }
+            }
+
             // 시스템 메시지나 참여자 입/퇴장 메시지일 경우 참여자 정보 최신화
             if (
               message.chatType === 'PLAYER_JOIN' ||
@@ -494,6 +510,28 @@ const WaitingRoomContent = () => {
       } catch (error) {
         notify({ type: 'error', text: '카테고리 변경에 실패했습니다.' });
       }
+    }
+  };
+
+  const handleStartGame = async () => {
+    try {
+      if (contextRoomCode) {
+        await Promise.all([
+          setRound({
+            roomCode: contextRoomCode,
+            roundNumber: 1,
+            gameMode: roomData?.roomInfo.gameMode || 'DEFAULT',
+            category: selectedCategory,
+          }),
+          startGame(contextRoomCode),
+        ]);
+        navigate('/game-room');
+      }
+    } catch (error) {
+      notify({
+        type: 'error',
+        text: '게임 시작에 실패했습니다.',
+      });
     }
   };
 
@@ -790,19 +828,7 @@ const WaitingRoomContent = () => {
                 <GameButton
                   text="게임시작"
                   size="small"
-                  onClick={async () => {
-                    try {
-                      if (contextRoomCode) {
-                        await startGame(contextRoomCode);
-                        navigate('/game-room');
-                      }
-                    } catch (error) {
-                      notify({
-                        type: 'error',
-                        text: '게임 시작에 실패했습니다.',
-                      });
-                    }
-                  }}
+                  onClick={handleStartGame}
                 />
               )}
             </div>
