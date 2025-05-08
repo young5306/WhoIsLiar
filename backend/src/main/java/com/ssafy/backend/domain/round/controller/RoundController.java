@@ -78,7 +78,7 @@ public class RoundController {
 	public ResponseEntity<CommonResponse<Void>> settingRound(
 		@Valid @RequestBody RoundSettingRequest request) {
 		roundService.settingRound(request);
-		chatSocketService.roundSet(request.roomCode(), request.roundNumber());
+
 		return ok(null);
 	}
 
@@ -93,19 +93,14 @@ public class RoundController {
 		@ApiResponse(responseCode = "403", description = "방 참가자 아님"),
 		@ApiResponse(responseCode = "404", description = "방 또는 라운드 없음")
 	})
-	@GetMapping("/{roomCode}/{roundNumber}/player-info")
+	@GetMapping("/player-info")
 	public ResponseEntity<CommonResponse<PlayerRoundInfoResponse>> getPlayerRoundInfo(
 		@Parameter(description = "방 코드", required = true)
 		@PathVariable
 		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
-		String roomCode,
-
-		@Parameter(description = "라운드 번호", required = true, example = "1")
-		@PathVariable
-		@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
-		int roundNumber
+		String roomCode
 	) {
-		PlayerRoundInfoResponse dto = roundService.getPlayerRoundSetup(roomCode, roundNumber);
+		PlayerRoundInfoResponse dto = roundService.getPlayerRoundInfo(roomCode);
 		return ok(dto);
 	}
 
