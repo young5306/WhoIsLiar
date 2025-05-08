@@ -14,6 +14,7 @@ public enum ResponseCode {
 	ACCEPTED(HttpStatus.ACCEPTED, "요청을 수락했습니다. 비동기 처리 중입니다."),
 
 	OPENVIDU_SESSION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "OpenVidu 세션 처리 중 오류가 발생했습니다."),
+	OPENVIDU_CONFLICT(HttpStatus.CONFLICT, "OpenVidu 세션에 이미 접속중입니다."),
 	SESSION_CREATING(HttpStatus.LOCKED, "세션이 생성 중입니다. 잠시 후 다시 시도해주세요."),
 	INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
 	VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "유효성 검사에 실패했습니다."),
