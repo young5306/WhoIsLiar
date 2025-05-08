@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ssafy.backend.domain.chat.service.ChatSocketService;
 import com.ssafy.backend.domain.round.dto.request.EndRoundRequestDto;
 import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
+import com.ssafy.backend.domain.round.dto.request.TurnSkipRequest;
 import com.ssafy.backend.domain.round.dto.request.TurnUpdateRequestDto;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
@@ -24,6 +26,7 @@ import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
+import com.ssafy.backend.domain.round.service.TurnTimerService;
 import com.ssafy.backend.global.common.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,18 +39,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
+import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Round", description = "라운드 관련 API")
 @RestController
 @RequestMapping("/rounds")
 @Validated
+@RequiredArgsConstructor
 public class RoundController {
 
 	private final RoundService roundService;
-
-	public RoundController(RoundService roundService) {
-		this.roundService = roundService;
-	}
+	private final TurnTimerService turnTimerService;
+	private final ChatSocketService chatSocketService;
 
 	@Operation(summary = "게임 종료", description = "해당 방 코드에 대한 게임 데이터를 전부 삭제합니다.")
 	@ApiResponses({
@@ -75,6 +78,7 @@ public class RoundController {
 	public ResponseEntity<CommonResponse<Void>> settingRound(
 		@Valid @RequestBody RoundSettingRequest request) {
 		roundService.settingRound(request);
+		chatSocketService.roundSet(request.roomCode(), request.roundNumber());
 		return ok(null);
 	}
 
@@ -122,6 +126,7 @@ public class RoundController {
 		@Valid @RequestBody RoundStartRequest request
 	) {
 		roundService.startRound(request);
+		turnTimerService.startTurnSequence(request.roomCode(), request.roundNumber());
 		return ok(null);
 	}
 
@@ -246,6 +251,18 @@ public class RoundController {
 		@Valid @RequestBody TurnUpdateRequestDto request
 	) {
 		roundService.updateTurn(request);
+		return ok(null);
+	}
+
+	@PostMapping("/turn/skip")
+	@Operation(summary = "현재 턴 스킵", description = "현재 발언자의 발언을 조기 종료하고 다음 턴으로 넘깁니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "턴 스킵 완료"),
+		@ApiResponse(responseCode = "404", description = "방 또는 턴 상태 없음", content = @Content),
+		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
+	})
+	public ResponseEntity<CommonResponse<Void>> skipTurn(@Valid @RequestBody TurnSkipRequest request) {
+		turnTimerService.endTurn(request.roomCode());
 		return ok(null);
 	}
 }

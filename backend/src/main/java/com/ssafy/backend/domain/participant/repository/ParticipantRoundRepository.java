@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.ssafy.backend.domain.participant.entity.ParticipantRound;
 import com.ssafy.backend.domain.round.entity.Round;
@@ -12,4 +14,15 @@ public interface ParticipantRoundRepository extends JpaRepository<ParticipantRou
 	void deleteByRound(Round round);
 	List<ParticipantRound> findByRound(Round round);
 	Optional<ParticipantRound> findByRoundAndParticipant_Id(Round round, Long participantId);
+
+	@Query("""
+	SELECT pr
+	FROM ParticipantRound pr
+	JOIN FETCH pr.participant p
+	JOIN FETCH p.session s
+	WHERE pr.round = :round
+	ORDER BY pr.order ASC
+""")
+	List<ParticipantRound> findByRoundWithParticipantSession(@Param("round") Round round);
+
 }
