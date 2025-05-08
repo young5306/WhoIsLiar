@@ -84,8 +84,6 @@ public class RoomService {
 			.build();
 		participantRepository.save(participant);
 
-		chatSocketService.playerJoined(roomCode, SecurityUtils.getCurrentNickname());
-
 		RoomInfo roomInfo = RoomInfo.builder()
 			.roomName(room.getRoomName())
 			.roomCode(room.getRoomCode())
@@ -151,8 +149,6 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
-
-		chatSocketService.playerJoined(request.roomCode(), SecurityUtils.getCurrentNickname());
 	}
 
 	// 비밀번호를 입력하여 방 참여
@@ -187,8 +183,6 @@ public class RoomService {
 			.updatedAt(LocalDateTime.now())
 			.build();
 		participantRepository.save(participant);
-
-		chatSocketService.playerJoined(request.roomCode(), SecurityUtils.getCurrentNickname());
 	}
 
 	// 방의 비밀번호가 올바른지 확인

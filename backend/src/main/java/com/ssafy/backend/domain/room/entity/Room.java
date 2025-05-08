@@ -4,8 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
+import com.ssafy.backend.domain.chat.entity.Chat;
+import com.ssafy.backend.domain.participant.entity.Participant;
+import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
 import com.ssafy.backend.global.enums.VideoMode;
@@ -59,6 +64,15 @@ public class Room {
 
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
+
+	@OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Participant> participants = new ArrayList<>();
+
+	@OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Round> rounds = new ArrayList<>();
+
+	@OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Chat> chats = new ArrayList<>();
 
 	@Builder
 	public Room(SessionEntity session, String roomCode, String roomName, String password, int roundCount, GameMode gameMode, VideoMode videoMode, RoomStatus roomStatus,

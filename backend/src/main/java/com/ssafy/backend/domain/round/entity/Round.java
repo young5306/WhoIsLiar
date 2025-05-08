@@ -1,5 +1,6 @@
 package com.ssafy.backend.domain.round.entity;
 
+import com.ssafy.backend.domain.participant.entity.ParticipantRound;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.enums.Winner;
@@ -7,6 +8,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -48,6 +51,9 @@ public class Round {
 
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
+
+	@OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<ParticipantRound> participantRounds = new ArrayList<>();
 
 	@Builder
 	public Round(Room room, int roundNumber, String word1, String word2, RoundStatus roundStatus, Winner winner,
