@@ -329,9 +329,6 @@ public class RoomService {
 				roomRepository.deleteById(room.getId());
 			}
 		}
-
-		chatSocketService.playerLeft(roomCode, nickname);
-		//여기서 끊어
 	}
 
 	// 게임 시작(상태값 playing으로 변경)
