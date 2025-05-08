@@ -890,24 +890,30 @@ const WaitingRoomContent = () => {
                     </div>
                   ) : (
                     <>
-                      <span
-                        className={`font-bold body-medium ${
-                          msg.sender === userInfo?.nickname
-                            ? 'text-green-500'
-                            : 'text-white'
-                        }`}
+                      <div
+                        className={`flex flex-col ${msg.sender === userInfo?.nickname ? 'items-end' : 'items-start'} mb-1`}
                       >
-                        {msg.sender}
-                      </span>
-                      <span
-                        className={`text-xs break-words ${
-                          msg.sender === userInfo?.nickname
-                            ? 'text-green-500'
-                            : 'text-white'
-                        }`}
-                      >
-                        {msg.content}
-                      </span>
+                        <span
+                          className={`text-[10px] text-gray-400 mb-0.5 ${
+                            msg.sender === userInfo?.nickname
+                              ? 'text-green-400'
+                              : ''
+                          }`}
+                        >
+                          {msg.sender}
+                        </span>
+                        <div
+                          className={`px-3 py-1.5 rounded-2xl max-w-[85%] ${
+                            msg.sender === userInfo?.nickname
+                              ? 'bg-green-500/20 text-green-500'
+                              : 'bg-gray-700/50 text-white'
+                          }`}
+                        >
+                          <span className="text-sm break-words">
+                            {msg.content}
+                          </span>
+                        </div>
+                      </div>
                     </>
                   )}
                 </div>
