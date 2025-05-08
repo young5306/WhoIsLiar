@@ -25,10 +25,10 @@ public record VoteResultsResponseDto(
 	Long liarId
 
 ) {
-	@Schema(description = "득표 수 결과 항목")
+	@Schema(description = "득표 수 결과 항목 (targetNickname=null 이면 스킵표)")
 	public record Result(
-		@Schema(description = "투표 대상 참가자 ID", example = "5")
-		Long targetId,
+		@Schema(description = "투표 대상 참가자 닉네임; 스킵표 항목은 null", example = "user_02", nullable = true)
+		String targetNickname,
 
 		@Schema(description = "투표 수", example = "3")
 		int voteCount
