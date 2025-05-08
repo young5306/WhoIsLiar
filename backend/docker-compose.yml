@@ -14,7 +14,6 @@ services:
       MYSQL_PASSWORD: skdaks               # 사용자 비밀번호(낭만)
     volumes:
       - mysql-data:/var/lib/mysql          # DB 데이터 볼륨
-    command: --default-authentication-plugin=mysql_native_password
     networks:
       - backend-net
 
