@@ -204,7 +204,7 @@ public class RoomService {
 		List<Room> rooms = roomRepository.findAll();
 		List<RoomInfo> roomInfos = rooms.stream()
 			.map(room -> {
-				int count = participantRepository.countByRoom(room);
+				int count = participantRepository.countByRoomAndIsActiveTrue(room);
 				return RoomInfo.builder()
 					.roomName(room.getRoomName())
 					.roomCode(room.getRoomCode())
@@ -303,17 +303,11 @@ public class RoomService {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		log.info("방 못찾음");
-
 		SessionEntity session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		log.info("세션 못찾음");
-
 		Participant participant = participantRepository.findByRoomAndSession(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-
-		log.info("참가자 못찾음");
 
 		if (room.getRoomStatus() == RoomStatus.waiting) {
 			// 참가자 제거
@@ -327,6 +321,12 @@ public class RoomService {
 		} else if (room.getRoomStatus() == RoomStatus.playing) {
 			// 게임 중이면 비활성화만
 			participant.setActive(false);
+
+			// 예비 로직 - 활성화 인원 0명이면 방폭
+			int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
+			if (activeCount  == 0) {
+				roomRepository.delete(room); // 마지막 인원이면 방도 삭제
+			}
 		} else {
 			throw new CustomException(ResponseCode.SERVER_ERROR);
 		}
