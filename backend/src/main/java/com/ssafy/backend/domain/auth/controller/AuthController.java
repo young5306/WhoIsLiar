@@ -40,6 +40,7 @@ public class AuthController {
 
 	private final AuthService auth;
 
+	//주석
 	@Value("${cookie.secure}")
 	private boolean cookieSecure;
 
