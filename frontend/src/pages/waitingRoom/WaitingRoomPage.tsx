@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { notify } from '../../components/common/Toast';
 import { outRoom, startGame, setRound } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
-import { useSocketStore } from '../../stores/useSocketStore';
+import useSocketStore from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
 
 const WaitingRoomContent = () => {
@@ -53,6 +53,8 @@ const WaitingRoomContent = () => {
   const { userInfo } = useAuthStore();
   const { roomCode: contextRoomCode, clearRoomCode } = useRoomStore();
   const isHost = userInfo?.nickname === roomData?.roomInfo.hostNickname;
+  const { subscription, setSubscription, clearSubscription, addChatMessage } =
+    useSocketStore();
 
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
@@ -71,7 +73,6 @@ const WaitingRoomContent = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const { subscription, setSubscription, clearSubscription } = useSocketStore();
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -284,6 +285,8 @@ const WaitingRoomContent = () => {
           `/topic/room.${contextRoomCode}`,
           async (frame) => {
             const message = JSON.parse(frame.body);
+            // 채팅 메시지를 전역 상태에 추가
+            addChatMessage(message);
             // 중복 메시지 체크
             setChatMessages((prev) => {
               // CATEGORY_SELECTED 메시지는 채팅창에 표시하지 않음
@@ -456,17 +459,17 @@ const WaitingRoomContent = () => {
           clearSubscription();
         }
 
-        // 웹소켓 연결 해제
-        if (isConnected && stompClient?.connected) {
-          stompClient.deactivate();
-        }
-
         // 룸 스토어 초기화 (API 호출 전에 먼저 수행)
         clearRoomCode();
         setRoomData(null);
 
         // 그 다음 방 나가기 API 호출
         await outRoom(contextRoomCode);
+
+        // 웹소켓 연결 해제 (API 호출 후에 수행)
+        if (isConnected && stompClient?.connected) {
+          stompClient.deactivate();
+        }
 
         notify({ type: 'success', text: '방을 나갔습니다.' });
         navigate('/room-list');
