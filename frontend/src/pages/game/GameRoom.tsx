@@ -25,6 +25,7 @@ import GameControls from './GameControls';
 
 import { loadModels } from '../../services/api/FaceApiService';
 import EmotionLog from './FaceApi';
+import GameChat from './GameChat';
 // import { VideoOff } from 'lucide-react';
 
 const GameRoom: React.FC = () => {
@@ -448,6 +449,7 @@ const GameRoom: React.FC = () => {
                       </div>
                       <div className="w-full h-full flex items-center justify-center">
                         <UserVideoComponent streamManager={sub} />
+
                         {/* {sub.isVideoEnabled ? (
                         <UserVideoComponent streamManager={sub} />
                         ) : (
@@ -489,6 +491,9 @@ const GameRoom: React.FC = () => {
             </div>
 
             <div className="mb-2 mt-1 text-white">
+              <div className="z-10 justify-center">
+                <GameChat />
+              </div>
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}

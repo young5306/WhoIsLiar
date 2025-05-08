@@ -96,7 +96,7 @@ const RoomListPage = () => {
   // 공통 대기방 이동
   const goToWaitingRoom = (roomCode: string) => {
     setRoomCode(roomCode);
-    navigate(`/waiting-room?roomCode=${roomCode}`);
+    navigate(`/waiting-room`);
   };
 
   // 코드 입장
