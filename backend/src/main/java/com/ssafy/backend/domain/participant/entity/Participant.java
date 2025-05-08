@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,6 +36,9 @@ public class Participant {
 
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
+
+	@OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<ParticipantRound> participantRounds = new ArrayList<>();
 
 	@Builder
 	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt) {
