@@ -107,7 +107,7 @@ public class DisconnectEventListener {
 		}
 
 		messagingTemplate.convertAndSend("/topic/room." + roomCode,
-			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.", ChatType.PLAYER_LEAVE));
+			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.eventhandler", ChatType.PLAYER_LEAVE));
 		log.info("************************************************");
 	}
 }

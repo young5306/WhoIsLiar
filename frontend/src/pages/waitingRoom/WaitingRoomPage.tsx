@@ -2,7 +2,16 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import GameButton from '../../components/common/GameButton';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import { useRoomStore } from '../../stores/useRoomStore';
-import { VideoOff, Video, Mic, MicOff, Crown, Copy, Check } from 'lucide-react';
+import {
+  VideoOff,
+  Video,
+  Mic,
+  MicOff,
+  Crown,
+  Copy,
+  Check,
+  Timer,
+} from 'lucide-react';
 import { getRoomData, setRoomCategory } from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +23,8 @@ import useSocketStore from '../../stores/useSocketStore';
 
 const WaitingRoomContent = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
+  console.log(selectedCategory);
+
   const [displayCategory, setDisplayCategory] = useState<string>('랜덤');
   const [roomData, setRoomData] = useState<{
     roomInfo: {
@@ -509,12 +520,7 @@ const WaitingRoomContent = () => {
     try {
       if (contextRoomCode) {
         await Promise.all([
-          setRound({
-            roomCode: contextRoomCode,
-            roundNumber: 1,
-            gameMode: roomData?.roomInfo.gameMode || 'DEFAULT',
-            category: selectedCategory,
-          }),
+          setRound(contextRoomCode),
           startGame(contextRoomCode),
         ]);
         navigate('/game-room');
@@ -580,6 +586,13 @@ const WaitingRoomContent = () => {
                 {roomData?.roomInfo.gameMode === 'DEFAULT'
                   ? '일반 모드'
                   : '바보 모드'}
+              </span>
+            </div>
+            {/* 라운드 정보 표시 */}
+            <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <Timer className="w-7 h-7 text-rose-600" />
+              <span className="text-white text-base font-medium">
+                {roomData?.roomInfo.roundCount} 라운드
               </span>
             </div>
           </div>
@@ -764,7 +777,7 @@ const WaitingRoomContent = () => {
               {roomData?.participants.map((participant) => (
                 <div
                   key={participant.participantId}
-                  className="flex items-center gap-1 hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200"
+                  className="flex items-center justify-center gap-1 hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200"
                 >
                   {participant.nickName === roomData.roomInfo.hostNickname ? (
                     <Crown className="w-4 h-4 text-yellow-500" />

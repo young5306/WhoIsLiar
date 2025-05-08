@@ -37,7 +37,8 @@ public class TurnTimerService {
 
 	private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 	private final Map<String, TurnState> turnMap = new ConcurrentHashMap<>();
-	private static final int TURN_DURATION_SECONDS = 10;
+	private static final int TURN_DURATION_SECONDS = 20;
+	private static final int TURN_DELAY_SECONDS = 3;
 
 	@PostConstruct
 	public void init() {
@@ -63,7 +64,7 @@ public class TurnTimerService {
 		TurnState state = new TurnState(turnList, 0, null);
 		turnMap.put(roomCode, state);
 
-		proceedToNextTurn(roomCode);
+		startNextTurn(roomCode, state); // 첫 턴은 즉시 시작
 	}
 
 	public void endTurn(String roomCode) {
@@ -80,6 +81,17 @@ public class TurnTimerService {
 		TurnState state = turnMap.get(roomCode);
 		if (state == null) return;
 
+		if (state.getIndex() >= state.getTurns().size()) {
+			chatSocketService.roundFullyEnded(roomCode);
+			turnMap.remove(roomCode);
+			return;
+		}
+
+		// 이후 턴부터는 3초 대기
+		scheduler.schedule(() -> startNextTurn(roomCode, state), Instant.now().plusSeconds(TURN_DELAY_SECONDS));
+	}
+
+	private void startNextTurn(String roomCode, TurnState state) {
 		if (state.getIndex() >= state.getTurns().size()) {
 			chatSocketService.roundFullyEnded(roomCode);
 			turnMap.remove(roomCode);
@@ -117,7 +129,6 @@ public class TurnTimerService {
 		}
 	}
 
-	// 외부 접근을 허용하려면 public static
 	public static class TurnState {
 		private final List<ParticipantRound> turns;
 		private int index;

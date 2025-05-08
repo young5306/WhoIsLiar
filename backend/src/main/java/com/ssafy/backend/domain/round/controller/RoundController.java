@@ -126,7 +126,6 @@ public class RoundController {
 		@Valid @RequestBody RoundStartRequest request
 	) {
 		roundService.startRound(request);
-		turnTimerService.startTurnSequence(request.roomCode(), request.roundNumber());
 		return ok(null);
 	}
 
@@ -263,6 +262,12 @@ public class RoundController {
 	})
 	public ResponseEntity<CommonResponse<Void>> skipTurn(@Valid @RequestBody TurnSkipRequest request) {
 		turnTimerService.endTurn(request.roomCode());
+		return ok(null);
+	}
+
+	@PostMapping("turn/start")
+	public ResponseEntity<CommonResponse<Void>> startTurn(@Valid @RequestBody RoundStartRequest request) {
+		turnTimerService.startTurnSequence(request.roomCode(), request.roundNumber());
 		return ok(null);
 	}
 }
