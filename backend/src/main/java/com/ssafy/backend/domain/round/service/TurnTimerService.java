@@ -37,7 +37,7 @@ public class TurnTimerService {
 
 	private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 	private final Map<String, TurnState> turnMap = new ConcurrentHashMap<>();
-	private static final int TURN_DURATION_SECONDS = 10;
+	private static final int TURN_DURATION_SECONDS = 20;
 
 	@PostConstruct
 	public void init() {
