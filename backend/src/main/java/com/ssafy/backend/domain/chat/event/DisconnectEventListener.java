@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
@@ -37,11 +38,25 @@ public class DisconnectEventListener {
 	private final ParticipantRepository participantRepository;
 	private final SessionRepository sessionRepository;
 
+	private final Set<String> handledSessions = ConcurrentHashMap.newKeySet();
+
+	@EventListener
+	public void handleSessionConnected(SessionConnectEvent event) {
+		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+		String sessionId = accessor.getSessionId();
+		handledSessions.remove(sessionId);
+	}
+
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 
 		if (accessor.getCommand() != StompCommand.DISCONNECT) {
+			return;
+		}
+
+		String sessionId = accessor.getSessionId();
+		if (!handledSessions.add(sessionId)) {
 			return;
 		}
 
