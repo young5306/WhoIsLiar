@@ -36,7 +36,7 @@ public class ChatSocketService {
 	}
 
 	public void playerLeft(String roomCode, String nickname) {
-		sendAfterCommit(roomCode, nickname + "님이 퇴장하였습니다.", ChatType.PLAYER_LEAVE);
+		sendAfterCommit(roomCode, nickname + "님이 퇴장하였습니다.playerleft", ChatType.PLAYER_LEAVE);
 	}
 
 	public void playerJoined(String roomCode, String nickname) {

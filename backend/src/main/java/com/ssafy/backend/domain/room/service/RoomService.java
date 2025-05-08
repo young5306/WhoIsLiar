@@ -56,7 +56,7 @@ public class RoomService {
 		SessionEntity session = sessionRepository.findByNickname(request.hostNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySessionAndIsActiveTrue(session)) {
 			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
 		}
 
@@ -125,7 +125,7 @@ public class RoomService {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySessionAndIsActiveTrue(session)) {
 			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
 		}
 
@@ -157,7 +157,7 @@ public class RoomService {
 		SessionEntity session = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		if (roomRepository.existsBySession(session) || participantRepository.existsBySession(session)) {
+		if (roomRepository.existsBySession(session) || participantRepository.existsBySessionAndIsActiveTrue(session)) {
 			throw new CustomException(ResponseCode.ALREADY_IN_ROOM);
 		}
 

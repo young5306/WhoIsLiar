@@ -1,23 +1,29 @@
 import { create } from 'zustand';
-
-export type SocketMessage = {
+interface ChatMessage {
   sender: string;
   content: string;
   chatType: string;
-};
-
-interface SocketStoreState {
-  latestMessage: SocketMessage | null;
-  setLatestMessage: (msg: SocketMessage) => void;
-  subscription: any | null;
-  setSubscription: (sub: any) => void;
-  clearSubscription: () => void;
 }
 
-export const useSocketStore = create<SocketStoreState>((set) => ({
-  latestMessage: null,
-  setLatestMessage: (msg) => set({ latestMessage: msg }),
+interface SocketStore {
+  subscription: any;
+  setSubscription: (subscription: any) => void;
+  clearSubscription: () => void;
+  chatMessages: ChatMessage[];
+  addChatMessage: (message: ChatMessage) => void;
+  clearChatMessages: () => void;
+}
+
+const useSocketStore = create<SocketStore>((set) => ({
   subscription: null,
-  setSubscription: (sub) => set({ subscription: sub }),
+  setSubscription: (subscription) => set({ subscription }),
   clearSubscription: () => set({ subscription: null }),
+  chatMessages: [],
+  addChatMessage: (message) =>
+    set((state) => ({
+      chatMessages: [...state.chatMessages, message],
+    })),
+  clearChatMessages: () => set({ chatMessages: [] }),
 }));
+
+export default useSocketStore;
