@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Getter
 @Setter
@@ -24,6 +27,7 @@ public class Round {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "room_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Room room;
 
 	@Column(name = "round_number", nullable = false)
