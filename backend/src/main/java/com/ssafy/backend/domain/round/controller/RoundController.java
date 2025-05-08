@@ -78,7 +78,7 @@ public class RoundController {
 	public ResponseEntity<CommonResponse<Void>> settingRound(
 		@Valid @RequestBody RoundSettingRequest request) {
 		roundService.settingRound(request);
-		chatSocketService.roundSet(request.roomCode(), request.roundNumber());
+
 		return ok(null);
 	}
 

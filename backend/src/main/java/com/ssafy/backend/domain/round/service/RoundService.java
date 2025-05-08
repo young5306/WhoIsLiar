@@ -90,26 +90,35 @@ public class RoundService {
 		Room room = roomRepository.findByRoomCode(request.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		GameMode gameMode = room.getGameMode();
+		Category category = room.getCategory();
+
+		int nextRoundNumber = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.map(r -> r.getRoundNumber() + 1)
+			.orElse(1);
+
 		List<CategoryWord> candidates =
-			request.category() == Category.랜덤
+			category  == Category.랜덤
 				? categoryWordRepository.findAll()
-				: categoryWordRepository.findByCategory(request.category());
+				: categoryWordRepository.findByCategory(category );
 		if (candidates.isEmpty()) {
 			throw new CustomException(ResponseCode.NOT_FOUND);
 		}
 
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = "";
-		if (request.gameMode() == GameMode.FOOL) {
-			w2 = gptService.getSimilarWord(w1, room.getCategory().name());
+		if (gameMode  == GameMode.FOOL) {
+			w2 = gptService.getSimilarWord(w1, category.name());
 		}
 
 		Round round = Round.builder()
 			.room(room)
-			.roundNumber(request.roundNumber())
+			.roundNumber(nextRoundNumber)
 			.word1(w1)
 			.word2(w2)
 			.roundStatus(RoundStatus.waiting)
+			.turn(1)
 			.winner(null)
 			.createdAt(LocalDateTime.now())
 			.updatedAt(LocalDateTime.now())
@@ -140,6 +149,8 @@ public class RoundService {
 				.build();
 			participantRoundRepository.save(pr);
 		}
+
+		chatSocketService.roundSet(request.roomCode(), nextRoundNumber);
 	}
 
 	@Transactional(readOnly = true)
