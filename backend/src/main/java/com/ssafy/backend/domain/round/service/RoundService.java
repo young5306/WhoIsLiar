@@ -154,11 +154,11 @@ public class RoundService {
 	}
 
 	@Transactional(readOnly = true)
-	public PlayerRoundInfoResponse getPlayerRoundSetup(String roomCode, int roundNumber) {
+	public PlayerRoundInfoResponse getPlayerRoundInfo(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+		Round round = roundRepository.findTopByRoomOrderByRoundNumberDesc(room)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String nickname = SecurityUtils.getCurrentNickname();
@@ -174,10 +174,11 @@ public class RoundService {
 
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
 
-		List<PlayerPositionDto> participants = prList.stream()
-			.map(pr -> new PlayerPositionDto(
-				pr.getParticipant().getId(),
-				pr.getOrder()))
+		List<PlayerRoundInfoResponse.PlayerPositionInfo> positions = prList.stream()
+			.map(pr -> new PlayerRoundInfoResponse.PlayerPositionInfo(
+				pr.getParticipant().getSession().getNickname(),
+				pr.getOrder()
+			))
 			.collect(Collectors.toList());
 
 		boolean isLiar = prList.stream()
@@ -193,7 +194,12 @@ public class RoundService {
 			word = isLiar ? round.getWord2() : round.getWord1();
 		}
 
-		return new PlayerRoundInfoResponse(participants, word);
+		return new PlayerRoundInfoResponse(
+			round.getRoundNumber(),
+			room.getRoundCount(),
+			positions,
+			word
+		);
 	}
 
 	public void startRound(RoundStartRequest request) {
