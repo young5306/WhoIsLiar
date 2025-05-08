@@ -37,10 +37,17 @@ public class DisconnectEventListener {
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+
 		String nickname = (String) accessor.getSessionAttributes().get("nickname");
 		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
 
 		if (nickname == null || roomCode == null) return;
+
+		Boolean leftHandled = (Boolean) accessor.getSessionAttributes().get("leftHandled");
+		if (Boolean.TRUE.equals(leftHandled)) {
+			return;
+		}
+		accessor.getSessionAttributes().put("leftHandled", true);
 
 		log.info("************************************************");
 		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId() ,nickname, roomCode);
@@ -82,32 +89,10 @@ public class DisconnectEventListener {
 					roomRepository.deleteById(room.getId());
 				}
 			}
-
-			// if (room.getRoomStatus() == RoomStatus.waiting) {
-			// 	// 참가자 제거
-			// 	participantRepository.delete(participant);
-			//
-			// 	// (남은 활성 참가자 수 == 0) => 방 삭제
-			// 	int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-			// 	if (activeCount  == 0) {
-			// 		roomRepository.delete(room); // 마지막 인원이면 방도 삭제
-			// 	}
-			// } else if (room.getRoomStatus() == RoomStatus.playing) {
-			// 	// 게임 중이면 비활성화만
-			// 	participant.setActive(false);
-			//
-			// 	// 예비 로직 - 활성화 인원 0명이면 방폭
-			// 	int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-			// 	if (activeCount  == 0) {
-			// 		roomRepository.delete(room); // 마지막 인원이면 방도 삭제
-			// 	}
-			// } else {
-			// 	throw new CustomException(ResponseCode.SERVER_ERROR);
-			// }
 		}
 
 		messagingTemplate.convertAndSend("/topic/room." + roomCode,
-			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.eventhandler", ChatType.PLAYER_LEAVE));
+			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.", ChatType.PLAYER_LEAVE));
 		log.info("************************************************");
 	}
 }
