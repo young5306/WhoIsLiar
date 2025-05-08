@@ -136,7 +136,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
 
               <button
                 onClick={() => setIsHelpOpen(false)}
-                className="mt-5 text-gray-500 hover:text-gray-700"
+                className="mt-5 text-gray-500 hover:text-gray-700 cursor-pointer"
               >
                 닫기
               </button>
