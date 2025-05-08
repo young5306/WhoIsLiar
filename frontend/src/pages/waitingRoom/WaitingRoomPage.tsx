@@ -301,16 +301,7 @@ const WaitingRoomContent = () => {
             // 게임 시작 메시지 처리
             if (message.chatType === 'GAME_START') {
               if (contextRoomCode && !isHost) {
-                startGame(contextRoomCode)
-                  .then(() => {
-                    navigate('/game-room');
-                  })
-                  .catch(() => {
-                    notify({
-                      type: 'error',
-                      text: '게임 시작에 실패했습니다.',
-                    });
-                  });
+                navigate('/game-room');
               }
             }
 
