@@ -401,6 +401,25 @@ const WaitingRoomContent = () => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
+    // 채팅 메시지 길이 제한 (100자)
+    if (chatInput.length > 100) {
+      notify({
+        type: 'warning',
+        text: '채팅 메시지는 100자를 초과할 수 없습니다.',
+      });
+      return;
+    }
+
+    // 특수문자 제한 (이모지, HTML 태그 등)
+    const sanitizedInput = chatInput.replace(/[<>]/g, '');
+    if (sanitizedInput !== chatInput) {
+      notify({
+        type: 'warning',
+        text: '특수문자 <, >는 사용할 수 없습니다.',
+      });
+      return;
+    }
+
     // 웹소켓 연결 상태 확인
     if (!isConnected) {
       console.warn('WebSocket이 연결되지 않았습니다.');
@@ -408,7 +427,7 @@ const WaitingRoomContent = () => {
     }
 
     // 웹소켓으로 메시지 전송
-    contextSend(chatInput, userInfo?.nickname || 'Unknown', 'NORMAL');
+    contextSend(sanitizedInput, userInfo?.nickname || 'Unknown', 'NORMAL');
     setChatInput('');
 
     // 메시지 전송 후 스크롤을 맨 아래로 이동
@@ -437,12 +456,18 @@ const WaitingRoomContent = () => {
           clearSubscription();
         }
 
+        // 웹소켓 연결 해제
+        if (isConnected && stompClient?.connected) {
+          stompClient.deactivate();
+        }
+
+        // 룸 스토어 초기화 (API 호출 전에 먼저 수행)
+        clearRoomCode();
+        setRoomData(null);
+
         // 그 다음 방 나가기 API 호출
         await outRoom(contextRoomCode);
 
-        // 룸 스토어 초기화
-        clearRoomCode();
-        setRoomData(null);
         notify({ type: 'success', text: '방을 나갔습니다.' });
         navigate('/room-list');
       }
@@ -450,36 +475,6 @@ const WaitingRoomContent = () => {
       notify({ type: 'error', text: '방을 나가는데 실패했습니다.' });
     }
   };
-
-  // 뒤로가기 이벤트 처리
-  useEffect(() => {
-    // 현재 페이지를 히스토리에 추가
-    window.history.pushState(null, '', window.location.href);
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
-    };
-
-    const handlePopState = (e: PopStateEvent) => {
-      e.preventDefault();
-      // 뒤로가기 시도 시 현재 페이지를 다시 히스토리에 추가
-      window.history.pushState(null, '', window.location.href);
-      notify({
-        type: 'warning',
-        text: '게임 중에는 뒤로가기를 할 수 없습니다.',
-      });
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
 
   // const timerRef = useRef<TimerRef>(null);
   // // 타이머 시작 함수
@@ -897,13 +892,19 @@ const WaitingRoomContent = () => {
                 ref={chatInputRef}
                 type="text"
                 value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="채팅을 입력하세요."
+                onChange={(e) => {
+                  // 입력값 길이 제한
+                  if (e.target.value.length <= 100) {
+                    setChatInput(e.target.value);
+                  }
+                }}
+                placeholder="채팅을 입력하세요. (최대 100자)"
                 className="flex-1 h-10 bg-gray-700/50 text-white text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                maxLength={100}
               />
               <button
                 type="submit"
-                className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200"
+                className="bg-primary-500 hover:bg-primary-600 text-white text-xs px-2 py-1 rounded-lg transition-colors duration-200 cursor-pointer"
               >
                 전송
               </button>

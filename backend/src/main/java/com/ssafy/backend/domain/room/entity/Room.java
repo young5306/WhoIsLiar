@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.chat.entity.Chat;
 import com.ssafy.backend.domain.participant.entity.Participant;
@@ -29,6 +32,7 @@ public class Room {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "host_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private SessionEntity session;
 
 	@Column(name = "room_code", nullable = false, unique = true)

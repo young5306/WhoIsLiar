@@ -8,6 +8,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Getter
 @Table(name = "chats")
@@ -20,10 +23,12 @@ public class Chat {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "room_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Room room;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "sender_id")
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private SessionEntity sender;
 
 	@Column(nullable = false, length = 255)

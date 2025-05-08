@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Getter
 @Table(name = "participants_rounds")
@@ -19,10 +22,12 @@ public class ParticipantRound {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "participant_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Participant participant;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "round_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Round round;
 
 	@Column(name = "`order`", nullable = false)
