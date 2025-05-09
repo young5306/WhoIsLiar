@@ -417,44 +417,7 @@ const GameRoom = () => {
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
   /////////////////////게임 진행 코드 시작/////////////////////
-  // const {
-  //   connect,
-  //   send: contextSend,
-  //   isConnected,
-  //   stompClient,
-  // } = useWebSocketContext();
-
   const { clearChatMessages, subscription, addChatMessage } = useSocketStore();
-
-  // // 게임룸 채팅 메시지 테스트
-  // useEffect(() => {
-  //   console.log('GameRoom WebSocket Status:', {
-  //     isConnected,
-  //     hasSubscription: !!subscription,
-  //     hasStompClient: !!stompClient,
-  //   });
-
-  //   if (isConnected && stompClient) {
-  //     // 테스트 메시지 전송
-  //     const sendTestMessage = () => {
-  //       contextSend('게임룸 테스트 메시지입니다.', 'GameRoom', 'NORMAL');
-  //     };
-
-  //     // 5초마다 테스트 메시지 전송
-  //     const interval = setInterval(sendTestMessage, 5000);
-
-  //     return () => {
-  //       clearInterval(interval);
-  //     };
-  //   }
-  // }, [isConnected, stompClient, contextSend]);
-
-  // // 콘솔 메시지 수신 테스트
-  // useEffect(() => {
-  //   if (subscription) {
-  //     console.log('GameRoom: WebSocket subscription active');
-  //   }
-  // }, [subscription]);
 
   // 게임 초기화용 상태
   const [roundNumber, setRoundNumber] = useState<number>(1);
