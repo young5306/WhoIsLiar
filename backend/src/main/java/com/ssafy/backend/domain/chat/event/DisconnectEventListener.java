@@ -38,13 +38,13 @@ public class DisconnectEventListener {
 	private final ParticipantRepository participantRepository;
 	private final SessionRepository sessionRepository;
 
-	private final Set<String> handledSessions = ConcurrentHashMap.newKeySet();
+	private final Set<String> activeSessions = ConcurrentHashMap.newKeySet();
 
 	@EventListener
 	public void handleSessionConnected(SessionConnectEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 		String sessionId = accessor.getSessionId();
-		handledSessions.remove(sessionId);
+		activeSessions.add(sessionId);
 	}
 
 	@EventListener
@@ -56,10 +56,9 @@ public class DisconnectEventListener {
 		}
 
 		String sessionId = accessor.getSessionId();
-		if (!handledSessions.add(sessionId)) {
+		if (!activeSessions.remove(sessionId)) {
 			return;
 		}
-
 		String nickname = (String) accessor.getSessionAttributes().get("nickname");
 		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
 
