@@ -35,11 +35,6 @@ export interface setRoundRequest {
   category: string;
 }
 
-export interface VoteRequest {
-  participantNickname: string;
-  targetParticipantNickname: string | null; // 스킵 시 null
-}
-
 export interface VoteResultItem {
   targetNickname: string;
   voteCount: number;
@@ -181,9 +176,11 @@ export const outRoom = async (roomCode: string) => {
 export const submitVotes = async (
   roomCode: string,
   roundNumber: number,
-  param: VoteRequest
+  targetParticipantNickname: string
 ) => {
-  const res = await api.post(`/rounds/${roomCode}/${roundNumber}/votes`, param);
+  const res = await api.post(`/rounds/${roomCode}/${roundNumber}/votes`, {
+    targetParticipantNickname,
+  });
   return res.data;
 };
 

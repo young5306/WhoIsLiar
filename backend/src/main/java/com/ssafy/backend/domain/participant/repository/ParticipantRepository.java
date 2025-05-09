@@ -25,4 +25,10 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	List<Participant> findByRoomAndIsActiveTrueOrderByCreatedAtAsc(Room room);
 
 	boolean existsBySessionAndIsActiveTrue(SessionEntity session);
+
+	@Query("SELECT p FROM Participant p WHERE p.room = :room AND p.session = :session AND p.isActive = true")
+	Optional<Participant> findByRoomAndSessionAndActive(Room room, SessionEntity session);
+
+	@Query("SELECT p FROM Participant p WHERE p.session = :session AND p.isActive = true")
+	Optional<Participant> findBySessionAndActive(SessionEntity session);
 }
