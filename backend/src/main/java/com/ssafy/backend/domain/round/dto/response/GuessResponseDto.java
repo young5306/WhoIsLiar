@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record GuessResponseDto(
 
 	@Schema(description = "정답 여부", example = "true")
-	boolean correct,
+	boolean isCorrect,
 
 	@Schema(description = "라운드 승자 ('LIAR' 또는 'CIVIL')", example = "LIAR")
 	String winner
