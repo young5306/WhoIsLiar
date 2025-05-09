@@ -125,6 +125,8 @@ const GameRoom = () => {
   }, []);
 
   useEffect(() => {
+    if (session) return;
+
     if (myUserName && mySessionId && session === undefined) {
       joinSession();
     }

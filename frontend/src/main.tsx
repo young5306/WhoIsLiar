@@ -10,8 +10,8 @@ const Root = () => {
   return (
     <BrowserRouter>
       <WebSocketProvider>
+        <Router />
         <MobileRestriction>
-          <Router />
           <Toast />
         </MobileRestriction>
       </WebSocketProvider>

@@ -12,6 +12,8 @@ import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
 import RoomListPage from '../pages/roomList/RoomListPage';
 import ModalTestPage from '../pages/gameModal/ModalTestPage';
 
+import MobileRestriction from '../components/common/MobileRestriction';
+
 // 기본 보호된 라우트 컴포넌트
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { userInfo } = useAuthStore();
@@ -53,18 +55,21 @@ const Router = () => {
         <Route
           path="/room-list"
           element={
-            <ProtectedRoute>
-              <RoomListPage />
-            </ProtectedRoute>
+            <MobileRestriction>
+              <ProtectedRoute>
+                <RoomListPage />
+              </ProtectedRoute>
+            </MobileRestriction>
           }
         />
-        {/* <Route path="/game" element={<GamePage />} /> */}
         <Route
           path="/waiting-room"
           element={
-            <GameRoomProtectedRoute>
-              <WaitingRoomPage />
-            </GameRoomProtectedRoute>
+            <MobileRestriction>
+              <GameRoomProtectedRoute>
+                <WaitingRoomPage />
+              </GameRoomProtectedRoute>
+            </MobileRestriction>
           }
         />
 
@@ -82,9 +87,11 @@ const Router = () => {
       <Route
         path="/modal"
         element={
-          <ProtectedRoute>
-            <ModalTestPage />
-          </ProtectedRoute>
+          <MobileRestriction>
+            <ProtectedRoute>
+              <ModalTestPage />
+            </ProtectedRoute>
+          </MobileRestriction>
         }
       />
     </Routes>
