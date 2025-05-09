@@ -19,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class StompSubscribeEventListener {
 
 	private final SimpMessagingTemplate messagingTemplate;
+	private final ChatSessionRegistry sessionRegistry;
 
 	@EventListener
 	public void handleSubscribeEvent(SessionSubscribeEvent event) {
@@ -31,6 +32,9 @@ public class StompSubscribeEventListener {
 
 		// destination 유효성 확인
 		if (destination != null && destination.startsWith("/topic/room.")) {
+
+			sessionRegistry.register(sessionId);
+
 			String nickname = (String) accessor.getSessionAttributes().get("nickname");
 
 			if (nickname == null) {

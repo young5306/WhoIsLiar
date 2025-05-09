@@ -37,15 +37,7 @@ public class DisconnectEventListener {
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
 	private final SessionRepository sessionRepository;
-
-	private final Set<String> activeSessions = ConcurrentHashMap.newKeySet();
-
-	@EventListener
-	public void handleSessionConnected(SessionConnectEvent event) {
-		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-		String sessionId = accessor.getSessionId();
-		activeSessions.add(sessionId);
-	}
+	private final ChatSessionRegistry sessionRegistry;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
@@ -56,9 +48,11 @@ public class DisconnectEventListener {
 		}
 
 		String sessionId = accessor.getSessionId();
-		if (!activeSessions.remove(sessionId)) {
+		// 2) 구독된 적 없는 세션이면 무시 (unregister 하면 true)
+		if (!sessionRegistry.unregister(sessionId)) {
 			return;
 		}
+
 		String nickname = (String) accessor.getSessionAttributes().get("nickname");
 		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
 
