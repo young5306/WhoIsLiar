@@ -93,7 +93,7 @@ public class RoundController {
 		@ApiResponse(responseCode = "403", description = "방 참가자 아님"),
 		@ApiResponse(responseCode = "404", description = "방 또는 라운드 없음")
 	})
-	@GetMapping("/player-info")
+	@GetMapping("/player-info/{roomCode}")
 	public ResponseEntity<CommonResponse<PlayerRoundInfoResponse>> getPlayerRoundInfo(
 		@Parameter(description = "방 코드", required = true)
 		@PathVariable

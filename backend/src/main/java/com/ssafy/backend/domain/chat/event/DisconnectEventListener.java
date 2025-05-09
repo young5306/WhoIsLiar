@@ -2,11 +2,15 @@ package com.ssafy.backend.domain.chat.event;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
@@ -33,21 +37,26 @@ public class DisconnectEventListener {
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
 	private final SessionRepository sessionRepository;
+	private final ChatSessionRegistry sessionRegistry;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 
+		if (accessor.getCommand() != StompCommand.DISCONNECT) {
+			return;
+		}
+
+		String sessionId = accessor.getSessionId();
+		// 2) 구독된 적 없는 세션이면 무시 (unregister 하면 true)
+		if (!sessionRegistry.unregister(sessionId)) {
+			return;
+		}
+
 		String nickname = (String) accessor.getSessionAttributes().get("nickname");
 		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
 
 		if (nickname == null || roomCode == null) return;
-
-		Boolean leftHandled = (Boolean) accessor.getSessionAttributes().get("leftHandled");
-		if (Boolean.TRUE.equals(leftHandled)) {
-			return;
-		}
-		accessor.getSessionAttributes().put("leftHandled", true);
 
 		log.info("************************************************");
 		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId() ,nickname, roomCode);
