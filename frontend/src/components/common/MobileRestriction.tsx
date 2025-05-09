@@ -26,7 +26,7 @@ const MobileRestriction: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <>
+    <div className="relative w-full h-full">
       <AnimatePresence>
         {isMobile && isImageLoaded && (
           <motion.div
@@ -103,8 +103,10 @@ const MobileRestriction: React.FC<{ children: React.ReactNode }> = ({
           </motion.div>
         )}
       </AnimatePresence>
-      {!isMobile && children}
-    </>
+      <div className={`w-full h-full ${isMobile ? 'hidden' : 'block'}`}>
+        {children}
+      </div>
+    </div>
   );
 };
 

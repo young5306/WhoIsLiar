@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotNull;
 
 public record VoteRequestDto(
 	/** 스킵 시 null */
-	Long targetParticipantId
+	String targetParticipantNickname
 ) {}

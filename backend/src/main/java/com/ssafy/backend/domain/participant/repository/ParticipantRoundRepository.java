@@ -7,13 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.entity.ParticipantRound;
 import com.ssafy.backend.domain.round.entity.Round;
 
 public interface ParticipantRoundRepository extends JpaRepository<ParticipantRound, Long> {
 	void deleteByRound(Round round);
 	List<ParticipantRound> findByRound(Round round);
-	Optional<ParticipantRound> findByRoundAndParticipant_Id(Round round, Long participantId);
+	Optional<ParticipantRound> findByRoundAndParticipant(Round round, Participant participant);
 
 	@Query("""
 	SELECT pr
