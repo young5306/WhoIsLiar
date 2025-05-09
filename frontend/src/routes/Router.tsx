@@ -58,7 +58,6 @@ const Router = () => {
             </ProtectedRoute>
           }
         />
-        {/* <Route path="/game" element={<GamePage />} /> */}
         <Route
           path="/waiting-room"
           element={
