@@ -35,6 +35,11 @@ export interface setRoundRequest {
   category: string;
 }
 
+export interface VoteRequest {
+  participantNickname: string;
+  targetParticipantNickname: string | null; // 스킵 시 null
+}
+
 export interface VoteResultItem {
   targetNickname: string;
   voteCount: number;
@@ -120,9 +125,9 @@ export const setRound = async (roomCode: string) => {
 };
 
 // 라운드 세팅 개인 정보 가져오기
-// /api/rounds/{roomCode}/{roundNumber}/player-info
-export const getPlayerInfo = async (roomCode: string, roundNumber: number) => {
-  const res = await api.get(`/rounds/${roomCode}/${roundNumber}/player-info`);
+// /api/rounds/player-info/{roomCode}
+export const getPlayerInfo = async (roomCode: string) => {
+  const res = await api.get(`/rounds/player-info/${roomCode}`);
   return res.data;
 };
 
@@ -137,6 +142,12 @@ export const startRound = async (roomCode: string, roundNumber: number) => {
 // /api/rounds/end
 export const endRound = async (roomCode: string, roundNumber: number) => {
   const res = await api.post(`/rounds/end`, { roomCode, roundNumber });
+  return res.data;
+};
+
+// 턴 시작
+export const startTurn = async (roomCode: string, roundNumber: number) => {
+  const res = await api.post(`/rounds/turn/start`, { roomCode, roundNumber });
   return res.data;
 };
 
@@ -163,6 +174,16 @@ export const endGame = async (roomCode: string) => {
 // [DELETE] /api/rooms/{roomCode}/out
 export const outRoom = async (roomCode: string) => {
   const res = await api.delete(`/rooms/${roomCode}/out`);
+  return res.data;
+};
+
+// 투표 제출
+export const submitVotes = async (
+  roomCode: string,
+  roundNumber: number,
+  param: VoteRequest
+) => {
+  const res = await api.post(`/rounds/${roomCode}/${roundNumber}/votes`, param);
   return res.data;
 };
 

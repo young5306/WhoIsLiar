@@ -12,12 +12,14 @@ import { isFaceApiModelLoaded } from '../../services/api/FaceApiService';
 interface EmotionLogProps {
   streamManager: StreamManager;
   name?: string;
+  onEmotionUpdate: (emotion: FaceApiResult) => void;
 }
 
-const EmotionLog: React.FC<EmotionLogProps> = ({
+const EmotionLog = ({
   streamManager,
   // name = '참가자',
-}) => {
+  onEmotionUpdate,
+}: EmotionLogProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [emotionResult, setEmotionResult] = useState<FaceApiResult | null>(
     null
@@ -87,6 +89,10 @@ const EmotionLog: React.FC<EmotionLogProps> = ({
 
   useEffect(() => {
     if (!emotionResult) return;
+    if (emotionResult?.expressions) {
+      onEmotionUpdate(emotionResult);
+      // console.log('emotionLog하위', emotionResult);
+    }
 
     const { emotion, probability: _ } = emotionResult.topEmotion;
     const now = Date.now();
