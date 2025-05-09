@@ -2,11 +2,15 @@ package com.ssafy.backend.domain.chat.event;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
@@ -33,10 +37,22 @@ public class DisconnectEventListener {
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
 	private final SessionRepository sessionRepository;
+	private final ChatSessionRegistry sessionRegistry;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+
+		if (accessor.getCommand() != StompCommand.DISCONNECT) {
+			return;
+		}
+
+		String sessionId = accessor.getSessionId();
+		// 2) 구독된 적 없는 세션이면 무시 (unregister 하면 true)
+		if (!sessionRegistry.unregister(sessionId)) {
+			return;
+		}
+
 		String nickname = (String) accessor.getSessionAttributes().get("nickname");
 		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
 
@@ -82,32 +98,10 @@ public class DisconnectEventListener {
 					roomRepository.deleteById(room.getId());
 				}
 			}
-
-			// if (room.getRoomStatus() == RoomStatus.waiting) {
-			// 	// 참가자 제거
-			// 	participantRepository.delete(participant);
-			//
-			// 	// (남은 활성 참가자 수 == 0) => 방 삭제
-			// 	int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-			// 	if (activeCount  == 0) {
-			// 		roomRepository.delete(room); // 마지막 인원이면 방도 삭제
-			// 	}
-			// } else if (room.getRoomStatus() == RoomStatus.playing) {
-			// 	// 게임 중이면 비활성화만
-			// 	participant.setActive(false);
-			//
-			// 	// 예비 로직 - 활성화 인원 0명이면 방폭
-			// 	int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-			// 	if (activeCount  == 0) {
-			// 		roomRepository.delete(room); // 마지막 인원이면 방도 삭제
-			// 	}
-			// } else {
-			// 	throw new CustomException(ResponseCode.SERVER_ERROR);
-			// }
 		}
 
 		messagingTemplate.convertAndSend("/topic/room." + roomCode,
-			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.eventhandler", ChatType.PLAYER_LEAVE));
+			new ChatMessage("SYSTEM", nickname + "님이 퇴장하였습니다.", ChatType.PLAYER_LEAVE));
 		log.info("************************************************");
 	}
 }
