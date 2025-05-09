@@ -60,7 +60,9 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
       console.log('roomCode', roomCode);
       setRoomCode(roomCode);
       onClose();
-      navigate(`/waiting-room?roomCode=${roomCode}`);
+      setTimeout(() => {
+        navigate(`/waiting-room?roomCode=${roomCode}`);
+      }, 1000);
     } catch (err: any) {
       const st = err?.response?.status;
       if (st === 409) {

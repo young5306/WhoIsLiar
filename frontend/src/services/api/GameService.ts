@@ -36,7 +36,7 @@ export interface setRoundRequest {
 }
 
 export interface VoteResultItem {
-  targetNickname: string;
+  targetNickname: string | null;
   voteCount: number;
 }
 

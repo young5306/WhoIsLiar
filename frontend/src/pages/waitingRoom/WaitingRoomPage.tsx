@@ -267,13 +267,15 @@ const WaitingRoomContent = () => {
           const response = await getRoomData(contextRoomCode);
           setRoomData(response);
           setDisplayCategory(response.roomInfo.category || '랜덤');
+
+          // 방 데이터를 성공적으로 가져온 후에 웹소켓 연결 시도
+          setupWebSocket();
         } catch (error) {
           console.error('Failed to fetch room data:', error);
+          notify({ type: 'error', text: '방 정보를 가져오는데 실패했습니다.' });
         }
       }
     };
-
-    fetchRoomData();
 
     if (!contextRoomCode) {
       console.warn('roomCode가 없습니다.');
@@ -351,7 +353,7 @@ const WaitingRoomContent = () => {
       }
     };
 
-    setupWebSocket();
+    fetchRoomData();
 
     // cleanup 함수
     return () => {
