@@ -15,6 +15,9 @@ import {
   GameState,
   PlayerState,
   outRoom,
+  getPlayerInfo,
+  startRound,
+  startTurn,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -27,6 +30,9 @@ import { FaceApiResult } from '../../services/api/FaceApiService';
 import { loadModels } from '../../services/api/FaceApiService';
 import EmotionLog from './FaceApi';
 import GameChat from './GameChat';
+import { useWebSocketContext } from '../../contexts/WebSocketProvider';
+import useSocketStore from '../../stores/useSocketStore';
+import { getRoomData } from '../../services/api/RoomService';
 // import { VideoOff } from 'lucide-react';
 
 const GameRoom = () => {
@@ -410,6 +416,137 @@ const GameRoom = () => {
   const myPosition =
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
+  /////////////////////게임 진행 코드 시작/////////////////////
+  // const {
+  //   connect,
+  //   send: contextSend,
+  //   isConnected,
+  //   stompClient,
+  // } = useWebSocketContext();
+
+  const { clearChatMessages, subscription, addChatMessage } = useSocketStore();
+
+  // // 게임룸 채팅 메시지 테스트
+  // useEffect(() => {
+  //   console.log('GameRoom WebSocket Status:', {
+  //     isConnected,
+  //     hasSubscription: !!subscription,
+  //     hasStompClient: !!stompClient,
+  //   });
+
+  //   if (isConnected && stompClient) {
+  //     // 테스트 메시지 전송
+  //     const sendTestMessage = () => {
+  //       contextSend('게임룸 테스트 메시지입니다.', 'GameRoom', 'NORMAL');
+  //     };
+
+  //     // 5초마다 테스트 메시지 전송
+  //     const interval = setInterval(sendTestMessage, 5000);
+
+  //     return () => {
+  //       clearInterval(interval);
+  //     };
+  //   }
+  // }, [isConnected, stompClient, contextSend]);
+
+  // // 콘솔 메시지 수신 테스트
+  // useEffect(() => {
+  //   if (subscription) {
+  //     console.log('GameRoom: WebSocket subscription active');
+  //   }
+  // }, [subscription]);
+
+  // 게임 초기화용 상태
+  const [roundNumber, setRoundNumber] = useState<number>(1);
+  const [totalRoundNumber, setTotalRoundNumber] = useState<number>(0);
+  const [playerOrders, setPlayerOrders] = useState<
+    { participantNickname: string; order: number }[]
+  >([]);
+  const [myWord, setMyWord] = useState<string>('');
+  const [hostNickname, setHostNickname] = useState<string>('');
+  const [currentTurn, setCurrentTurn] = useState<number>(0); // 발언턴
+
+  // 방장 조회
+  useEffect(() => {
+    const fetchRoomHost = async () => {
+      if (!roomCode) return;
+      try {
+        const data = await getRoomData(roomCode);
+        setHostNickname(data.roomInfo.hostNickname);
+      } catch (error) {
+        console.error('방 정보 조회 실패:', error);
+      }
+    };
+    fetchRoomHost();
+  }, [roomCode]);
+
+  // 개인정보 조회, 라운드 시작, 턴 시작 api 호출
+  useEffect(() => {
+    const initGame = async () => {
+      if (!roomCode || !userInfo?.nickname || !hostNickname) return;
+      try {
+        const data = await getPlayerInfo(roomCode);
+        const { roundNum, totalRoundNum, participants, word } = data.data;
+
+        setRoundNumber(roundNum);
+        setTotalRoundNumber(totalRoundNum);
+        setPlayerOrders(participants);
+        setMyWord(word);
+
+        if (userInfo.nickname === hostNickname) {
+          await startRound(roomCode, roundNumber);
+          await startTurn(roomCode, roundNumber);
+        }
+
+        console.log('개인정보 조회 및 라운드 시작, 턴 시작 완료');
+      } catch (error) {
+        console.error('게임 초기화 중 에러:', error);
+      }
+    };
+    initGame();
+  }, [roomCode, userInfo?.nickname, hostNickname]);
+
+  // 웹소켓 메세지 채팅에 출력 (chatType 표시 제한 위해 로컬 병행 -> GameChat 컴포넌트에 prop 필요?)
+  // const [chatMessages, setChatMessages] = useState<
+  //   Array<{ sender: string; content: string; chatType: string }>
+  // >([]);
+
+  // 방 바뀌면 채팅창 초기화
+  useEffect(() => {
+    clearChatMessages();
+  }, [roomCode]);
+
+  // 웹소켓 메세지 채팅에 출력
+  useEffect(() => {
+    if (!subscription) return;
+
+    const handler = (frame: any) => {
+      const message = JSON.parse(frame.body);
+      if (message.chatType === 'TURN_START') {
+        setCurrentTurn((prev) => (prev + 1) % playerOrders.length); // 발언턴 순환
+        console.log(currentTurn);
+        addChatMessage({
+          sender: 'SYSTEM',
+          content: message.content,
+          chatType: 'SYSTEM',
+        });
+      }
+    };
+
+    subscription.callback = handler;
+
+    return () => {
+      subscription.callback = () => {};
+    };
+  }, [subscription, playerOrders.length]);
+
+  const myParticipant = playerOrders.find(
+    (p) => p.participantNickname === myUserName
+  );
+  const isMeSpeaking = myParticipant?.order === currentTurn;
+
+  /////////////////////게임 진행 코드 끝/////////////////////
+
   return (
     <>
       {/* {session === undefined ? (
@@ -455,41 +592,50 @@ const GameRoom = () => {
               />
 
               {/* Video 영역 */}
-              {subscribers.map((sub, index) => (
-                <div
-                  key={sub.id || index}
-                  className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
-                >
-                  <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
-                    <div className="w-full h-full relative">
-                      <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                        {sub.nickname}
-                      </div>
-                      <div className="w-full h-full flex items-center justify-center">
-                        <UserVideoComponent streamManager={sub} />
+              {subscribers.map((sub, index) => {
+                const matchingParticipant = playerOrders.find(
+                  (p) => p.participantNickname === sub.nickname
+                );
+                const isSpeaking = matchingParticipant?.order === currentTurn;
 
-                        {/* {sub.isVideoEnabled ? (
+                return (
+                  <div
+                    key={sub.id || index}
+                    className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)} ${isSpeaking ? 'ring-4 ring-point-neon animate-pulse' : ''}`}
+                  >
+                    <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
+                      <div className="w-full h-full relative">
+                        <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                          {sub.nickname}
+                        </div>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <UserVideoComponent streamManager={sub} />
+
+                          {/* {sub.isVideoEnabled ? (
                         <UserVideoComponent streamManager={sub} />
                         ) : (
                           <VideoOff />
                         )} */}
+                        </div>
                       </div>
                     </div>
+                    <div className="absolute bottom-1 mb-2 left-1 z-20">
+                      <EmotionLog
+                        streamManager={sub}
+                        name={sub.nickname}
+                        onEmotionUpdate={(emotionResult) =>
+                          updateEmotionLog(sub.nickname, emotionResult)
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="absolute bottom-1 mb-2 left-1 z-20">
-                    <EmotionLog
-                      streamManager={sub}
-                      name={sub.nickname}
-                      onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog(sub.nickname, emotionResult)
-                      }
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* my video */}
-              <div className={`relative ${myPosition}`}>
+              <div
+                className={`relative ${myPosition} ${isMeSpeaking ? 'ring-4 ring-[#39FF14] animate-pulse' : ''}`}
+              >
                 <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                   <div className="w-full min-h-[150px] max-h-[170px] relative">
                     <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
