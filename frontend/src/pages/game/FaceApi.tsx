@@ -8,7 +8,7 @@ import { isFaceApiModelLoaded } from '../../services/api/FaceApiService';
 
 interface FaceApiEmotionProps {
   streamManager: StreamManager;
-  name: string;
+  name?: string;
   isLogReady: boolean;
   setIsLogReady: (isLogReady: boolean) => void;
   onEmotionUpdate: (emotion: FaceApiResult) => void;
