@@ -111,9 +111,15 @@ const GameRoom = () => {
   }, []);
 
   useEffect(() => {
-    loadModels('/models')
-      .then(() => console.log('✅ face-api models loaded'))
-      .catch(console.error);
+    const modelLoad = async () => {
+      try {
+        await loadModels('/models');
+        console.log('✅ face-api models loaded');
+      } catch (error) {
+        console.error('load error: ', error);
+      }
+    };
+    modelLoad();
   }, []);
 
   useEffect(() => {
