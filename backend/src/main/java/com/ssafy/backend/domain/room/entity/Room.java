@@ -102,4 +102,9 @@ public class Room {
 		this.category = category;
 		this.updatedAt = LocalDateTime.now();
 	}
+
+	public void changeHost(SessionEntity session) {
+		this.session = session;
+		this.updatedAt = LocalDateTime.now();
+	}
 }
