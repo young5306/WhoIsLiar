@@ -14,7 +14,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 	Optional<Room> findByRoomCode(String roomCode);
 	boolean existsBySession(SessionEntity session);
 	List<Room> findByRoomNameContaining(String roomName);
-	void deleteByRoomCode(String roomCode);
 
 	@Query("SELECT r FROM Room r JOIN FETCH r.session WHERE r.roomCode = :roomCode")
 	Optional<Room> findByRoomCodeFetchSession(@Param("roomCode") String roomCode);
