@@ -61,12 +61,13 @@ public class DisconnectEventListener {
 		log.info("************************************************");
 		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId() ,nickname, roomCode);
 
-		Room room = roomRepository.findByRoomCode(roomCode).orElse(null);
+		Room room = roomRepository.findByRoomCodeFetchSession(roomCode).orElse(null);
 		if (room == null) return;
 
 		SessionEntity session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-		boolean wasHost = room.getSession().equals(session);
+
+		boolean wasHost = room.getSession().getId().equals(session.getId());
 
 		Participant participant = participantRepository.findByRoomAndSession(room, session).orElse(null);
 		if (participant != null) {
@@ -77,6 +78,7 @@ public class DisconnectEventListener {
 				participantRepository.deleteById(participant.getId());
 			} else {
 				participant.setActive(false);
+				participantRepository.save(participant);
 			}
 
 			// 호스트가 강제 이탈 시 위임
@@ -88,8 +90,7 @@ public class DisconnectEventListener {
 					roomRepository.deleteById(room.getId());
 				} else {
 					SessionEntity newHost = remain.get(0).getSession();
-					room.setSession(newHost);
-					room.setUpdatedAt(LocalDateTime.now());
+					room.changeHost(newHost);
 					roomRepository.save(room);
 				}
 			}else{
