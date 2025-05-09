@@ -23,12 +23,30 @@ import UserVideoComponent from './UserVideoComponent';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
 
+import { FaceApiResult } from '../../services/api/FaceApiService';
 import { loadModels } from '../../services/api/FaceApiService';
 import EmotionLog from './FaceApi';
 import GameChat from './GameChat';
 // import { VideoOff } from 'lucide-react';
 
-const GameRoom: React.FC = () => {
+const GameRoom = () => {
+  const [emotionLogs, setEmotionLogs] = useState<Record<string, FaceApiResult>>(
+    {}
+  );
+  // console.log('emotionlog상위', emotionLogs);
+
+  const updateEmotionLog = (
+    name: string | undefined,
+    emotion: FaceApiResult
+  ) => {
+    if (name) {
+      setEmotionLogs((prevLogs) => ({
+        ...prevLogs,
+        [name]: emotion,
+      }));
+    }
+  };
+
   const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [_myToken, setMyToken] = useState<string>('');
@@ -257,19 +275,19 @@ const GameRoom: React.FC = () => {
     navigation('/room-list');
   }, [session, userInfo]);
 
-  // ck) 사용자 세션 닫힐 때, 세션 정리(cleanup)
+  // ck) 새로고침 시, 세션 연결만 종료
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      leaveSession();
+    const handleBeforeUnload = () => {
+      if (session) {
+        session.disconnect();
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [leaveSession]);
+  }, [session]);
 
   const toggleAudio = () => {
     if (publisher) {
@@ -459,7 +477,13 @@ const GameRoom: React.FC = () => {
                     </div>
                   </div>
                   <div className="absolute bottom-1 mb-2 left-1 z-20">
-                    <EmotionLog streamManager={sub} name={sub.nickname} />
+                    <EmotionLog
+                      streamManager={sub}
+                      name={sub.nickname}
+                      onEmotionUpdate={(emotionResult) =>
+                        updateEmotionLog(sub.nickname, emotionResult)
+                      }
+                    />
                   </div>
                 </div>
               ))}
@@ -484,7 +508,13 @@ const GameRoom: React.FC = () => {
                 </div>
                 <div className="absolute bottom-1 mb-2 left-1 z-20">
                   {publisher && (
-                    <EmotionLog streamManager={publisher} name="나" />
+                    <EmotionLog
+                      streamManager={publisher}
+                      name="나"
+                      onEmotionUpdate={(emotionResult) =>
+                        updateEmotionLog('나', emotionResult)
+                      }
+                    />
                   )}
                 </div>
               </div>
