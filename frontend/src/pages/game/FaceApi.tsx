@@ -17,7 +17,7 @@ interface EmotionLogProps {
 
 const EmotionLog = ({
   streamManager,
-  name = '참가자',
+  // name = '참가자',
   onEmotionUpdate,
 }: EmotionLogProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);

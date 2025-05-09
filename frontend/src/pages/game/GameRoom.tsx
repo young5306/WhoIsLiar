@@ -30,9 +30,9 @@ import GameChat from './GameChat';
 // import { VideoOff } from 'lucide-react';
 
 const GameRoom = () => {
-  const [emotionLogs, setEmotionLogs] = useState<Record<string, FaceApiResult>>(
-    {}
-  );
+  const [_emotionLogs, setEmotionLogs] = useState<
+    Record<string, FaceApiResult>
+  >({});
   // console.log('emotionlog상위', emotionLogs);
 
   const updateEmotionLog = (
