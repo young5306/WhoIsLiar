@@ -28,7 +28,6 @@ import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.request.TurnUpdateRequestDto;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
-import com.ssafy.backend.domain.round.dto.response.PlayerPositionDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
@@ -42,7 +41,6 @@ import com.ssafy.backend.domain.round.repository.RoundRepository;
 import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
-import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.enums.Winner;
 import com.ssafy.backend.global.exception.CustomException;
@@ -233,26 +231,28 @@ public class RoundService {
 		SessionEntity session = sessionRepository.findByNickname(myNickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
 
-		Participant self = participantRepository.findByRoomAndSession(room, session)
+		Participant self = participantRepository.findByRoomAndSessionAndActive(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
 
-		ParticipantRound pr = participantRoundRepository
-			.findByRoundAndParticipant_Id(round, self.getId())
+		ParticipantRound pr = participantRoundRepository.findByRoundAndParticipant(round, self)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String targetNickname = null;
-		if (request.targetParticipantId() != null) {
-			Participant target = participantRepository.findById(request.targetParticipantId())
+		if (request.targetParticipantNickname() != null) {
+			SessionEntity targetSession = sessionRepository.findByNickname(request.targetParticipantNickname())
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+			Participant target = participantRepository.findBySessionAndActive(targetSession)
+				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
 			if (!target.getRoom().equals(room)) {
 				throw new CustomException(ResponseCode.INVALID_REQUEST);
 			}
-			pr.setTargetParticipant(target);
+			pr.voteTargetParticipant(target);
 			targetNickname = target.getSession().getNickname();
 		} else {
-			pr.setTargetParticipant(null);
+			pr.voteTargetParticipant(null);
 		}
-		participantRoundRepository.save(pr);
 
 		return new VoteResponseDto(
 			myNickname,

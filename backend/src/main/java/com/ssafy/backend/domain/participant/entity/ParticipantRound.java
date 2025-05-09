@@ -58,7 +58,7 @@ public class ParticipantRound {
 		this.createdAt = createdAt;
 	}
 
-	public void setTargetParticipant(Participant targetParticipant) {
+	public void voteTargetParticipant(Participant targetParticipant) {
 		this.targetParticipant = targetParticipant;
 	}
 
