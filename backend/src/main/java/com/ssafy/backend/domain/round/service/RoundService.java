@@ -382,10 +382,8 @@ public class RoundService {
 				.filter(ParticipantRound::isLiar)
 				.forEach(pr -> pr.addScore(100));
 		}
-		participantRoundRepository.saveAll(prList);
 
 		round.setWinner(winnerEnum);
-		roundRepository.save(round);
 
 		return new GuessResponseDto(isCorrect, winnerEnum.name());
 	}
