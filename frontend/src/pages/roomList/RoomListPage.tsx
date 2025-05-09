@@ -112,7 +112,7 @@ const RoomListPage = () => {
       else if (st === 423)
         return notify({ type: 'error', text: '게임이 진행 중인 방입니다.' });
       else if (st === 409)
-        return notify({ type: 'error', text: '정원이 가득 찬 방입니다.' });
+        return notify({ type: 'error', text: err?.response?.data?.message });
       else
         return notify({
           type: 'error',
