@@ -1,16 +1,28 @@
 interface GameButtonProps {
   text: string;
   size?: 'small' | 'medium' | 'large';
+  variant?: 'default' | 'neon' | 'gray';
   onClick?: () => void;
 }
 
 const sizeClasses = {
-  small: 'px-4 py-1 headline-large text-gray-500 border-gray-500',
-  medium: 'px-6 py-2 display-medium text-primary-600 border-primary-600 ',
-  large: 'px-8 py-3 display-large text-primary-600 border-primary-600 ',
+  small: 'px-4 py-1 headline-large',
+  medium: 'px-6 py-2 display-medium',
+  large: 'px-8 py-3 display-large',
 };
 
-const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
+const variantClasses = {
+  default: 'text-primary-600 border-primary-600',
+  neon: 'text-point-neon border-point-neon',
+  gray: 'text-gray-500 border-gray-500',
+};
+
+const GameButton = ({
+  text,
+  size = 'medium',
+  variant = 'default',
+  onClick,
+}: GameButtonProps) => {
   return (
     <div className="inline-block p-1 bg-gray-900 rounded-full ">
       <button
@@ -26,6 +38,7 @@ const GameButton = ({ text, size = 'medium', onClick }: GameButtonProps) => {
           transition
           cursor-pointer
           ${sizeClasses[size]}
+          ${variantClasses[variant]}
         `}
       >
         {text}
