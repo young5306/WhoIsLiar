@@ -18,6 +18,7 @@ import {
   getPlayerInfo,
   startRound,
   startTurn,
+  skipTurn,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -33,6 +34,8 @@ import GameChat from './GameChat';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
 import { getRoomData } from '../../services/api/RoomService';
+import Timer, { TimerRef } from '../../components/common/Timer';
+import GameButton from '../../components/common/GameButton';
 // import { VideoOff } from 'lucide-react';
 
 const GameRoom = () => {
@@ -430,6 +433,7 @@ const GameRoom = () => {
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
+  const timerRef = useRef<TimerRef>(null);
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보보 조회
   useEffect(() => {
@@ -490,15 +494,35 @@ const GameRoom = () => {
 
     if (latest.chatType == 'TURN_START') {
       console.log('💡TURN_START 수신 확인');
-
       // 닉네임 파싱
       const nickname = latest.content.split('님의')[0]?.trim();
       if (nickname) {
         setSpeakingPlayer(nickname);
         console.log('🎤 발언자:', nickname);
+        timerRef.current?.startTimer(20);
       }
     }
   }, [chatMessages]);
+
+  const handleSkipTurn = async (roomCode: string | null) => {
+    if (!roomCode) {
+      console.warn('Room code가 없습니다.');
+      return;
+    }
+
+    try {
+      await skipTurn(roomCode);
+      console.log('턴이 스킵되었습니다.');
+    } catch (error) {
+      console.error('턴 스킵 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (speakingPlayer) {
+      timerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
+    }
+  }, [speakingPlayer]);
 
   /////////////////////게임 진행 코드 끝/////////////////////
 
@@ -537,6 +561,23 @@ const GameRoom = () => {
       {session !== undefined ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
+            <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+              {/* 발언자만 skip 버튼 표시 */}
+              {myUserName === speakingPlayer && (
+                <GameButton
+                  text="Skip"
+                  size="small"
+                  variant="neon"
+                  onClick={() => handleSkipTurn(roomCode)}
+                />
+              )}
+              {/* 타이머는 모두에게 표시 */}
+              <Timer
+                ref={timerRef}
+                onTimeEnd={() => console.log('⏰ 타이머 종료')}
+                size="medium"
+              />
+            </div>
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
                 round={roundNumber}

@@ -830,14 +830,12 @@ const WaitingRoomContent = () => {
               <GameButton
                 text="방 나가기"
                 size="small"
-                variant="gray"
                 onClick={() => setIsConfirmModalOpen(true)}
               />
               {isHost && (
                 <GameButton
                   text="게임시작"
                   size="small"
-                  variant="gray"
                   onClick={handleStartGame}
                 />
               )}
