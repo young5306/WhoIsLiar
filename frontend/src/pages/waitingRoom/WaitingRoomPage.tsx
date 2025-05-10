@@ -63,8 +63,15 @@ const WaitingRoomContent = () => {
   const { userInfo } = useAuthStore();
   const { roomCode: contextRoomCode, clearRoomCode } = useRoomStore();
   const isHost = userInfo?.nickname === roomData?.roomInfo.hostNickname;
-  const { subscription, setSubscription, clearSubscription, addChatMessage } =
-    useSocketStore();
+  const {
+    subscription,
+    setSubscription,
+    clearSubscription,
+    addChatMessage,
+    emotionSubscription,
+    setEmotionSubscription,
+    clearEmotionSubscription,
+  } = useSocketStore();
 
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
@@ -345,8 +352,19 @@ const WaitingRoomContent = () => {
           }
         );
 
+        // emotion 토픽 구독
+        const newEmotionSubscription = stompClient.subscribe(
+          `/topic/room.${contextRoomCode}.emotion`,
+          (frame) => {
+            const message = JSON.parse(frame.body);
+            // emotion 메시지 처리 로직 추가
+            console.log('Emotion message received:', message);
+          }
+        );
+
         // 구독 정보를 전역 store에 저장
         setSubscription(newSubscription);
+        setEmotionSubscription(newEmotionSubscription);
 
         // 서버에 입장 메시지 전송
         contextSend('입장했습니다.', 'System', 'SYSTEM');
@@ -477,6 +495,10 @@ const WaitingRoomContent = () => {
           if (subscription) {
             subscription.unsubscribe();
             clearSubscription();
+          }
+          if (emotionSubscription) {
+            emotionSubscription.unsubscribe();
+            clearEmotionSubscription();
           }
 
           // 룸 스토어 초기화
