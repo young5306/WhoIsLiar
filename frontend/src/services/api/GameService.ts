@@ -188,9 +188,7 @@ export const getVoteResult = async (
   roomCode: string,
   roundNumber: number
 ): Promise<VoteResultResponse> => {
-  const res = await api.get(
-    `/rounds/${roomCode}/rounds/${roundNumber}/votes/results`
-  );
+  const res = await api.get(`/rounds/${roomCode}/${roundNumber}/votes/results`);
   return res.data.data;
 };
 

@@ -2,6 +2,22 @@ import { useState } from 'react';
 import GameButton from '../../components/common/GameButton';
 import LiarResultModal from '../../components/modals/LiarResultModal';
 import ScoreModal from '../../components/modals/ScoreModal';
+import VoteResultModal from '../../components/modals/VoteResultModal';
+import { VoteResultResponse } from '../../services/api/GameService';
+
+const dummyVoteResult: VoteResultResponse = {
+  results: [
+    { targetNickname: 'user_01', voteCount: 1 },
+    { targetNickname: 'user_02', voteCount: 2 },
+    { targetNickname: 'user_03', voteCount: 3 },
+    { targetNickname: '', voteCount: 1 },
+  ],
+  selected: 'user_03',
+  detected: true,
+  liarNickname: 'user_03',
+  liarId: 5,
+  skip: false,
+};
 
 const ModalTestPage = () => {
   const [openModal, setOpenModal] = useState<string | null>(null);
@@ -27,6 +43,14 @@ const ModalTestPage = () => {
           text="Final Score Modal"
           onClick={() => setOpenModal('final-score')}
         />
+        <GameButton
+          text="Vote Result Modal"
+          onClick={() => setOpenModal('vote')}
+        />
+        <GameButton
+          text="Vote Result Modal"
+          onClick={() => setOpenModal('vote')}
+        />
       </div>
 
       {openModal === 'liar-found' && (
@@ -43,6 +67,15 @@ const ModalTestPage = () => {
 
       {openModal === 'final-score' && (
         <ScoreModal type="final-score" onClose={() => setOpenModal(null)} />
+      )}
+
+      {openModal === 'vote' && (
+        <VoteResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={dummyVoteResult}
+          onClose={() => setOpenModal(null)}
+        />
       )}
     </div>
   );

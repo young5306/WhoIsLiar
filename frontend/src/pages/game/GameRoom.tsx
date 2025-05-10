@@ -20,6 +20,8 @@ import {
   startTurn,
   skipTurn,
   submitVotes,
+  VoteResultResponse,
+  getVoteResult,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -37,6 +39,7 @@ import useSocketStore from '../../stores/useSocketStore';
 import { getRoomData } from '../../services/api/RoomService';
 import Timer, { TimerRef } from '../../components/common/Timer';
 import GameButton from '../../components/common/GameButton';
+import VoteResultModal from '../../components/modals/VoteResultModal';
 // import { VideoOff } from 'lucide-react';
 
 const GameRoom = () => {
@@ -433,14 +436,18 @@ const GameRoom = () => {
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
-
+  // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const timerRef = useRef<TimerRef>(null);
+  // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
   const [selectedTargetNickname, setSelectedTargetNickname] = useState<
     string | null
   >(null);
   const selectedTargetRef = useRef<string | null>(null);
+  // 투표 결과 관련
+  const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
+  const [showVoteResultModal, setShowVoteResultModal] = useState(false);
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
   useEffect(() => {
@@ -593,6 +600,9 @@ const GameRoom = () => {
       await submitVotes(roomCode!, roundNumber, target);
       console.log('투표 완료:', target);
       setIsVoting(false);
+      const result = await getVoteResult(roomCode!, roundNumber);
+      setVoteResult(result);
+      setShowVoteResultModal(true);
     } catch (err) {
       console.error('투표 제출 실패:', err);
     }
@@ -809,6 +819,19 @@ const GameRoom = () => {
           pointerEvents: 'none',
         }}
       />
+
+      {/* 투표 결과 모달 */}
+      {showVoteResultModal && voteResult && (
+        <VoteResultModal
+          result={voteResult}
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          onClose={() => {
+            setShowVoteResultModal(false);
+            // setShowLiarResultModal(true); // 다음 단계
+          }}
+        />
+      )}
     </>
   );
 };
