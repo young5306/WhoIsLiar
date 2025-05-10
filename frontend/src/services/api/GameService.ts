@@ -176,7 +176,7 @@ export const outRoom = async (roomCode: string) => {
 export const submitVotes = async (
   roomCode: string,
   roundNumber: number,
-  targetParticipantNickname: string
+  targetParticipantNickname: string | null
 ) => {
   const res = await api.post(`/rounds/${roomCode}/${roundNumber}/votes`, {
     targetParticipantNickname,
