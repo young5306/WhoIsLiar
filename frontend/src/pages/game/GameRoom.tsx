@@ -425,23 +425,33 @@ const GameRoom = () => {
   const [playerOrders, setPlayerOrders] = useState<
     { participantNickname: string; order: number }[]
   >([]);
+  const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
   const [currentTurn, setCurrentTurn] = useState<number>(0); // 발언턴
+  const currentTurnRef = useRef(currentTurn);
 
-  // 방장 조회
+  // 방장, 카테고리 조회
   useEffect(() => {
     const fetchRoomHost = async () => {
       if (!roomCode) return;
       try {
         const data = await getRoomData(roomCode);
-        setHostNickname(data.roomInfo.hostNickname);
+        console.log('roomData', data);
+        console.log('roomData', data.roomInfo.hostNickname);
+        console.log('roomData', data.roomInfo.category);
+        console.log('내 닉네임', userInfo?.nickname);
+        const { hostNickname, category } = data.roomInfo;
+        if (hostNickname && category) {
+          setHostNickname(hostNickname);
+          setCategory(category);
+        }
       } catch (error) {
         console.error('방 정보 조회 실패:', error);
       }
     };
     fetchRoomHost();
-  }, [roomCode]);
+  }, [roomCode, hostNickname, category]);
 
   // 개인정보 조회, 라운드 시작, 턴 시작 api 호출
   useEffect(() => {
@@ -449,12 +459,17 @@ const GameRoom = () => {
       if (!roomCode || !userInfo?.nickname || !hostNickname) return;
       try {
         const data = await getPlayerInfo(roomCode);
+        console.log('playerinfo', data);
         const { roundNum, totalRoundNum, participants, word } = data.data;
 
-        setRoundNumber(roundNum);
-        setTotalRoundNumber(totalRoundNum);
-        setPlayerOrders(participants);
-        setMyWord(word);
+        if (roundNum && totalRoundNum && participants && word) {
+          setRoundNumber(roundNum);
+          console.log('roundNumber', roundNum);
+          setTotalRoundNumber(totalRoundNum);
+          setPlayerOrders(participants);
+          setMyWord(word);
+          console.log('word', word);
+        }
 
         if (userInfo.nickname === hostNickname) {
           await startRound(roomCode, roundNumber);
@@ -467,7 +482,7 @@ const GameRoom = () => {
       }
     };
     initGame();
-  }, [roomCode, userInfo?.nickname, hostNickname]);
+  }, [roomCode, userInfo?.nickname, hostNickname, roundNumber]);
 
   // 웹소켓 메세지 채팅에 출력 (chatType 표시 제한 위해 로컬 병행 -> GameChat 컴포넌트에 prop 필요?)
   // const [chatMessages, setChatMessages] = useState<
@@ -486,8 +501,11 @@ const GameRoom = () => {
     const handler = (frame: any) => {
       const message = JSON.parse(frame.body);
       if (message.chatType === 'TURN_START') {
-        setCurrentTurn((prev) => (prev + 1) % playerOrders.length); // 발언턴 순환
-        console.log(currentTurn);
+        setCurrentTurn((prev) => {
+          const nextTurn = (prev + 1) % playerOrders.length;
+          console.log('TURN_START: currentTurn 업데이트 ->', nextTurn);
+          return nextTurn;
+        }); // 발언권
         addChatMessage({
           sender: 'SYSTEM',
           content: message.content,
@@ -507,6 +525,9 @@ const GameRoom = () => {
     (p) => p.participantNickname === myUserName
   );
   const isMeSpeaking = myParticipant?.order === currentTurn;
+  useEffect(() => {
+    currentTurnRef.current = currentTurn;
+  }, [currentTurn]);
 
   /////////////////////게임 진행 코드 끝/////////////////////
 
@@ -547,11 +568,15 @@ const GameRoom = () => {
           <div className="w-full h-full flex flex-col px-8">
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
-                round={gameState.round}
-                turn={gameState.turn}
-                category={gameState.category}
-                topic={gameState.topic}
-                isLiar={playerState.isLiar}
+                round={roundNumber}
+                turn={gameState.turn} // 이거 안받는데
+                category={category}
+                topic={
+                  myWord
+                    ? myWord
+                    : '당신은 라이어입니다! 제시어를 추측해보세요.'
+                }
+                isLiar={playerState.isLiar} // 투표 결과 조회 때 받음
               />
 
               {/* Video 영역 */}
