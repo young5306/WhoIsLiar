@@ -23,8 +23,19 @@ const useSocketStore = create<SocketStore>((set) => ({
   clearSubscription: () => set({ subscription: null }),
   emotionSubscription: null,
   setEmotionSubscription: (subscription) =>
-    set({ emotionSubscription: subscription }),
-  clearEmotionSubscription: () => set({ emotionSubscription: null }),
+    set((state) => {
+      if (state.emotionSubscription) {
+        state.emotionSubscription.unsubscribe();
+      }
+      return { emotionSubscription: subscription };
+    }),
+  clearEmotionSubscription: () =>
+    set((state) => {
+      if (state.emotionSubscription) {
+        state.emotionSubscription.unsubscribe();
+      }
+      return { emotionSubscription: null };
+    }),
   chatMessages: [],
   addChatMessage: (message) =>
     set((state) => ({
