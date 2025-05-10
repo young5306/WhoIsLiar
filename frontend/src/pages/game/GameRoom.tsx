@@ -31,8 +31,6 @@ import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
 
 const GameRoom = () => {
-  const { emotionLogs: socketEmotionLogs } = useSocketStore();
-
   const [emotionLogs, setEmotionLogs] = useState<
     Record<string, FaceApiResult | null>
   >({});
@@ -58,7 +56,7 @@ const GameRoom = () => {
   const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [_myToken, setMyToken] = useState<string>('');
-  const [mySessionId, setMySessionId] = useState('');
+  const [myRoomCode, setMyRoomCode] = useState('');
 
   // << OpenVidu >>
   // 현재 연결된 세션
@@ -99,8 +97,12 @@ const GameRoom = () => {
   const { roomCode } = useRoomStore();
   const setRoomCode = useRoomStore((state) => state.setRoomCode);
   const { stompClient } = useWebSocketContext();
-  const { clearSubscription, clearEmotionSubscription, clearChatMessages } =
-    useSocketStore();
+  const {
+    clearSubscription,
+    clearEmotionSubscription,
+    clearChatMessages,
+    emotionLogs: socketEmotionLogs,
+  } = useSocketStore();
 
   // emotion 메시지 처리
   useEffect(() => {
@@ -121,9 +123,9 @@ const GameRoom = () => {
     }
 
     if (roomCode) {
-      setMySessionId(roomCode);
+      setMyRoomCode(roomCode);
     } else {
-      setMySessionId('');
+      setMyRoomCode('');
     }
   }, []);
 
@@ -142,10 +144,10 @@ const GameRoom = () => {
   useEffect(() => {
     if (session) return;
 
-    if (myUserName && mySessionId && session === undefined) {
+    if (myUserName && myRoomCode && session === undefined) {
       joinSession();
     }
-  }, [myUserName, mySessionId]);
+  }, [myUserName, myRoomCode]);
 
   // 구독자 삭제
   const deleteSubscriber = (streamManager: StreamManager) => {
@@ -186,7 +188,7 @@ const GameRoom = () => {
 
     try {
       // getToken 분리
-      const token = await getToken(mySessionId);
+      const token = await getToken(myRoomCode);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
@@ -265,7 +267,7 @@ const GameRoom = () => {
     setSubscribers([]);
 
     // 세션 ID 초기화 수정
-    setMySessionId(roomCode || '');
+    setMyRoomCode(roomCode || '');
     // 사용자 이름 초기화 수정
     setMyUserName(
       userInfo?.nickname || 'Participant' + Math.floor(Math.random() * 100)
