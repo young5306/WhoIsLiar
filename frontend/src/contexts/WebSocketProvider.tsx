@@ -10,6 +10,7 @@ import React, {
 import { Client as StompClient } from '@stomp/stompjs';
 import { createStompClient } from '../websocket/stompClient';
 import { useParams } from 'react-router-dom';
+import { FaceApiResult } from '../services/api/FaceApiService';
 
 interface Message {
   sender: string;
@@ -17,11 +18,19 @@ interface Message {
   chatType: string;
 }
 
+interface EmotionLogMessage {
+  roomCode: string;
+  order: number;
+  userName: string;
+  emotionResult: FaceApiResult;
+}
+
 interface WebSocketContextType {
   stompClient: StompClient | null;
   isConnected: boolean;
   connect: (roomCode: string) => void;
   send: (content: string, sender: string, chatType: string) => void;
+  sendEmotion: (payload: EmotionLogMessage) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -29,6 +38,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   isConnected: false,
   connect: () => {},
   send: () => {},
+  sendEmotion: () => {},
 });
 
 export const useWebSocketContext = () => useContext(WebSocketContext);
@@ -114,6 +124,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     []
   );
 
+  const sendEmotion = useCallback((payload: EmotionLogMessage) => {
+    if (!clientRef.current?.connected || !currentRoomCodeRef.current) {
+      console.warn('WebSocket이 연결되지 않았습니다.');
+      return;
+    }
+
+    clientRef.current.publish({
+      destination: `/app/emotion.send/${currentRoomCodeRef.current}`,
+      body: JSON.stringify(payload),
+    });
+  }, []);
+
   // 페이지 로드/새로고침 시 연결 시도
   useEffect(() => {
     if (urlRoomCode) {
@@ -151,7 +173,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <WebSocketContext.Provider
-      value={{ stompClient: clientRef.current, isConnected, connect, send }}
+      value={{
+        stompClient: clientRef.current,
+        isConnected,
+        connect,
+        send,
+        sendEmotion,
+      }}
     >
       {children}
     </WebSocketContext.Provider>

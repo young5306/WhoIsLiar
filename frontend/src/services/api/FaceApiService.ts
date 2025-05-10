@@ -13,9 +13,16 @@ export type Expressions = {
   [key in Emotion]: number; // 감정 확률
 };
 
+export interface EmotionLog {
+  roomCode: string;
+  order: number;
+  userName: string;
+  emotionResult: FaceApiResult;
+}
+
 export interface FaceApiResult {
-  expressions: Expressions; // 감정별 확률
-  topEmotion: { emotion: Emotion; probability: number }; // 최고 확률의 감정
+  expressions: Expressions;
+  topEmotion: { emotion: Emotion; probability: number };
 }
 
 let faceApiModelIsLoaded = false;

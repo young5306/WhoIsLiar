@@ -31,6 +31,9 @@ import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
 
 const GameRoom = () => {
+  const { emotionLogs: socketEmotionLogs } = useSocketStore();
+  // console.log('수신', socketEmotionLogs);
+
   const [emotionLogs, setEmotionLogs] = useState<
     Record<string, FaceApiResult | null>
   >({});
@@ -97,19 +100,15 @@ const GameRoom = () => {
   const { roomCode } = useRoomStore();
   const setRoomCode = useRoomStore((state) => state.setRoomCode);
   const { stompClient } = useWebSocketContext();
-  const {
-    clearSubscription,
-    clearEmotionSubscription,
-    clearChatMessages,
-    emotionSubscription,
-  } = useSocketStore();
+  const { clearSubscription, clearEmotionSubscription, clearChatMessages } =
+    useSocketStore();
 
   // emotion 메시지 처리
   useEffect(() => {
-    if (emotionSubscription) {
-      console.log('GameRoom - Using existing emotion subscription');
-    }
-  }, [emotionSubscription]);
+    socketEmotionLogs.forEach((log) => {
+      updateEmotionLog(log.userName, log.emotionResult);
+    });
+  }, [socketEmotionLogs]);
 
   useEffect(() => {
     if (userInfo?.nickname) {
