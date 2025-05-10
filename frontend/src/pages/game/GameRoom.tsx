@@ -418,6 +418,7 @@ const GameRoom = () => {
 
   /////////////////////게임 진행 코드 시작/////////////////////
   const { clearChatMessages, subscription, addChatMessage } = useSocketStore();
+  const chatMessages = useSocketStore((state) => state.chatMessages); // 메세지 변경만 감지
 
   // 게임 초기화용 상태
   const [roundNumber, setRoundNumber] = useState<number>(1);
@@ -428,9 +429,7 @@ const GameRoom = () => {
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
-  const [currentTurnIndex, setCurrentTurnIndex] = useState<number>(0);
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
-  const isMyTurn = speakingPlayer === myUserName;
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보보 조회
   useEffect(() => {
@@ -482,41 +481,24 @@ const GameRoom = () => {
     clearChatMessages();
   }, [roomCode]);
 
-  // 웹소켓 메세지 채팅에 출력
-  // useEffect(() => {
-  //   if (!subscription) return;
+  // 채팅 감지
+  useEffect(() => {
+    const latest = chatMessages.at(-1);
 
-  //   const handler = (frame: any) => {
-  //     const message = JSON.parse(frame.body);
-  //     if (message.chatType === 'TURN_START') {
-  //       addChatMessage(message);
-  //       if (!participants.length) return;
-  //       setCurrentTurnIndex((prev) => {
-  //         const nextIndex = (prev + 1) % participants.length;
-  //         const nextPlayer = participants[nextIndex]?.participantNickname;
+    // NORMAL일 경우 무시
+    if (!latest || latest.chatType == 'NORMAL') return;
 
-  //         console.log('💬 TURN_START', {
-  //           nextIndex,
-  //           nextPlayer,
-  //           participants,
-  //         });
-  //         console.log(
-  //           '👥 subscribers:',
-  //           subscribers.map((s) => s.nickname)
-  //         );
+    if (latest.chatType == 'TURN_START') {
+      console.log('💡TURN_START 수신 확인');
 
-  //         setSpeakingPlayer(nextPlayer);
-  //         return nextIndex;
-  //       });
-  //     }
-  //   };
-
-  //   subscription.callback = handler;
-
-  //   return () => {
-  //     subscription.callback = () => {};
-  //   };
-  // }, [subscription, participants]);
+      // 닉네임 파싱
+      const nickname = latest.content.split('님의')[0]?.trim();
+      if (nickname) {
+        setSpeakingPlayer(nickname);
+        console.log('🎤 발언자:', nickname);
+      }
+    }
+  }, [chatMessages]);
 
   /////////////////////게임 진행 코드 끝/////////////////////
 
@@ -610,7 +592,11 @@ const GameRoom = () => {
 
               {/* my video */}
               <div
-                className={`relative ${myPosition} ${myUserName === speakingPlayer ? 'ring-4 ring-point-neon animate-pulse' : ''}`}
+                className={`relative ${myPosition} ${
+                  myUserName === speakingPlayer
+                    ? 'ring-4 ring-point-neon animate-pulse'
+                    : ''
+                }`}
               >
                 <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                   <div className="w-full min-h-[150px] max-h-[170px] relative">
