@@ -32,7 +32,6 @@ import useSocketStore from '../../stores/useSocketStore';
 
 const GameRoom = () => {
   const { emotionLogs: socketEmotionLogs } = useSocketStore();
-  // console.log('수신', socketEmotionLogs);
 
   const [emotionLogs, setEmotionLogs] = useState<
     Record<string, FaceApiResult | null>
@@ -42,7 +41,7 @@ const GameRoom = () => {
     name: string | null,
     emotion: FaceApiResult | null
   ) => {
-    console.log(`감정 업데이트 - ${name}:`, emotion);
+    // console.log(`감정 업데이트 - ${name}:`, emotion);
 
     if (name) {
       setEmotionLogs((prevLogs) => ({

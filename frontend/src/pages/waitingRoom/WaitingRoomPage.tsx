@@ -360,7 +360,7 @@ const WaitingRoomContent = () => {
             const message = JSON.parse(frame.body);
             // emotion 메시지 처리 로직 추가
             addEmotionLog(message);
-            console.log('Emotion message received:', message);
+            // console.log('Emotion message received:', message);
           }
         );
 

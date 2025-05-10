@@ -35,10 +35,6 @@ const FaceApiEmotion = ({
 
   const pollingIntervalMs = 1000;
 
-  useEffect(() => {
-    console.log(`${name} 분석 코드로 넘어옴`);
-  }, []);
-
   const waitForModelReady = async (retry = 10) => {
     return new Promise<void>((resolve, reject) => {
       const interval = setInterval(() => {
@@ -79,7 +75,7 @@ const FaceApiEmotion = ({
         await waitForModelReady();
         setIsReady(true);
         setIsLogReady(true);
-        console.log(`${name} - 모델 준비 완료`);
+        // console.log(`${name} - 모델 준비 완료`);
       } catch (err) {
         console.warn(`${name} - 모델 아직 로드 안됨`, err);
       }
@@ -121,13 +117,13 @@ const FaceApiEmotion = ({
 
   useEffect(() => {
     if (!isReady || !videoRef.current) {
-      console.log(`${name} - 감정 분석 대기 중`, isReady);
+      // console.log(`${name} - 감정 분석 대기 중`, isReady);
       return;
     }
 
     const delay = 0;
     // const delay = userIndex * 200 + Math.random() * 300; // 부하 분산 필요할 경우 활성화
-    console.log(`${name}의 분석 시작 Delay: ${delay.toFixed(0)}ms`);
+    // console.log(`${name}의 분석 시작 Delay: ${delay.toFixed(0)}ms`);
 
     let intervalId: ReturnType<typeof setInterval>;
 
@@ -155,7 +151,7 @@ const FaceApiEmotion = ({
     if (!emotionResult?.expressions) return;
 
     onEmotionUpdate(emotionResult);
-    console.log(`${name} - 감정 결과 전송`, isLogReady, emotionResult);
+    // console.log(`${name} - 감정 결과 전송`, isLogReady, emotionResult);
 
     if (!isConnected) {
       console.warn('WebSocket이 연결되지 않았습니다.');
@@ -171,7 +167,7 @@ const FaceApiEmotion = ({
     };
 
     emotionSend(emotionLog);
-    console.log(`🔄 ${name} 감정 로그 웹소켓 전송:`, emotionLog);
+    // console.log(`🔄 ${name} 감정 로그 웹소켓 전송:`, emotionLog);
   }, [emotionResult]);
 
   return (

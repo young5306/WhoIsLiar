@@ -11,16 +11,14 @@ interface EmotionLogProps {
   emotion?: FaceApiResult;
 }
 
-const EmotionLog = ({ name, emotion, isLogReady }: EmotionLogProps) => {
+const EmotionLog = ({ emotion, isLogReady }: EmotionLogProps) => {
   const [currentEmotion, _setCurrentEmotion] = useState<Emotion | null>(null);
   const [emotionLog, setEmotionLog] = useState<string[]>([]);
   const [topEmotions, setTopEmotions] = useState<[Emotion, number][]>([]);
   const [highlighting, setHighlighting] = useState<string | null>(null);
 
-  const userName = name;
+  // const userName = name;
   const emotionResult = emotion;
-
-  console.log('prop 결과', userName, emotionResult);
 
   useEffect(() => {
     if (
@@ -84,7 +82,7 @@ const EmotionLog = ({ name, emotion, isLogReady }: EmotionLogProps) => {
   return (
     <>
       <div className="w-[190px]"></div>
-      <div className="max-h-[170px] min-h-[160px] w-[152px] min-w-[152px] rounded-xl px-2 py-1 bg-[#320000] text-red-600 flex">
+      <div className="max-h-[170px] min-h-[160px] w-[162px] min-w-[152px] rounded-xl px-2 py-1 bg-[#320000] text-red-600 flex justify-center">
         {!isLogReady ? (
           <p className="flex justify-center items-center">👀 Loading...</p>
         ) : (
@@ -126,8 +124,8 @@ const EmotionLog = ({ name, emotion, isLogReady }: EmotionLogProps) => {
                   </div>
                 )}
               </div>
-              <div className="w-full max-h-[70px] min-h-[70px] min-w-[136px] rounded-xl p-2 bg-white border">
-                <div className="w-full max-h-[50px] rounded-xl px-2 py-1 bg-white overflow-y-auto">
+              <div className="w-full max-h-[70px] min-h-[70px] min-w-[136px] rounded-xl py-2 px-1 bg-white border">
+                <div className="w-full max-h-[50px] rounded-xl px-[6px] py-1 bg-white overflow-y-auto">
                   {emotionLog.length === 0 ? (
                     <p className="text-xs text-gray-500">기록 없음</p>
                   ) : (
