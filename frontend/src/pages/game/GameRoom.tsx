@@ -15,6 +15,13 @@ import {
   GameState,
   PlayerState,
   outRoom,
+  getPlayerInfo,
+  startRound,
+  startTurn,
+  skipTurn,
+  submitVotes,
+  VoteResultResponse,
+  getVoteResult,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -25,10 +32,14 @@ import GameControls from './GameControls';
 import { FaceApiResult } from '../../services/api/FaceApiService';
 import { loadModels } from '../../services/api/FaceApiService';
 import GameChat from './GameChat';
-import FaceApiEmotion from './FaceApi';
-import EmotionLog from './EmotionLog';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
+import { getRoomData } from '../../services/api/RoomService';
+import Timer, { TimerRef } from '../../components/common/Timer';
+import GameButton from '../../components/common/GameButton';
+import VoteResultModal from '../../components/modals/VoteResultModal';
+import FaceApiEmotion from './FaceApi';
+import EmotionLog from './EmotionLog';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -407,57 +418,312 @@ const GameRoom = () => {
   const myPosition =
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
+  /////////////////////게임 진행 코드 시작/////////////////////
+  // const { subscription, addChatMessage } = useSocketStore();
+  const chatMessages = useSocketStore((state) => state.chatMessages); // 메세지 변경만 감지
+
+  // 게임 초기화용 상태
+  const [roundNumber, setRoundNumber] = useState<number>(1);
+  const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
+  const [participants, setParticipants] = useState<
+    Array<{ participantNickname: string; order: number }>
+  >([]);
+  const [category, setCategory] = useState<string>('');
+  const [myWord, setMyWord] = useState<string>('');
+  const [hostNickname, setHostNickname] = useState<string>('');
+  // 발언 진행 관련
+  const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
+  const timerRef = useRef<TimerRef>(null);
+  // 투표 진행 관련
+  const [isVoting, setIsVoting] = useState(false);
+  const [selectedTargetNickname, setSelectedTargetNickname] = useState<
+    string | null
+  >(null);
+  const selectedTargetRef = useRef<string | null>(null);
+  // 투표 결과 관련
+  const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
+  const [showVoteResultModal, setShowVoteResultModal] = useState(false);
+
+  // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
+  useEffect(() => {
+    const setupGameInfo = async () => {
+      if (!roomCode || !myUserName) return;
+      try {
+        const [playerInfoRes, roomInfoRes] = await Promise.all([
+          getPlayerInfo(roomCode),
+          getRoomData(roomCode),
+        ]);
+        setRoundNumber(playerInfoRes.data.roundNumber);
+        setTotalRoundNumber(playerInfoRes.data.totalRoundNumber);
+        setParticipants(playerInfoRes.data.participants);
+        setMyWord(playerInfoRes.data.word);
+        setCategory(roomInfoRes.roomInfo.category);
+        setHostNickname(roomInfoRes.roomInfo.hostNickname);
+
+        console.log('✅playerInfoRes', playerInfoRes);
+        console.log('✅roomInfoRes', roomInfoRes);
+        console.log('✅세팅 끝');
+        console.log('roundNumber', playerInfoRes.data.roundNumber);
+        console.log('totalRoundNumber', playerInfoRes.data.totalRoundNumber);
+        console.log('word', playerInfoRes.data.word);
+        console.log('category', roomInfoRes.roomInfo.category);
+        console.log('hostNickname', roomInfoRes.roomInfo.hostNickname);
+        console.log('myUserName', myUserName);
+
+        // 라운드 시작 및 턴 시작 API 순차 호출
+        if (myUserName === roomInfoRes.roomInfo.hostNickname) {
+          await startRound(roomCode, playerInfoRes.data.roundNumber);
+          console.log('✅startRound 호출');
+          await startTurn(roomCode, playerInfoRes.data.roundNumber);
+          console.log('✅startTurn 호출');
+        }
+      } catch (error) {
+        console.error('게임 정보 세팅 중 오류:', error);
+      }
+    };
+    setupGameInfo();
+  }, [roomCode, myUserName]);
+
+  // 웹소켓 메세지 채팅에 출력 (chatType 표시 제한 위해 로컬 병행 -> GameChat 컴포넌트에 prop 필요?)
+  // const [chatMessages, setChatMessages] = useState<
+  //   Array<{ sender: string; content: string; chatType: string }>
+  // >([]);
+
+  // 방 바뀌면 채팅창 초기화
+  useEffect(() => {
+    clearChatMessages();
+  }, [roomCode]);
+
+  // 채팅 감지
+  useEffect(() => {
+    const latest = chatMessages.at(-1);
+
+    // NORMAL일 경우 무시
+    if (!latest || latest.chatType == 'NORMAL') return;
+
+    // 개인 발언
+    if (latest.chatType == 'TURN_START') {
+      console.log('💡TURN_START 수신 확인');
+      // 닉네임 파싱
+      const nickname = latest.content.split('님의')[0]?.trim();
+      if (nickname) {
+        setSpeakingPlayer(nickname);
+        console.log('🎤 발언자:', nickname);
+        // timerRef.current?.startTimer(20);
+      }
+    }
+
+    // 모든 발언 종료 후 투표 시작
+    if (latest.chatType == 'ROUND_END') {
+      console.log('💡투표 시작');
+      setSpeakingPlayer('');
+      setIsVoting(true);
+      setSelectedTargetNickname(null);
+      // timerRef.current?.startTimer(10); // 10초 안에 투표
+    }
+  }, [chatMessages]);
+
+  // 발언 skip 핸들러
+  const handleSkipTurn = async (roomCode: string | null) => {
+    if (!roomCode) {
+      console.warn('Room code가 없습니다.');
+      return;
+    }
+
+    try {
+      await skipTurn(roomCode);
+      console.log('턴이 스킵되었습니다.');
+    } catch (error) {
+      console.error('턴 스킵 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (speakingPlayer) {
+      timerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
+    }
+  }, [speakingPlayer]);
+
+  useEffect(() => {
+    if (isVoting) {
+      setTimeout(() => {
+        timerRef.current?.startTimer(10);
+      }, 0); // 다음 이벤트 루프에서 실행
+    }
+  }, [isVoting]);
+
+  // 투표 진행 시 마우스 포인터 핸들러
+  useEffect(() => {
+    if (!isVoting) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const overlay = document.getElementById('vote-overlay'); // 오버레이 요소
+      if (overlay) {
+        overlay.style.setProperty('--x', `${e.clientX}px`); // 마우스 X 좌표를 CSS 변수로 설정
+        overlay.style.setProperty('--y', `${e.clientY}px`); // 마우스 Y 좌표를 CSS 변수로 설정
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove); // 마우스 움직임에 반응해서 handleMouseMove 실행
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove); // 컴포넌트 언마운트 시 이벤트 제거
+    };
+  }, [isVoting]);
+
+  // 각 비디오 컴포넌트 클릭 시 선택된 대상 설정
+  const handleSelectTarget = (nickname: string | undefined) => {
+    if (nickname) {
+      setSelectedTargetNickname(nickname);
+      console.log('선택 : ', nickname);
+    }
+  };
+
+  // 기권 버튼 클릭
+  const handleVoteSkip = () => {
+    setSelectedTargetNickname(null);
+  };
+
+  // selectedTargetNickname이 바뀔 때마다 ref에도 저장 (투표 제출 시 최신값 전달)
+  useEffect(() => {
+    selectedTargetRef.current = selectedTargetNickname;
+  }, [selectedTargetNickname]);
+
+  // 투표 타이머 종료 시 최종 투표 제출
+  const handleVotingEnd = async () => {
+    try {
+      const target = selectedTargetRef.current;
+      await submitVotes(roomCode!, roundNumber, target);
+      console.log('투표 완료:', target);
+      setIsVoting(false);
+      const result = await getVoteResult(roomCode!, roundNumber);
+      setVoteResult(result);
+      setShowVoteResultModal(true);
+    } catch (err) {
+      console.error('투표 제출 실패:', err);
+    }
+  };
+
+  /////////////////////게임 진행 코드 끝/////////////////////
+
   return (
     <>
       {session !== undefined ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
+            <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+              {/* --- 발언시간 --- */}
+              {/* 발언자만 skip 버튼 표시 */}
+              {myUserName === speakingPlayer && (
+                <GameButton
+                  text="Skip"
+                  size="small"
+                  variant="neon"
+                  onClick={() => handleSkipTurn(roomCode)}
+                />
+              )}
+              {/* 타이머는 모두에게 표시 */}
+              {speakingPlayer && (
+                <Timer
+                  ref={timerRef}
+                  onTimeEnd={() => console.log('⏰ 타이머 종료')}
+                  size="medium"
+                />
+              )}
+              {/* --- 투표 시간 --- */}
+              {isVoting && (
+                <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
+                  <GameButton
+                    text="기권"
+                    size="small"
+                    variant="gray"
+                    onClick={handleVoteSkip}
+                  />
+                  <Timer
+                    ref={timerRef}
+                    onTimeEnd={handleVotingEnd}
+                    size="medium"
+                  />
+                </div>
+              )}
+            </div>
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
-                round={gameState.round}
-                turn={gameState.turn}
-                category={gameState.category}
-                topic={gameState.topic}
-                isLiar={playerState.isLiar}
+                round={roundNumber}
+                turn={gameState.turn} // 이거 안받는데
+                category={category}
+                topic={
+                  myWord
+                    ? myWord
+                    : '당신은 라이어입니다! 제시어를 추측해보세요.'
+                }
+                isLiar={playerState.isLiar} // 투표 결과 조회 때 받음
               />
 
               {/* Video 영역 */}
-              {subscribers.map((sub, index) => (
-                <div
-                  key={sub.id || index}
-                  className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
-                >
-                  <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
-                    <div className="w-full h-full relative">
-                      <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                        {sub.nickname}
-                      </div>
-                      <div className="w-full h-full flex items-center justify-center">
+              {subscribers.map((sub, index) => {
+                return (
+                  <div
+                    key={sub.id || index}
+                    onClick={() => isVoting && handleSelectTarget(sub.nickname)}
+                    className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)} 
+                    ${isVoting ? 'cursor-pointer' : ''}
+                    ${
+                      sub.nickname === speakingPlayer
+                        ? 'ring-4 ring-point-neon'
+                        : ''
+                    }`}
+                  >
+                    {/* 선택된 타겟에 과녁 이미지 */}
+                    {selectedTargetNickname === sub.nickname && (
+                      <img
+                        src="assets/target.png"
+                        alt="타겟"
+                        className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
+                      />
+                    )}
+                    <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
+                      <div className="w-full h-full relative">
+                        <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                          {sub.nickname}
+                        </div>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <UserVideoComponent streamManager={sub} />
+
+                          {/* {sub.isVideoEnabled ? (
                         <UserVideoComponent streamManager={sub} />
+                        ) : (
+                          <VideoOff />
+                        )} */}
+                        </div>
                       </div>
                     </div>
+                    <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
+                      <EmotionLog
+                        name={sub.nickname!}
+                        emotion={emotionLogs[sub.nickname!] || undefined}
+                        isLogReady={isLogReady}
+                      />
+                    </div>
                   </div>
-                  <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
-                    {/* <FaceApiEmotion
-                      streamManager={sub}
-                      name={sub.nickname}
-                      onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog(sub.nickname!, emotionResult)
-                      }
-                      isLogReady={false}
-                      setIsLogReady={setIsLogReady}
-                    /> */}
-                    <EmotionLog
-                      name={sub.nickname!}
-                      emotion={emotionLogs[sub.nickname!] || undefined}
-                      isLogReady={isLogReady}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* my video */}
-              <div className={`relative ${myPosition}`}>
+              <div
+                onClick={() => isVoting && handleSelectTarget(myUserName)}
+                className={`relative ${myPosition} 
+                ${isVoting ? 'cursor-pointer' : ''}
+                ${
+                  myUserName === speakingPlayer ? 'ring-4 ring-point-neon' : ''
+                }`}
+              >
+                {selectedTargetNickname === myUserName && (
+                  <img
+                    src="assets/target.png"
+                    alt="타겟"
+                    className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
+                  />
+                )}
                 <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                   <div className="w-full min-h-[150px] max-h-[170px] relative">
                     <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
@@ -515,6 +781,31 @@ const GameRoom = () => {
           </div>
         </>
       ) : null}
+
+      {/* 투표 진행 화면 */}
+      <div
+        id="vote-overlay" // 마우스 위치 조정을 위한 ID
+        className="fixed inset-0 z-50 pointer-events-none transition-opacity duration-500" // 화면 전체 덮는 레이어
+        style={{
+          opacity: isVoting ? 1 : 0,
+          background:
+            'radial-gradient(circle at var(--x, 50vw) var(--y, 50vh), transparent 80px, rgba(0,0,0,0.8) 10px)', // 마우스 위치에 원형 밝은 영역 (마우스 주변 80px까지 밝고, 10px까지 fade)
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* 투표 결과 모달 */}
+      {showVoteResultModal && voteResult && (
+        <VoteResultModal
+          result={voteResult}
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          onClose={() => {
+            setShowVoteResultModal(false);
+            // setShowLiarResultModal(true); // 다음 단계
+          }}
+        />
+      )}
     </>
   );
 };
