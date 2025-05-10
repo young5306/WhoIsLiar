@@ -362,13 +362,13 @@ public class RoundService {
 			case FOOL    -> round.getWord2();
 		};
 
-		boolean correct = req.guessText().equalsIgnoreCase(targetWord);
+		boolean isCorrect = req.guessText().equalsIgnoreCase(targetWord);
 
 		Winner winnerEnum;
 		if (room.getGameMode() == GameMode.DEFAULT) {
-			winnerEnum = correct ? Winner.liar : Winner.civil;
+			winnerEnum = isCorrect ? Winner.liar : Winner.civil;
 		} else {
-			winnerEnum = correct ? Winner.civil : Winner.liar;
+			winnerEnum = isCorrect ? Winner.civil : Winner.liar;
 		}
 
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
@@ -382,12 +382,10 @@ public class RoundService {
 				.filter(ParticipantRound::isLiar)
 				.forEach(pr -> pr.addScore(100));
 		}
-		participantRoundRepository.saveAll(prList);
 
 		round.setWinner(winnerEnum);
-		roundRepository.save(round);
 
-		return new GuessResponseDto(correct, winnerEnum.name());
+		return new GuessResponseDto(isCorrect, winnerEnum.name());
 	}
 
 	/**
