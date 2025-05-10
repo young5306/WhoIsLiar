@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import com.ssafy.backend.domain.chat.dto.ChatMessage;
+import com.ssafy.backend.domain.chat.dto.EmotionBroadcastMessage;
 import com.ssafy.backend.global.enums.ChatType;
 
 import lombok.RequiredArgsConstructor;
@@ -87,6 +88,12 @@ public class ChatSocketController {
 			ChatType.PLAYER_LEAVE);
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
 		log.info("[WS GameMessage][SYSTEM][{}] {}님이 퇴장했습니다.",roomCode, nickname);
+	}
+
+	@MessageMapping("/emotion.send/{roomCode}")
+	public void handleEmotionSend(@DestinationVariable String roomCode,
+		@Payload EmotionBroadcastMessage message) {
+		messagingTemplate.convertAndSend("/topic/room." + roomCode + ".emotion", message);
 	}
 
 }
