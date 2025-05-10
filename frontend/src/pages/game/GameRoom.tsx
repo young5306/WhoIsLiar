@@ -94,8 +94,19 @@ const GameRoom = () => {
   const { roomCode } = useRoomStore();
   const setRoomCode = useRoomStore((state) => state.setRoomCode);
   const { stompClient } = useWebSocketContext();
-  const { clearSubscription, clearEmotionSubscription, clearChatMessages } =
-    useSocketStore();
+  const {
+    clearSubscription,
+    clearEmotionSubscription,
+    clearChatMessages,
+    emotionSubscription,
+  } = useSocketStore();
+
+  // emotion 메시지 처리
+  useEffect(() => {
+    if (emotionSubscription) {
+      console.log('GameRoom - Using existing emotion subscription');
+    }
+  }, [emotionSubscription]);
 
   useEffect(() => {
     if (userInfo?.nickname) {
