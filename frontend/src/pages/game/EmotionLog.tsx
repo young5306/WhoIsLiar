@@ -21,6 +21,7 @@ const EmotionLog = ({ name, emotion, isLogReady }: EmotionLogProps) => {
   const emotionResult = emotion;
 
   console.log('prop 결과', userName, emotionResult);
+
   useEffect(() => {
     if (
       emotionResult &&

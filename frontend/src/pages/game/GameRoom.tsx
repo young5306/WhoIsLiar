@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   OpenVidu,
@@ -29,20 +29,23 @@ import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 
 const GameRoom = () => {
-  const [emotionLogs, setEmotionLogs] = useState<Record<string, FaceApiResult>>(
-    {}
-  );
-  console.log('emotionlog상위', emotionLogs);
+  const [emotionLogs, setEmotionLogs] = useState<
+    Record<string, FaceApiResult | null>
+  >({});
 
   const updateEmotionLog = (
-    name: string | undefined,
-    emotion: FaceApiResult
+    name: string | null,
+    emotion: FaceApiResult | null
   ) => {
+    console.log(`감정 업데이트 - ${name}:`, emotion);
+
     if (name) {
       setEmotionLogs((prevLogs) => ({
         ...prevLogs,
         [name]: emotion,
       }));
+    } else {
+      console.log('이름이 존재하지 않습니다.', emotion);
     }
   };
 
@@ -402,18 +405,18 @@ const GameRoom = () => {
                     </div>
                   </div>
                   <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
-                    <FaceApiEmotion
+                    {/* <FaceApiEmotion
                       streamManager={sub}
                       name={sub.nickname}
                       onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog(sub.nickname, emotionResult)
+                        updateEmotionLog(sub.nickname!, emotionResult)
                       }
                       isLogReady={false}
                       setIsLogReady={setIsLogReady}
-                    />
+                    /> */}
                     <EmotionLog
                       name={sub.nickname!}
-                      emotion={emotionLogs[sub.nickname!]}
+                      emotion={emotionLogs[sub.nickname!] || undefined}
                       isLogReady={isLogReady}
                     />
                   </div>
@@ -444,6 +447,8 @@ const GameRoom = () => {
                       <FaceApiEmotion
                         streamManager={publisher}
                         name={myUserName}
+                        // userIndex={order}
+                        roomCode={roomCode}
                         onEmotionUpdate={(emotionResult) =>
                           updateEmotionLog(myUserName, emotionResult)
                         }
@@ -452,7 +457,7 @@ const GameRoom = () => {
                       />
                       <EmotionLog
                         name={myUserName}
-                        emotion={emotionLogs[myUserName]}
+                        emotion={emotionLogs[myUserName] || undefined}
                         isLogReady={isLogReady}
                       />
                     </div>
