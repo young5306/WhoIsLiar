@@ -63,8 +63,15 @@ const WaitingRoomContent = () => {
   const { userInfo } = useAuthStore();
   const { roomCode: contextRoomCode, clearRoomCode } = useRoomStore();
   const isHost = userInfo?.nickname === roomData?.roomInfo.hostNickname;
-  const { subscription, setSubscription, clearSubscription, addChatMessage } =
-    useSocketStore();
+  const {
+    subscription,
+    setSubscription,
+    clearSubscription,
+    addChatMessage,
+    emotionSubscription,
+    setEmotionSubscription,
+    clearEmotionSubscription,
+  } = useSocketStore();
 
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
@@ -267,13 +274,15 @@ const WaitingRoomContent = () => {
           const response = await getRoomData(contextRoomCode);
           setRoomData(response);
           setDisplayCategory(response.roomInfo.category || '랜덤');
+
+          // 방 데이터를 성공적으로 가져온 후에 웹소켓 연결 시도
+          setupWebSocket();
         } catch (error) {
           console.error('Failed to fetch room data:', error);
+          notify({ type: 'error', text: '방 정보를 가져오는데 실패했습니다.' });
         }
       }
     };
-
-    fetchRoomData();
 
     if (!contextRoomCode) {
       console.warn('roomCode가 없습니다.');
@@ -343,15 +352,26 @@ const WaitingRoomContent = () => {
           }
         );
 
+        // emotion 토픽 구독
+        const newEmotionSubscription = stompClient.subscribe(
+          `/topic/room.${contextRoomCode}.emotion`,
+          (frame) => {
+            const message = JSON.parse(frame.body);
+            // emotion 메시지 처리 로직 추가
+            console.log('Emotion message received:', message);
+          }
+        );
+
         // 구독 정보를 전역 store에 저장
         setSubscription(newSubscription);
+        setEmotionSubscription(newEmotionSubscription);
 
         // 서버에 입장 메시지 전송
         contextSend('입장했습니다.', 'System', 'SYSTEM');
       }
     };
 
-    setupWebSocket();
+    fetchRoomData();
 
     // cleanup 함수
     return () => {
@@ -475,6 +495,10 @@ const WaitingRoomContent = () => {
           if (subscription) {
             subscription.unsubscribe();
             clearSubscription();
+          }
+          if (emotionSubscription) {
+            emotionSubscription.unsubscribe();
+            clearEmotionSubscription();
           }
 
           // 룸 스토어 초기화

@@ -27,6 +27,8 @@ import { loadModels } from '../../services/api/FaceApiService';
 import GameChat from './GameChat';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
+import { useWebSocketContext } from '../../contexts/WebSocketProvider';
+import useSocketStore from '../../stores/useSocketStore';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -94,6 +96,20 @@ const GameRoom = () => {
   const { userInfo } = useAuthStore();
   const { roomCode } = useRoomStore();
   const setRoomCode = useRoomStore((state) => state.setRoomCode);
+  const { stompClient } = useWebSocketContext();
+  const {
+    clearSubscription,
+    clearEmotionSubscription,
+    clearChatMessages,
+    emotionSubscription,
+  } = useSocketStore();
+
+  // emotion 메시지 처리
+  useEffect(() => {
+    if (emotionSubscription) {
+      console.log('GameRoom - Using existing emotion subscription');
+    }
+  }, [emotionSubscription]);
 
   useEffect(() => {
     if (userInfo?.nickname) {
@@ -263,10 +279,27 @@ const GameRoom = () => {
     setCurrentVideoDevice(null);
     setCurrentMicDevice(null);
 
+    // 웹소켓 연결 해제 및 소켓 스토어 초기화
+    if (stompClient?.connected) {
+      stompClient.deactivate();
+    }
+    clearSubscription();
+    clearEmotionSubscription();
+    clearChatMessages();
+
     setRoomCode('');
     outGameRoom();
     navigation('/room-list');
-  }, [session, userInfo]);
+  }, [
+    session,
+    userInfo,
+    stompClient,
+    clearSubscription,
+    clearEmotionSubscription,
+    clearChatMessages,
+    roomCode,
+    navigation,
+  ]);
 
   // 새로고침 시, 세션 연결만 종료
   useEffect(() => {
