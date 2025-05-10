@@ -421,68 +421,56 @@ const GameRoom = () => {
 
   // 게임 초기화용 상태
   const [roundNumber, setRoundNumber] = useState<number>(1);
-  const [totalRoundNumber, setTotalRoundNumber] = useState<number>(0);
-  const [playerOrders, setPlayerOrders] = useState<
-    { participantNickname: string; order: number }[]
+  const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
+  const [participants, setParticipants] = useState<
+    Array<{ participantNickname: string; order: number }>
   >([]);
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
-  const [currentTurn, setCurrentTurn] = useState<number>(0); // 발언턴
-  const currentTurnRef = useRef(currentTurn);
+  const [currentTurnIndex, setCurrentTurnIndex] = useState<number>(0);
+  const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
+  const isMyTurn = speakingPlayer === myUserName;
 
-  // 방장, 카테고리 조회
+  // 방정보(방장, 카테고리), 라운드 세팅 개인정보보 조회
   useEffect(() => {
-    const fetchRoomHost = async () => {
-      if (!roomCode) return;
+    const setupGameInfo = async () => {
+      if (!roomCode || !myUserName) return;
       try {
-        const data = await getRoomData(roomCode);
-        console.log('roomData', data);
-        console.log('roomData', data.roomInfo.hostNickname);
-        console.log('roomData', data.roomInfo.category);
-        console.log('내 닉네임', userInfo?.nickname);
-        const { hostNickname, category } = data.roomInfo;
-        if (hostNickname && category) {
-          setHostNickname(hostNickname);
-          setCategory(category);
+        const [playerInfoRes, roomInfoRes] = await Promise.all([
+          getPlayerInfo(roomCode),
+          getRoomData(roomCode),
+        ]);
+        setRoundNumber(playerInfoRes.data.roundNumber);
+        setTotalRoundNumber(playerInfoRes.data.totalRoundNumber);
+        setParticipants(playerInfoRes.data.participants);
+        setMyWord(playerInfoRes.data.word);
+        setCategory(roomInfoRes.roomInfo.category);
+        setHostNickname(roomInfoRes.roomInfo.hostNickname);
+
+        console.log('✅playerInfoRes', playerInfoRes);
+        console.log('✅roomInfoRes', roomInfoRes);
+        console.log('✅세팅 끝');
+        console.log('roundNumber', playerInfoRes.data.roundNumber);
+        console.log('totalRoundNumber', playerInfoRes.data.totalRoundNumber);
+        console.log('word', playerInfoRes.data.word);
+        console.log('category', roomInfoRes.roomInfo.category);
+        console.log('hostNickname', roomInfoRes.roomInfo.hostNickname);
+        console.log('myUserName', myUserName);
+
+        // 라운드 시작 및 턴 시작 API 순차 호출
+        if (myUserName === roomInfoRes.roomInfo.hostNickname) {
+          await startRound(roomCode, playerInfoRes.data.roundNumber);
+          console.log('✅startRound 호출');
+          await startTurn(roomCode, playerInfoRes.data.roundNumber);
+          console.log('✅startTurn 호출');
         }
       } catch (error) {
-        console.error('방 정보 조회 실패:', error);
+        console.error('게임 정보 세팅 중 오류:', error);
       }
     };
-    fetchRoomHost();
-  }, [roomCode, hostNickname, category]);
-
-  // 개인정보 조회, 라운드 시작, 턴 시작 api 호출
-  useEffect(() => {
-    const initGame = async () => {
-      if (!roomCode || !userInfo?.nickname || !hostNickname) return;
-      try {
-        const data = await getPlayerInfo(roomCode);
-        console.log('playerinfo', data);
-        const { roundNum, totalRoundNum, participants, word } = data.data;
-
-        if (roundNum && totalRoundNum && participants && word) {
-          setRoundNumber(roundNum);
-          console.log('roundNumber', roundNum);
-          setTotalRoundNumber(totalRoundNum);
-          setPlayerOrders(participants);
-          setMyWord(word);
-          console.log('word', word);
-        }
-
-        if (userInfo.nickname === hostNickname) {
-          await startRound(roomCode, roundNumber);
-          await startTurn(roomCode, roundNumber);
-        }
-
-        console.log('개인정보 조회 및 라운드 시작, 턴 시작 완료');
-      } catch (error) {
-        console.error('게임 초기화 중 에러:', error);
-      }
-    };
-    initGame();
-  }, [roomCode, userInfo?.nickname, hostNickname, roundNumber]);
+    setupGameInfo();
+  }, [roomCode, myUserName]);
 
   // 웹소켓 메세지 채팅에 출력 (chatType 표시 제한 위해 로컬 병행 -> GameChat 컴포넌트에 prop 필요?)
   // const [chatMessages, setChatMessages] = useState<
@@ -495,39 +483,40 @@ const GameRoom = () => {
   }, [roomCode]);
 
   // 웹소켓 메세지 채팅에 출력
-  useEffect(() => {
-    if (!subscription) return;
+  // useEffect(() => {
+  //   if (!subscription) return;
 
-    const handler = (frame: any) => {
-      const message = JSON.parse(frame.body);
-      if (message.chatType === 'TURN_START') {
-        setCurrentTurn((prev) => {
-          const nextTurn = (prev + 1) % playerOrders.length;
-          console.log('TURN_START: currentTurn 업데이트 ->', nextTurn);
-          return nextTurn;
-        }); // 발언권
-        addChatMessage({
-          sender: 'SYSTEM',
-          content: message.content,
-          chatType: 'SYSTEM',
-        });
-      }
-    };
+  //   const handler = (frame: any) => {
+  //     const message = JSON.parse(frame.body);
+  //     if (message.chatType === 'TURN_START') {
+  //       addChatMessage(message);
+  //       if (!participants.length) return;
+  //       setCurrentTurnIndex((prev) => {
+  //         const nextIndex = (prev + 1) % participants.length;
+  //         const nextPlayer = participants[nextIndex]?.participantNickname;
 
-    subscription.callback = handler;
+  //         console.log('💬 TURN_START', {
+  //           nextIndex,
+  //           nextPlayer,
+  //           participants,
+  //         });
+  //         console.log(
+  //           '👥 subscribers:',
+  //           subscribers.map((s) => s.nickname)
+  //         );
 
-    return () => {
-      subscription.callback = () => {};
-    };
-  }, [subscription, playerOrders.length]);
+  //         setSpeakingPlayer(nextPlayer);
+  //         return nextIndex;
+  //       });
+  //     }
+  //   };
 
-  const myParticipant = playerOrders.find(
-    (p) => p.participantNickname === myUserName
-  );
-  const isMeSpeaking = myParticipant?.order === currentTurn;
-  useEffect(() => {
-    currentTurnRef.current = currentTurn;
-  }, [currentTurn]);
+  //   subscription.callback = handler;
+
+  //   return () => {
+  //     subscription.callback = () => {};
+  //   };
+  // }, [subscription, participants]);
 
   /////////////////////게임 진행 코드 끝/////////////////////
 
@@ -581,15 +570,14 @@ const GameRoom = () => {
 
               {/* Video 영역 */}
               {subscribers.map((sub, index) => {
-                const matchingParticipant = playerOrders.find(
-                  (p) => p.participantNickname === sub.nickname
-                );
-                const isSpeaking = matchingParticipant?.order === currentTurn;
-
                 return (
                   <div
                     key={sub.id || index}
-                    className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)} ${isSpeaking ? 'ring-4 ring-point-neon animate-pulse' : ''}`}
+                    className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)} ${
+                      sub.nickname === speakingPlayer
+                        ? 'ring-4 ring-point-neon animate-pulse'
+                        : ''
+                    }`}
                   >
                     <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                       <div className="w-full h-full relative">
@@ -622,7 +610,7 @@ const GameRoom = () => {
 
               {/* my video */}
               <div
-                className={`relative ${myPosition} ${isMeSpeaking ? 'ring-4 ring-[#39FF14] animate-pulse' : ''}`}
+                className={`relative ${myPosition} ${myUserName === speakingPlayer ? 'ring-4 ring-point-neon animate-pulse' : ''}`}
               >
                 <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                   <div className="w-full min-h-[150px] max-h-[170px] relative">
