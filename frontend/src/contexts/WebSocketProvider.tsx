@@ -10,21 +10,13 @@ import React, {
 import { Client as StompClient } from '@stomp/stompjs';
 import { createStompClient } from '../websocket/stompClient';
 import { useParams } from 'react-router-dom';
-import { FaceApiResult } from '../services/api/FaceApiService';
+import { EmotionLogMessage } from '../services/api/FaceApiService';
 
 interface Message {
   sender: string;
   content: string;
   chatType: string;
 }
-
-interface EmotionLogMessage {
-  roomCode: string;
-  order: number;
-  userName: string;
-  emotionResult: FaceApiResult;
-}
-
 interface WebSocketContextType {
   stompClient: StompClient | null;
   isConnected: boolean;
