@@ -192,7 +192,6 @@ public class RoundController {
 		@Valid @RequestBody GuessRequestDto request
 	) {
 		GuessResponseDto dto = roundService.submitGuess(roomCode, roundNumber, request);
-		chatSocketService.guessSubmitted(roomCode, request.guessText());
 		return ok(dto);
 	}
 
