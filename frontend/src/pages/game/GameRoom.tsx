@@ -89,12 +89,14 @@ const GameRoom = () => {
   // 같은 세션에 있는 다른 참가자 스트림 목록
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   // 현재 사용 중인 카메라 장치 정보
-  const [currentVideoDevice, setCurrentVideoDevice] = useState<Device | null>(
+  const [_currentVideoDevice, setCurrentVideoDevice] = useState<Device | null>(
     null
   );
 
   // 현재 사용 중인 마이크 장치 정보
-  const [currentMicDevice, setCurrentMicDevice] = useState<Device | null>(null);
+  const [_currentMicDevice, setCurrentMicDevice] = useState<Device | null>(
+    null
+  );
 
   // 카메라, 마이크 상태 관리
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -467,7 +469,7 @@ const GameRoom = () => {
   const [currentTurn, setCurrentTurn] = useState(1);
   const [roundNumber, setRoundNumber] = useState<number>(1);
   const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
-  const [participants, setParticipants] = useState<
+  const [_participants, setParticipants] = useState<
     Array<{ participantNickname: string; order: number }>
   >([]);
   const [category, setCategory] = useState<string>('');

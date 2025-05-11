@@ -33,7 +33,7 @@ const LiarResultModal = ({
 
   // 제시어 추측 입력창 (라이어용)
   const [input, setInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // ui 추가
+  const [_isSubmitting, setIsSubmitting] = useState(false); // ui 추가
 
   // 제시어 추측 제출 (라이어용)
   const handleSubmit = async () => {
