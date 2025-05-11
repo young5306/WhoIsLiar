@@ -504,9 +504,9 @@ const GameRoom = () => {
   const [currentTurn, setCurrentTurn] = useState(1);
   const [roundNumber, setRoundNumber] = useState<number>(1);
   const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
-  const [participants, setParticipants] = useState<
-    Array<{ participantNickname: string; order: number }>
-  >([]);
+  // const [participants, setParticipants] = useState<
+  //   Array<{ participantNickname: string; order: number }>
+  // >([]);
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
@@ -543,7 +543,7 @@ const GameRoom = () => {
         ]);
         setRoundNumber(playerInfoRes.data.roundNumber);
         setTotalRoundNumber(playerInfoRes.data.totalRoundNumber);
-        setParticipants(playerInfoRes.data.participants);
+        // setParticipants(playerInfoRes.data.participants);
         setMyWord(playerInfoRes.data.word);
         setCategory(roomInfoRes.roomInfo.category);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
@@ -725,8 +725,9 @@ const GameRoom = () => {
   const handleLiarResultModalClose = async () => {
     setShowLiarResultModal(false);
 
+    // skip 모달 이후
     if (voteResult?.skip) {
-      if (userInfo?.nickname === hostNickname) {
+      if (myUserName === hostNickname) {
         try {
           await endTurn(roomCode!, roundNumber);
           await startTurn(roomCode!, roundNumber);
@@ -738,6 +739,7 @@ const GameRoom = () => {
       setCurrentTurn((prev) => prev + 1);
     }
 
+    // liar not found 모달 이후
     if (!voteResult?.detected && !voteResult?.skip) {
       await fetchAndShowScore();
     }
@@ -777,15 +779,20 @@ const GameRoom = () => {
         setRoundNumber(playerInfo.data.roundNumber);
         setMyWord(playerInfo.data.word);
         setCategory(roomInfo.roomInfo.category);
-        setParticipants(playerInfo.data.participants);
+        // setParticipants(playerInfo.data.participants);
 
-        await startRound(roomCode!, playerInfo.data.roundNumber);
-        await startTurn(roomCode!, playerInfo.data.roundNumber);
+        console.log('다음 라운드', playerInfo.data.roundNumber);
+        if (myUserName === hostNickname) {
+          await startRound(roomCode!, playerInfo.data.roundNumber);
+          await startTurn(roomCode!, playerInfo.data.roundNumber);
+        }
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
-        await endRound(roomCode!, roundNumber);
-        await endGame(roomCode!);
+        if (myUserName === hostNickname) {
+          await endRound(roomCode!, roundNumber);
+          await endGame(roomCode!);
+        }
         navigation('/waiting-room');
       }
     } catch (error) {
@@ -823,7 +830,7 @@ const GameRoom = () => {
               </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
-                <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
+                <div className="absolute top-6 right-6 z-60 flex gap-2 items-center">
                   {currentTurn < 3 && (
                     <GameButton
                       text="기권"

@@ -33,7 +33,7 @@ const LiarResultModal = ({
 
   // 제시어 추측 입력창 (라이어용)
   const [input, setInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // ui 추가
+  // const [isSubmitting, setIsSubmitting] = useState(false); // ui 추가
 
   // 제시어 추측 제출 (라이어용)
   const handleSubmit = async () => {
@@ -42,7 +42,7 @@ const LiarResultModal = ({
     }
 
     try {
-      setIsSubmitting(true);
+      // setIsSubmitting(true);
       await submitWordGuess(roomCode!, roundNumber, input.trim());
       notify({
         type: 'success',
@@ -61,7 +61,7 @@ const LiarResultModal = ({
         error?.response?.data?.message || '제시어 제출에 실패했습니다.';
       notify({ type: 'error', text: msg });
     } finally {
-      setIsSubmitting(false);
+      // setIsSubmitting(false);
     }
   };
 

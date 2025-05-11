@@ -21,7 +21,7 @@ const ScoreModal = ({
   roundNumber,
   totalRoundNumber,
   scores,
-  onClose,
+  // onClose,
 }: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
 
