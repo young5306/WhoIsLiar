@@ -22,6 +22,12 @@ import {
   submitVotes,
   VoteResultResponse,
   getVoteResult,
+  endTurn,
+  ScoreResponse,
+  getScores,
+  endRound,
+  setRound,
+  endGame,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -34,12 +40,16 @@ import { loadModels } from '../../services/api/FaceApiService';
 import GameChat from './GameChat';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
+import { sttService, SttResult } from '../../services/api/SttService';
+import SttText from '../../components/SttText';
 import { getRoomData } from '../../services/api/RoomService';
 import Timer, { TimerRef } from '../../components/common/Timer';
 import GameButton from '../../components/common/GameButton';
 import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
+import LiarResultModal from '../../components/modals/LiarResultModal';
+import ScoreModal from '../../components/modals/ScoreModal';
 import { VideoOff, MicOff } from 'lucide-react';
 
 const GameRoom = () => {
@@ -116,6 +126,10 @@ const GameRoom = () => {
     emotionLogs: socketEmotionLogs,
     emotionSubscription,
   } = useSocketStore();
+
+  const [sttResults, setSttResults] = useState<
+    Record<string, SttResult | null>
+  >({});
 
   // emotion 메시지 처리
   useEffect(() => {
@@ -388,11 +402,69 @@ const GameRoom = () => {
   const myPosition =
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
+  // STT 결과 처리 함수
+  const handleSttResult = (result: SttResult) => {
+    console.log('GameRoom received STT result:', result); // 디버깅 로그 추가
+    setSttResults((prev) => {
+      const newResults = {
+        ...prev,
+        [result.speaker]: result,
+      };
+      console.log('Updated STT results:', newResults); // 디버깅 로그 추가
+      return newResults;
+    });
+  };
+
+  // 세션 참가 시 STT 시작
+  useEffect(() => {
+    console.log('Session or publisher changed:', { session, publisher }); // 상태 변경 로그
+    if (session && publisher) {
+      console.log('Starting STT service for publisher...'); // 디버깅을 위한 로그 추가
+      try {
+        sttService.start(handleSttResult);
+      } catch (error) {
+        console.error('Error starting STT service:', error);
+      }
+    }
+    return () => {
+      console.log('Cleaning up STT service...'); // 디버깅을 위한 로그 추가
+      try {
+        sttService.stop();
+      } catch (error) {
+        console.error('Error stopping STT service:', error);
+      }
+    };
+  }, [session, publisher]);
+
+  // 구독자들의 오디오 스트림 처리
+  useEffect(() => {
+    console.log('Subscribers changed:', subscribers); // 구독자 변경 로그
+    subscribers.forEach((sub) => {
+      if (sub.nickname) {
+        console.log('Processing audio stream for subscriber:', sub.nickname); // 디버깅을 위한 로그 추가
+        try {
+          sttService.processStreamAudio(sub, (result) => {
+            handleSttResult({
+              ...result,
+              speaker: sub.nickname || 'unknown',
+            });
+          });
+        } catch (error) {
+          console.error(
+            'Error processing audio stream for subscriber:',
+            sub.nickname,
+            error
+          );
+        }
+      }
+    });
+  }, [subscribers]);
   /////////////////////게임 진행 코드 시작/////////////////////
-  // const { subscription, addChatMessage } = useSocketStore();
+
   const chatMessages = useSocketStore((state) => state.chatMessages); // 메세지 변경만 감지
 
   // 게임 초기화용 상태
+  const [currentTurn, setCurrentTurn] = useState(1);
   const [roundNumber, setRoundNumber] = useState<number>(1);
   const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
   const [participants, setParticipants] = useState<
@@ -403,16 +475,25 @@ const GameRoom = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
-  const timerRef = useRef<TimerRef>(null);
+  const speechTimerRef = useRef<TimerRef>(null);
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
   const [selectedTargetNickname, setSelectedTargetNickname] = useState<
     string | null
   >(null);
   const selectedTargetRef = useRef<string | null>(null);
+  const voteTimerRef = useRef<TimerRef>(null);
   // 투표 결과 관련
   const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
   const [showVoteResultModal, setShowVoteResultModal] = useState(false);
+  const [showLiarResultModal, setShowLiarResultModal] = useState(false);
+  // liar found 관련
+  const [guessedWord, setGuessedWord] = useState<string | null>(null);
+  const [showGuessedWord, setShowGuessedWord] = useState(false);
+  // 점수 관련
+  const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const scoreTimerRef = useRef<TimerRef>(null);
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
   useEffect(() => {
@@ -479,7 +560,7 @@ const GameRoom = () => {
       if (nickname) {
         setSpeakingPlayer(nickname);
         console.log('🎤 발언자:', nickname);
-        // timerRef.current?.startTimer(20);
+        // speechTimerRef.current?.startTimer(20);
       }
     }
 
@@ -489,7 +570,24 @@ const GameRoom = () => {
       setSpeakingPlayer('');
       setIsVoting(true);
       setSelectedTargetNickname(null);
-      // timerRef.current?.startTimer(10); // 10초 안에 투표
+      // voteTimerRef.current?.startTimer(10); // 10초 안에 투표
+    }
+
+    // 라이어 제시어 추측 제출
+    if (latest.chatType == 'GUESS_SUBMITTED') {
+      const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
+      const word = match?.[1] || null;
+      console.log('추측!', latest.content);
+      if (word) {
+        console.log('💡라이어가 추측한 제시어', word);
+        setGuessedWord(word);
+        setShowGuessedWord(true);
+
+        setTimeout(async () => {
+          setShowGuessedWord(false);
+          await fetchAndShowScore();
+        }, 2000);
+      }
     }
   }, [chatMessages]);
 
@@ -510,14 +608,14 @@ const GameRoom = () => {
 
   useEffect(() => {
     if (speakingPlayer) {
-      timerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
+      speechTimerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
     }
   }, [speakingPlayer]);
 
   useEffect(() => {
     if (isVoting) {
       setTimeout(() => {
-        timerRef.current?.startTimer(10);
+        voteTimerRef.current?.startTimer(10);
       }, 0); // 다음 이벤트 루프에서 실행
     }
   }, [isVoting]);
@@ -560,16 +658,78 @@ const GameRoom = () => {
 
   // 투표 타이머 종료 시 최종 투표 제출
   const handleVotingEnd = async () => {
+    console.log('투표 제출', currentTurn, selectedTargetRef.current);
     try {
-      const target = selectedTargetRef.current;
+      const target =
+        currentTurn >= 3 && !selectedTargetRef.current
+          ? myUserName // 3번째 턴에서 투표 안할 경우 본인 투표 (페널티)
+          : selectedTargetRef.current;
       await submitVotes(roomCode!, roundNumber, target);
       console.log('투표 완료:', target);
+      // 초기화
+      setSelectedTargetNickname(null);
+      selectedTargetRef.current = null;
       setIsVoting(false);
+
+      // 투표 집계 기다리기 (1초) - 로직 수정 필요
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const result = await getVoteResult(roomCode!, roundNumber);
+      console.log('✅투표 결과 조회 api', result);
       setVoteResult(result);
       setShowVoteResultModal(true);
     } catch (err) {
       console.error('투표 제출 실패:', err);
+    }
+  };
+
+  // 점수 조회 및 모달 표시
+  const fetchAndShowScore = async () => {
+    try {
+      const result = await getScores(roomCode!);
+      setScoreData(result);
+      setShowScoreModal(true);
+      scoreTimerRef.current?.startTimer(10);
+    } catch (error) {
+      console.error('점수 조회 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (showScoreModal && scoreData) {
+      scoreTimerRef.current?.startTimer(10);
+    }
+  }, [showScoreModal, scoreData]);
+
+  // 점수 모달 이후 로직 (마지막 라운드인지 구분)
+  const handleScoreTimeEnd = async () => {
+    try {
+      setShowScoreModal(false);
+
+      // 다음 라운드 세팅
+      if (roundNumber < totalRoundNumber) {
+        await endRound(roomCode!, roundNumber);
+        await setRound(roomCode!);
+
+        const playerInfo = await getPlayerInfo(roomCode!);
+        const roomInfo = await getRoomData(roomCode!);
+
+        setRoundNumber(playerInfo.data.roundNumber);
+        setMyWord(playerInfo.data.word);
+        setCategory(roomInfo.roomInfo.category);
+        setParticipants(playerInfo.data.participants);
+
+        await startRound(roomCode!, playerInfo.data.roundNumber);
+        await startTurn(roomCode!, playerInfo.data.roundNumber);
+      }
+      // 마지막 라운드 종료 후 게임 종료
+      else {
+        await endRound(roomCode!, roundNumber);
+        await endGame(roomCode!);
+        navigation('/waiting-room');
+      }
+    } catch (error) {
+      console.error('라운드 종료 처리 실패:', error);
     }
   };
 
@@ -582,34 +742,38 @@ const GameRoom = () => {
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
               {/* --- 발언시간 --- */}
-              {/* 발언자만 skip 버튼 표시 */}
-              {myUserName === speakingPlayer && (
-                <GameButton
-                  text="Skip"
-                  size="small"
-                  variant="neon"
-                  onClick={() => handleSkipTurn(roomCode)}
-                />
-              )}
-              {/* 타이머는 모두에게 표시 */}
-              {speakingPlayer && (
-                <Timer
-                  ref={timerRef}
-                  onTimeEnd={() => console.log('⏰ 타이머 종료')}
-                  size="medium"
-                />
-              )}
+              <>
+                {/* 발언자만 skip 버튼 표시 */}
+                {myUserName === speakingPlayer && (
+                  <GameButton
+                    text="Skip"
+                    size="small"
+                    variant="neon"
+                    onClick={() => handleSkipTurn(roomCode)}
+                  />
+                )}
+                {/* 발언 타이머는 모두에게 표시 */}
+                {speakingPlayer && (
+                  <Timer
+                    ref={speechTimerRef}
+                    onTimeEnd={() => console.log('⏰ 타이머 종료')}
+                    size="medium"
+                  />
+                )}
+              </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
                 <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
-                  <GameButton
-                    text="기권"
-                    size="small"
-                    variant="gray"
-                    onClick={handleVoteSkip}
-                  />
+                  {currentTurn < 3 && (
+                    <GameButton
+                      text="기권"
+                      size="small"
+                      variant="gray"
+                      onClick={handleVoteSkip}
+                    />
+                  )}
                   <Timer
-                    ref={timerRef}
+                    ref={voteTimerRef}
                     onTimeEnd={handleVotingEnd}
                     size="medium"
                   />
@@ -668,6 +832,10 @@ const GameRoom = () => {
                               </div>
                             )}
                           </div>
+                          <SttText
+                            sttResult={sttResults[sub.nickname || ''] || null}
+                            speaker={sub.nickname || 'unknown'}
+                          />
                           <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                             {sub.stream.videoActive ? (
                               <UserVideoComponent streamManager={sub} />
@@ -726,6 +894,10 @@ const GameRoom = () => {
                           </div>
                         )}
                       </div>
+                      <SttText
+                        sttResult={sttResults['current'] || null}
+                        speaker="나"
+                      />
                       <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                         {publisher && isVideoEnabled ? (
                           <UserVideoComponent streamManager={publisher} />
@@ -745,7 +917,6 @@ const GameRoom = () => {
                       <FaceApiEmotion
                         streamManager={publisher}
                         name={myUserName}
-                        // userIndex={order}
                         roomCode={roomCode}
                         onEmotionUpdate={(emotionResult) =>
                           updateEmotionLog(myUserName, emotionResult)
@@ -808,9 +979,79 @@ const GameRoom = () => {
           totalRoundNumber={totalRoundNumber}
           onClose={() => {
             setShowVoteResultModal(false);
-            // setShowLiarResultModal(true); // 다음 단계
+            setShowLiarResultModal(true); // 다음 단계
           }}
         />
+      )}
+
+      {/* 라이어 예측 결과 모달 (liar found / liar not found / skip) */}
+      {showLiarResultModal && voteResult && (
+        <LiarResultModal
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          result={{
+            detected: voteResult.detected,
+            skip: voteResult.skip,
+            liarNickname: voteResult.liarNickname,
+          }}
+          results={voteResult.results}
+          // 이후 로직
+          onClose={async () => {
+            setShowLiarResultModal(false);
+
+            if (voteResult?.skip && userInfo?.nickname === hostNickname) {
+              try {
+                await endTurn(roomCode!, roundNumber);
+                await startTurn(roomCode!, roundNumber);
+                console.log('SKIP 이후 다음 턴 시작');
+              } catch (e) {
+                console.error('다음 턴 시작 실패', e);
+              }
+            }
+
+            setCurrentTurn((prev) => prev + 1);
+          }}
+        />
+      )}
+
+      {/* 라이어가 추측한 제시어 표시 */}
+      {showGuessedWord && guessedWord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
+            <p className="text-2xl font-bold mb-2">
+              라이어가 제시어로 제출한 단어는
+            </p>
+            <p className="text-4xl font-extrabold text-red-600">
+              {guessedWord}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 점수 */}
+      {showScoreModal && scoreData && (
+        <>
+          <ScoreModal
+            type={
+              roundNumber < totalRoundNumber
+                ? voteResult?.detected
+                  ? 'liar-win'
+                  : 'civilian-win'
+                : 'final-score'
+            }
+            roundNumber={roundNumber}
+            totalRoundNumber={totalRoundNumber}
+            scores={scoreData.scores}
+            onClose={() => setShowScoreModal(false)}
+          />
+          <div className="absolute top-4 right-4 z-50">
+            <Timer
+              ref={scoreTimerRef}
+              onTimeEnd={handleScoreTimeEnd}
+              size="medium"
+            />
+          </div>
+        </>
       )}
     </>
   );

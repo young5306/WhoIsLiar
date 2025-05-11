@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
-// import { getRoomScores } from '../../services/api/RoomService';
 import { ScoreResponse } from '../../services/api/GameService';
-import { useRoomStore } from '../../stores/useRoomStore';
-// import { notify } from '../common/Toast';
 
 interface ScoreModalProps {
   type: 'liar-win' | 'civilian-win' | 'final-score';
+  roundNumber: number;
+  totalRoundNumber: number;
+  scores: ScoreResponse['scores'];
   onClose?: () => void;
 }
 
@@ -17,63 +16,27 @@ const titleImageMap = {
 
 const medalIcons = ['assets/1st.png', 'assets/2nd.png', 'assets/3rd.png'];
 
-const ScoreModal = ({ type, onClose }: ScoreModalProps) => {
-  const { roomCode } = useRoomStore();
-  const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
-
-  useEffect(() => {
-    // const fetchScores = async () => {
-    //   try {
-    //     const res = await getRoomScores(roomCode!);
-    //     setScores(res.scores);
-    //   } catch (err) {
-    //     notify({ type: 'error', text: '점수 조회 실패' });
-    //   }
-    // };
-    // fetchScores();
-
-    const dummyResponse: ScoreResponse = {
-      scores: [
-        { participantNickname: 'user_01', totalScore: 45 },
-        { participantNickname: 'user_02', totalScore: 30 },
-        { participantNickname: 'user_03', totalScore: 20 },
-        { participantNickname: 'user_04', totalScore: 45 },
-        { participantNickname: 'user_05', totalScore: 30 },
-        { participantNickname: 'user_06', totalScore: 20 },
-      ],
-    };
-    setScoreData(dummyResponse);
-  }, [roomCode]);
-
+const ScoreModal = ({
+  type,
+  roundNumber,
+  totalRoundNumber,
+  scores,
+  onClose,
+}: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
-  const roundNumber = 3; // 로컬 스토리지에서 가져옴
-  const scores = scoreData?.scores || [];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          src="assets/timer.png"
-          alt="timer"
-          className="absolute top-4 right-4 w-12 h-12"
-        />
-
-        {roundNumber && (
-          <p className="headline-xlarge">ROUND {roundNumber}/5</p> // /총 라운드 수
-        )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
+      <div className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600">
+        <p className="headline-xlarge">
+          ROUND {roundNumber}/{totalRoundNumber}
+        </p>
 
         <img src={titleImage} alt="title" className="mx-auto mt-8 mb-10 h-18" />
 
         <ul className="space-y-2">
           {scores.map((s, idx) => (
             <li key={s.participantNickname} className="flex items-center gap-2">
-              {/* 메달 아이콘 영역 */}
               <div className="w-6 flex justify-center">
                 {idx < 3 && (
                   <img

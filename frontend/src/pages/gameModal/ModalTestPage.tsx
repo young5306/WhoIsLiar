@@ -19,6 +19,15 @@ const dummyVoteResult: VoteResultResponse = {
   skip: false,
 };
 
+const dummyScores = [
+  { participantNickname: 'user_01', totalScore: 45 },
+  { participantNickname: 'user_02', totalScore: 30 },
+  { participantNickname: 'user_03', totalScore: 20 },
+  { participantNickname: 'user_04', totalScore: 45 },
+  { participantNickname: 'user_05', totalScore: 30 },
+  { participantNickname: 'user_06', totalScore: 20 },
+];
+
 const ModalTestPage = () => {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
@@ -28,9 +37,14 @@ const ModalTestPage = () => {
 
       <div className="flex flex-wrap gap-4">
         <GameButton
-          text="Liar Modal"
+          text="Liar Found Modal"
           onClick={() => setOpenModal('liar-found')}
         />
+        <GameButton
+          text="Liar Not Found Modal"
+          onClick={() => setOpenModal('liar-not-found')}
+        />
+        <GameButton text="Skip Modal" onClick={() => setOpenModal('skip')} />
         <GameButton
           text="Liar Win Modal"
           onClick={() => setOpenModal('liar-win')}
@@ -54,19 +68,73 @@ const ModalTestPage = () => {
       </div>
 
       {openModal === 'liar-found' && (
-        <LiarResultModal onClose={() => setOpenModal(null)} />
+        <LiarResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={{ detected: true, skip: false, liarNickname: '홍길동' }}
+          results={[
+            { targetNickname: 'user1', voteCount: 2 },
+            { targetNickname: 'user2', voteCount: 1 },
+            { targetNickname: null, voteCount: 3 },
+          ]}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === 'liar-not-found' && (
+        <LiarResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={{ detected: false, skip: false }}
+          results={[
+            { targetNickname: 'user1', voteCount: 2 },
+            { targetNickname: 'user2', voteCount: 1 },
+            { targetNickname: null, voteCount: 3 },
+          ]}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === 'skip' && (
+        <LiarResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={{ detected: false, skip: true }}
+          results={[
+            { targetNickname: 'user1', voteCount: 2 },
+            { targetNickname: 'user2', voteCount: 1 },
+            { targetNickname: null, voteCount: 3 },
+          ]}
+          onClose={() => setOpenModal(null)}
+        />
       )}
 
       {openModal === 'liar-win' && (
-        <ScoreModal type="liar-win" onClose={() => setOpenModal(null)} />
+        <ScoreModal
+          type="liar-win"
+          scores={dummyScores}
+          roundNumber={2}
+          totalRoundNumber={5}
+          onClose={() => setOpenModal(null)}
+        />
       )}
-
       {openModal === 'civilian-win' && (
-        <ScoreModal type="civilian-win" onClose={() => setOpenModal(null)} />
+        <ScoreModal
+          type="civilian-win"
+          scores={dummyScores}
+          roundNumber={2}
+          totalRoundNumber={5}
+          onClose={() => setOpenModal(null)}
+        />
       )}
-
       {openModal === 'final-score' && (
-        <ScoreModal type="final-score" onClose={() => setOpenModal(null)} />
+        <ScoreModal
+          type="final-score"
+          scores={dummyScores}
+          roundNumber={5}
+          totalRoundNumber={5}
+          onClose={() => setOpenModal(null)}
+        />
       )}
 
       {openModal === 'vote' && (
