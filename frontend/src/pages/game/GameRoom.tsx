@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   OpenVidu,
@@ -31,20 +31,23 @@ import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
 
 const GameRoom = () => {
-  const [emotionLogs, setEmotionLogs] = useState<Record<string, FaceApiResult>>(
-    {}
-  );
-  console.log('emotionlog상위', emotionLogs);
+  const [emotionLogs, setEmotionLogs] = useState<
+    Record<string, FaceApiResult | null>
+  >({});
 
   const updateEmotionLog = (
-    name: string | undefined,
-    emotion: FaceApiResult
+    name: string | null,
+    emotion: FaceApiResult | null
   ) => {
+    // console.log(`감정 업데이트 - ${name}:`, emotion);
+
     if (name) {
       setEmotionLogs((prevLogs) => ({
         ...prevLogs,
         [name]: emotion,
       }));
+    } else {
+      console.log('이름이 존재하지 않습니다.', emotion);
     }
   };
 
@@ -53,7 +56,7 @@ const GameRoom = () => {
   const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [_myToken, setMyToken] = useState<string>('');
-  const [mySessionId, setMySessionId] = useState('');
+  const [myRoomCode, setMyRoomCode] = useState('');
 
   // << OpenVidu >>
   // 현재 연결된 세션
@@ -98,6 +101,7 @@ const GameRoom = () => {
     clearSubscription,
     clearEmotionSubscription,
     clearChatMessages,
+    emotionLogs: socketEmotionLogs,
     emotionSubscription,
   } = useSocketStore();
 
@@ -107,6 +111,13 @@ const GameRoom = () => {
       console.log('GameRoom - Using existing emotion subscription');
     }
   }, [emotionSubscription]);
+
+  // emotion 메시지 처리
+  useEffect(() => {
+    socketEmotionLogs.forEach((log) => {
+      updateEmotionLog(log.userName, log.emotionResult);
+    });
+  }, [socketEmotionLogs]);
 
   useEffect(() => {
     if (userInfo?.nickname) {
@@ -120,9 +131,9 @@ const GameRoom = () => {
     }
 
     if (roomCode) {
-      setMySessionId(roomCode);
+      setMyRoomCode(roomCode);
     } else {
-      setMySessionId('');
+      setMyRoomCode('');
     }
   }, []);
 
@@ -141,10 +152,10 @@ const GameRoom = () => {
   useEffect(() => {
     if (session) return;
 
-    if (myUserName && mySessionId && session === undefined) {
+    if (myUserName && myRoomCode && session === undefined) {
       joinSession();
     }
-  }, [myUserName, mySessionId]);
+  }, [myUserName, myRoomCode]);
 
   // 구독자 삭제
   const deleteSubscriber = (streamManager: StreamManager) => {
@@ -185,7 +196,7 @@ const GameRoom = () => {
 
     try {
       // getToken 분리
-      const token = await getToken(mySessionId);
+      const token = await getToken(myRoomCode);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
@@ -264,7 +275,7 @@ const GameRoom = () => {
     setSubscribers([]);
 
     // 세션 ID 초기화 수정
-    setMySessionId(roomCode || '');
+    setMyRoomCode(roomCode || '');
     // 사용자 이름 초기화 수정
     setMyUserName(
       userInfo?.nickname || 'Participant' + Math.floor(Math.random() * 100)
@@ -435,18 +446,18 @@ const GameRoom = () => {
                     </div>
                   </div>
                   <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
-                    <FaceApiEmotion
+                    {/* <FaceApiEmotion
                       streamManager={sub}
                       name={sub.nickname}
                       onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog(sub.nickname, emotionResult)
+                        updateEmotionLog(sub.nickname!, emotionResult)
                       }
                       isLogReady={false}
                       setIsLogReady={setIsLogReady}
-                    />
+                    /> */}
                     <EmotionLog
                       name={sub.nickname!}
-                      emotion={emotionLogs[sub.nickname!]}
+                      emotion={emotionLogs[sub.nickname!] || undefined}
                       isLogReady={isLogReady}
                     />
                   </div>
@@ -477,6 +488,8 @@ const GameRoom = () => {
                       <FaceApiEmotion
                         streamManager={publisher}
                         name={myUserName}
+                        // userIndex={order}
+                        roomCode={roomCode}
                         onEmotionUpdate={(emotionResult) =>
                           updateEmotionLog(myUserName, emotionResult)
                         }
@@ -485,7 +498,7 @@ const GameRoom = () => {
                       />
                       <EmotionLog
                         name={myUserName}
-                        emotion={emotionLogs[myUserName]}
+                        emotion={emotionLogs[myUserName] || undefined}
                         isLogReady={isLogReady}
                       />
                     </div>

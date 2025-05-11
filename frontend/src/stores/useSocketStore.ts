@@ -1,10 +1,10 @@
 import { create } from 'zustand';
+import { EmotionLogMessage } from '../services/api/FaceApiService';
 interface ChatMessage {
   sender: string;
   content: string;
   chatType: string;
 }
-
 interface SocketStore {
   subscription: any;
   setSubscription: (subscription: any) => void;
@@ -15,6 +15,9 @@ interface SocketStore {
   chatMessages: ChatMessage[];
   addChatMessage: (message: ChatMessage) => void;
   clearChatMessages: () => void;
+  emotionLogs: EmotionLogMessage[];
+  addEmotionLog: (log: EmotionLogMessage) => void;
+  clearEmotionLog: () => void;
 }
 
 const useSocketStore = create<SocketStore>((set) => ({
@@ -42,6 +45,16 @@ const useSocketStore = create<SocketStore>((set) => ({
       chatMessages: [...state.chatMessages, message],
     })),
   clearChatMessages: () => set({ chatMessages: [] }),
+
+  emotionLogs: [],
+  addEmotionLog: (newLog) =>
+    set((state) => ({
+      emotionLogs: [
+        ...state.emotionLogs.filter((log) => log.userName !== newLog.userName),
+        newLog,
+      ],
+    })),
+  clearEmotionLog: () => set({ emotionLogs: [] }),
 }));
 
 export default useSocketStore;

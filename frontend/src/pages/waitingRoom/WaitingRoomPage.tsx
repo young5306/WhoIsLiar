@@ -71,6 +71,7 @@ const WaitingRoomContent = () => {
     emotionSubscription,
     setEmotionSubscription,
     clearEmotionSubscription,
+    addEmotionLog,
   } = useSocketStore();
 
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
@@ -358,7 +359,8 @@ const WaitingRoomContent = () => {
           (frame) => {
             const message = JSON.parse(frame.body);
             // emotion 메시지 처리 로직 추가
-            console.log('Emotion message received:', message);
+            addEmotionLog(message);
+            // console.log('Emotion message received:', message);
           }
         );
 

@@ -71,39 +71,12 @@ export const getToken = async (sessionId: string): Promise<string> => {
 export const createSessionApi = async (sessionId: string): Promise<string> => {
   try {
     const response = await api.post(`/openvidu/sessions/${sessionId}`, {});
-    // console.log('createSession res: ', response.data.data);
     return response.data.data.token;
   } catch (error) {
     console.error('세션 생성 중 오류 발생: ', error);
     throw error;
   }
 };
-
-// export const createTokenApi = async (
-//   sessionId: string,
-//   accessToken: string
-// ): Promise<string> => {
-//   console.log('createTokenApi:', sessionId, accessToken);
-
-//   try {
-//     const response = await axios.post(
-//       APPLICATION_SERVER_URL + '/sessions/' + sessionId + '/connections',
-//       {},
-//       {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           // Authorization: `Bearer ${accessToken}`,
-//         },
-//         // withCredentials: true,
-//       }
-//     );
-//     console.log('createToken res: ', response);
-//     return response.data;
-//   } catch (error) {
-//     console.log('토큰 생성 중 오류 발생: ', error);
-//     throw error;
-//   }
-// };
 
 // 게임 시작
 // POST /api/rooms/game/start
