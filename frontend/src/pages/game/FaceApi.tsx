@@ -22,7 +22,7 @@ const FaceApiEmotion = ({
   name,
   userIndex = 0,
   roomCode,
-  isLogReady,
+  // isLogReady,
   setIsLogReady,
   onEmotionUpdate,
 }: FaceApiEmotionProps) => {
