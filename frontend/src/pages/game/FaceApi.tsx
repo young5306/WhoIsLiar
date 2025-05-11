@@ -1,272 +1,186 @@
 import { useRef, useEffect, useState } from 'react';
 import {
-  // loadModels,
   detectExpressions,
-  Emotion,
-  EMOTION_STYLE,
   FaceApiResult,
+  isFaceApiModelLoaded,
 } from '../../services/api/FaceApiService';
 import { StreamManager } from 'openvidu-browser';
-import { isFaceApiModelLoaded } from '../../services/api/FaceApiService';
+import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 
-interface EmotionLogProps {
+interface FaceApiEmotionProps {
   streamManager: StreamManager;
   name?: string;
+  userIndex?: number;
+  roomCode: string | null;
+  isLogReady: boolean;
+  setIsLogReady: (isLogReady: boolean) => void;
   onEmotionUpdate: (emotion: FaceApiResult) => void;
 }
 
-const EmotionLog = ({
+const FaceApiEmotion = ({
   streamManager,
-  // name = '참가자',
+  name,
+  userIndex = 0,
+  roomCode,
+  // isLogReady,
+  setIsLogReady,
   onEmotionUpdate,
-}: EmotionLogProps) => {
+}: FaceApiEmotionProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [emotionResult, setEmotionResult] = useState<FaceApiResult | null>(
     null
   );
-  const [currentEmotion, setCurrentEmotion] = useState<Emotion | null>(null);
-  const [emotionStartTime, setEmotionStartTime] = useState<number | null>(null);
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const { sendEmotion: emotionSend, isConnected } = useWebSocketContext();
 
-  const logContainerRef = useRef<HTMLDivElement>(null); // 로그 영역 DOM 참조
-  const [emotionLog, setEmotionLog] = useState<string[]>([]);
-  const [topEmotions, setTopEmotions] = useState<[Emotion, number][]>([]);
-  const [highlighting, setHighlighting] = useState<string | null>(null);
+  const pollingIntervalMs = 1000;
+
+  const waitForModelReady = async (retry = 10) => {
+    return new Promise<void>((resolve, reject) => {
+      const interval = setInterval(() => {
+        if (isFaceApiModelLoaded()) {
+          clearInterval(interval);
+          resolve();
+        } else if (retry-- <= 0) {
+          clearInterval(interval);
+          reject(`${name} - FaceAPI 모델 로딩 실패`);
+        }
+      }, 200);
+    });
+  };
 
   useEffect(() => {
-    const init = async () => {
-      if (!videoRef.current || !streamManager?.stream?.getMediaStream) return;
+    let checkInterval: NodeJS.Timeout;
+    let initialized = false;
 
-      // await loadModels('/models');
+    const continueInit = async () => {
+      if (
+        initialized ||
+        !videoRef.current ||
+        typeof streamManager?.stream?.getMediaStream !== 'function'
+      )
+        return;
+      initialized = true;
 
       const mediaStream = streamManager.stream.getMediaStream();
       videoRef.current.srcObject = mediaStream;
 
-      await videoRef.current.play();
-
-      if (isFaceApiModelLoaded()) {
-        setIsReady(true);
+      try {
+        await videoRef.current.play();
+      } catch (error) {
+        console.warn(`${name} - video play 실패:`, error);
       }
 
-      // const detectLoop = async () => {
-      //   if (videoRef.current) {
-      //     const res = await detectExpressions(videoRef.current);
-      //     setEmotionResult(res);
-      //   }
-      //   requestAnimationFrame(detectLoop);
-      // };
+      try {
+        await waitForModelReady();
+        setIsReady(true);
+        setIsLogReady(true);
+        // console.log(`${name} - 모델 준비 완료`);
+      } catch (err) {
+        console.warn(`${name} - 모델 아직 로드 안됨`, err);
+      }
+    };
 
-      // detectLoop();
+    const init = () => {
+      if (
+        !videoRef.current ||
+        typeof streamManager?.stream?.getMediaStream !== 'function'
+      ) {
+        console.warn(`${name} - 비디오 또는 스트림이 준비되지 않음`);
+
+        checkInterval = setInterval(() => {
+          if (
+            videoRef.current &&
+            typeof streamManager?.stream?.getMediaStream === 'function'
+          ) {
+            clearInterval(checkInterval);
+            continueInit();
+          }
+        }, 100);
+      } else {
+        continueInit();
+      }
     };
 
     setTimeout(init, 100);
-    // init();
 
-    // clean up (unmount)
     return () => {
+      if (checkInterval) clearInterval(checkInterval);
+
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream)
           .getTracks()
-          .forEach((t) => t.stop()); // 웹캠 사용 종료
+          .forEach((t) => t.stop());
       }
     };
   }, [streamManager]);
 
   useEffect(() => {
-    if (!isReady || !videoRef.current) return;
+    if (!isReady || !videoRef.current) {
+      // console.log(`${name} - 감정 분석 대기 중`, isReady);
+      return;
+    }
 
-    const interval = setInterval(async () => {
-      // ! => non-null assertion operator
-      const res = await detectExpressions(videoRef.current!);
-      if (res) {
-        setEmotionResult(res);
-      }
-    }, 1000); // 1.5초
+    const delay = 0;
+    // const delay = userIndex * 200 + Math.random() * 300; // 부하 분산 필요할 경우 활성화
+    // console.log(`${name}의 분석 시작 Delay: ${delay.toFixed(0)}ms`);
 
-    return () => clearInterval(interval);
+    let intervalId: ReturnType<typeof setInterval>;
+
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(async () => {
+        try {
+          const res = await detectExpressions(videoRef.current!);
+
+          if (res) {
+            setEmotionResult(res);
+          }
+        } catch (error) {
+          console.error(`${name} - 감정 분석 오류:`, error);
+        }
+      }, pollingIntervalMs);
+    }, delay);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, [isReady]);
 
   useEffect(() => {
-    if (!emotionResult) return;
-    if (emotionResult?.expressions) {
-      onEmotionUpdate(emotionResult);
-      // console.log('emotionLog하위', emotionResult);
+    if (!emotionResult?.expressions) return;
+
+    onEmotionUpdate(emotionResult);
+    // console.log(`${name} - 감정 결과 전송`, isLogReady, emotionResult);
+
+    if (!isConnected) {
+      console.warn('WebSocket이 연결되지 않았습니다.');
+      return;
     }
 
-    const { emotion, probability: _ } = emotionResult.topEmotion;
-    const now = Date.now();
-
-    // 감정이 변경되었을 때
-    if (emotion !== currentEmotion) {
-      setCurrentEmotion(emotion); // 현재 감정 상태 업데이트
-      setEmotionStartTime(now); // 감정이 시작된 시간 기록
-      setAlertMessage(null); // 이전 알림 메시지 초기화
-    }
-
-    // 감정이 지속되고 있을 때
-    if (currentEmotion && emotion === currentEmotion) {
-      const duration = now - (emotionStartTime ?? now); // 감정 지속 시간 계산
-
-      // 감정이 10초 이상 지속되면 알림 메시지 설정
-      if (duration >= 10000 && !alertMessage) {
-        setAlertMessage(
-          `${EMOTION_STYLE[emotion].emoji} ${EMOTION_STYLE[emotion].label}`
-        );
-      }
-    }
-  }, [emotionResult, currentEmotion, emotionStartTime, alertMessage]);
-
-  useEffect(() => {
-    if (
-      emotionResult &&
-      emotionResult.topEmotion.emotion !== 'neutral' &&
-      emotionResult.topEmotion.emotion !== currentEmotion
-    ) {
-      const time = new Date().toLocaleTimeString(); // 현재 시간
-      const log = `[${time}] ${
-        EMOTION_STYLE[emotionResult.topEmotion.emotion].emoji
-      } ${EMOTION_STYLE[emotionResult.topEmotion.emotion].label}`;
-
-      // 중복 방지 및 강조 처리
-      setEmotionLog((prev) => {
-        if (prev[prev.length - 1] === log) return prev;
-        setHighlighting(log);
-        return [...prev, log];
-      });
-    }
-  }, [emotionResult]);
-
-  useEffect(() => {
-    const emotionCounts: Record<Emotion, number> = {
-      happy: 0,
-      surprised: 0,
-      sad: 0,
-      angry: 0,
-      fearful: 0,
-      disgusted: 0,
-      neutral: 0,
+    const emotionLog = {
+      type: 'socketEmotionLog',
+      roomCode: roomCode || '',
+      order: userIndex,
+      userName: name || 'unknown',
+      emotionResult: emotionResult,
     };
 
-    emotionLog.forEach((log) => {
-      const match = log.match(/ (\p{Emoji_Presentation})/u);
-      if (!match) return;
-
-      const emoji = match[1];
-      const emotion = Object.entries(EMOTION_STYLE).find(
-        ([, value]) => value.emoji === emoji
-      )?.[0] as Emotion;
-
-      if (emotion) {
-        emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
-      }
-    });
-
-    const sorted = Object.entries(emotionCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 2) as [Emotion, number][];
-
-    setTopEmotions(sorted);
-  }, [emotionLog]);
-
-  useEffect(() => {
-    if (highlighting) {
-      const timer = setTimeout(() => setHighlighting(null), 1300);
-      return () => clearTimeout(timer);
-    }
-  }, [highlighting]);
+    emotionSend(emotionLog);
+    // console.log(`🔄 ${name} 감정 로그 웹소켓 전송:`, emotionLog);
+  }, [emotionResult]);
 
   return (
-    <div className="flex gap-4">
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        playsInline
-        style={{
-          display: 'none',
-        }}
-      />
-      <div className="w-[190px]"></div>
-      <div className="max-h-[170px] min-h-[160px] w-[152px] min-w-[152px] rounded-xl px-2 py-1 bg-[#320000] text-red-600 flex">
-        {!isReady ? (
-          <p className="flex justify-center items-center">👀 Loading...</p>
-        ) : (
-          <>
-            <div className="mt-2">
-              {/* <h3>Expression</h3> */}
-              {emotionResult ? (
-                <ul>
-                  <li>
-                    {/* Top Emotion:{' '} */}
-                    <strong
-                      style={{
-                        color:
-                          EMOTION_STYLE[emotionResult.topEmotion.emotion].color,
-                      }}
-                    >
-                      {EMOTION_STYLE[emotionResult.topEmotion.emotion].emoji}{' '}
-                      {EMOTION_STYLE[emotionResult.topEmotion.emotion].label}
-                    </strong>{' '}
-                    ({(emotionResult.topEmotion.probability * 100).toFixed(1)}
-                    %)
-                  </li>
-                </ul>
-              ) : (
-                <p>Detecting...</p>
-              )}
-
-              <div className="flex flex-row items-center gap-2 mt-2">
-                {/* <h3 className="text-sm font-bold bg-red-200/80 w-[90px] rounded-2xl p-1">
-                  📝 감정 기록
-                </h3> */}
-
-                {topEmotions.length > 0 && (
-                  <div className="text-[13px] text-gray-700 mb-2">
-                    {topEmotions.map(([emotion, count]) => (
-                      <span
-                        key={emotion}
-                        className="mr-2"
-                        style={{ color: `${EMOTION_STYLE[emotion].color}` }}
-                      >
-                        {EMOTION_STYLE[emotion].emoji}{' '}
-                        {EMOTION_STYLE[emotion].label} {count}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="w-full max-h-[70px] min-h-[70px] min-w-[136px] rounded-xl p-2 bg-white border">
-                <div
-                  ref={logContainerRef}
-                  className="w-full max-h-[50px] rounded-xl px-2 py-1 bg-white overflow-y-auto"
-                >
-                  {emotionLog.length === 0 ? (
-                    <p className="text-xs text-gray-500">기록 없음</p>
-                  ) : (
-                    <ul className="text-[10px] space-y-1">
-                      {[...emotionLog].reverse().map((log, idx) => (
-                        <li
-                          key={idx}
-                          className={`transition-all duration-400 ${
-                            log === highlighting
-                              ? 'bg-amber-100 animate-bounce'
-                              : ''
-                          }`}
-                        >
-                          {log}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+    <video
+      ref={videoRef}
+      autoPlay
+      muted
+      playsInline
+      style={{
+        display: 'none',
+      }}
+    />
   );
 };
 
-export default EmotionLog;
+export default FaceApiEmotion;

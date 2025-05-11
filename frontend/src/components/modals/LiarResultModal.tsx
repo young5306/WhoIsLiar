@@ -34,18 +34,19 @@ const LiarResultModal = ({ onClose }: Props) => {
       results: [
         { targetNickname: 'user_05', voteCount: 3 },
         { targetNickname: 'user_02', voteCount: 2 },
+        { targetNickname: null, voteCount: 1 }, // skip 투표
       ],
       selected: 'user_05',
       detected: false,
       liarNickname: 'user_05',
       liarId: 7,
-      skip: false,
+      skip: true,
     };
     setResult(dummy);
   }, [roomCode]);
 
   if (!result) return null;
-  const { detected, liarNickname } = result;
+  const { detected, liarNickname, skip } = result;
   const roundNumber = 3; // 로컬 스토리지에서 들고 와야함
 
   const handleSubmit = async () => {
@@ -63,6 +64,10 @@ const LiarResultModal = ({ onClose }: Props) => {
     }
   };
 
+  // skip 투표 수 계산
+  const skipCount =
+    result.results.find((r) => r.targetNickname === null)?.voteCount || 0;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70"
@@ -76,15 +81,15 @@ const LiarResultModal = ({ onClose }: Props) => {
         <p className="headline-xlarge mb-2">ROUND {roundNumber}/5</p>{' '}
         <div className="flex flex-col items-center gap-3">
           <div className="text-primary-600 display-medium flex items-center justify-center gap-2 mt-5">
-            <img src="assets/mask-fill.png" className="w-13 h-14 pt-1" />
-            {detected ? 'LIAR FOUND!' : 'LIAR NOT FOUND!'}
+            <img src="assets/mask_smile.png" className="w-13 h-14 pt-1" />
+            {skip ? 'SKIP!' : detected ? 'LIAR FOUND!' : 'LIAR NOT FOUND!'}
           </div>
-          {detected && (
+          {detected && !skip && (
             <div className="display-medium text-primary-600">
               {liarNickname}
             </div>
           )}
-          {detected && (
+          {detected && !skip && (
             <>
               <input
                 value={input}
@@ -95,8 +100,13 @@ const LiarResultModal = ({ onClose }: Props) => {
               <GameButton2 text="제출" onClick={handleSubmit} />
             </>
           )}
-          {!detected && (
+          {!detected && !skip && (
             <img src="assets/timer.png" className="w-20 h-20 mt-10" />
+          )}
+          {skip && (
+            <div className="display-medium text-primary-600 mt-4">
+              Skip Votes: {skipCount}
+            </div>
           )}
         </div>
       </div>

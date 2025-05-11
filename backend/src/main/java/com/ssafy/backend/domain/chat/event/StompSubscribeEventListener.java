@@ -31,7 +31,8 @@ public class StompSubscribeEventListener {
 		log.info("[WS SUBSCRIBE] 구독 이벤트 감지 - destination: {}, sessionId: {}", destination, sessionId);
 
 		// destination 유효성 확인
-		if (destination != null && destination.startsWith("/topic/room.")) {
+		if (destination != null && destination.startsWith("/topic/room.")
+			&& !destination.contains(".emotion")) {
 
 			sessionRegistry.register(sessionId);
 

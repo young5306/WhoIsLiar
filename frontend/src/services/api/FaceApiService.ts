@@ -13,9 +13,16 @@ export type Expressions = {
   [key in Emotion]: number; // 감정 확률
 };
 
+export interface EmotionLogMessage {
+  roomCode: string;
+  order: number;
+  userName: string;
+  emotionResult: FaceApiResult;
+}
+
 export interface FaceApiResult {
-  expressions: Expressions; // 감정별 확률
-  topEmotion: { emotion: Emotion; probability: number }; // 최고 확률의 감정
+  expressions: Expressions;
+  topEmotion: { emotion: Emotion; probability: number };
 }
 
 let faceApiModelIsLoaded = false;
@@ -44,25 +51,41 @@ export const detectExpressions = async (
   // detectSingleFace - 단일 얼굴 감지
   // withFaceLandmarks - 얼굴랜드마크 정보 추출
   // withFaceExpressions - 얼굴 감정 정보 추출
-  const detection = await faceapi
-    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks()
-    .withFaceExpressions();
 
-  // 얼굴 감지 실패시, null 반환
-  if (!detection) return null;
+  if (!faceApiModelIsLoaded) {
+    console.warn('감정 모델 미로드 상태에서 detect 호출됨');
+    return null;
+  }
 
-  const expr = detection.expressions as Expressions;
+  if (!video || video.readyState < 2) {
+    console.warn('비디오 준비 안됨');
+    return null;
+  }
 
-  // Object.entries() - 객체 -> 배열 변환 함수
-  const [emotion, probability] = (
-    Object.entries(expr) as [Emotion, number][]
-  ).sort((a, b) => b[1] - a[1])[0];
+  try {
+    const detection = await faceapi
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceExpressions();
 
-  return {
-    expressions: expr,
-    topEmotion: { emotion, probability },
-  };
+    // 얼굴 감지 실패시, null 반환
+    if (!detection) return null;
+
+    const expr = detection.expressions as Expressions;
+
+    // Object.entries() - 객체 -> 배열 변환 함수
+    const [emotion, probability] = (
+      Object.entries(expr) as [Emotion, number][]
+    ).sort((a, b) => b[1] - a[1])[0];
+
+    return {
+      expressions: expr,
+      topEmotion: { emotion, probability },
+    };
+  } catch (err) {
+    console.error('감정 분석 중 오류 발생:', err);
+    return null;
+  }
 };
 
 export const EMOTION_LABELS: Record<Emotion, string> = {

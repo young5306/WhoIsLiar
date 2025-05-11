@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   OpenVidu,
@@ -26,13 +26,11 @@ import {
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
 import UserVideoComponent from './UserVideoComponent';
-// import GameButton from '../../components/common/GameButton';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
 
 import { FaceApiResult } from '../../services/api/FaceApiService';
 import { loadModels } from '../../services/api/FaceApiService';
-import EmotionLog from './FaceApi';
 import GameChat from './GameChat';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
@@ -40,54 +38,54 @@ import { getRoomData } from '../../services/api/RoomService';
 import Timer, { TimerRef } from '../../components/common/Timer';
 import GameButton from '../../components/common/GameButton';
 import VoteResultModal from '../../components/modals/VoteResultModal';
-// import { VideoOff } from 'lucide-react';
+import FaceApiEmotion from './FaceApi';
+import EmotionLog from './EmotionLog';
 
 const GameRoom = () => {
-  const [_emotionLogs, setEmotionLogs] = useState<
-    Record<string, FaceApiResult>
+  const [emotionLogs, setEmotionLogs] = useState<
+    Record<string, FaceApiResult | null>
   >({});
-  // console.log('emotionlog상위', emotionLogs);
 
   const updateEmotionLog = (
-    name: string | undefined,
-    emotion: FaceApiResult
+    name: string | null,
+    emotion: FaceApiResult | null
   ) => {
+    // console.log(`감정 업데이트 - ${name}:`, emotion);
+
     if (name) {
       setEmotionLogs((prevLogs) => ({
         ...prevLogs,
         [name]: emotion,
       }));
+    } else {
+      console.log('이름이 존재하지 않습니다.', emotion);
     }
   };
+
+  const [isLogReady, setIsLogReady] = useState(false);
 
   const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
   const [_myToken, setMyToken] = useState<string>('');
+  const [myRoomCode, setMyRoomCode] = useState('');
 
-  // ck) 세션 ID는 세션을 식별하는 문자열, 입장 코드?와 비슷한 역할을 하는듯 (중복되면 안되고, 같은 세션 이이디 입력한 사람은 같은 방에 접속되며, 만약 세션 아이디가 존재하지 않는다면 새로 생성해서 세션을 오픈할 수 있게끔 한다.) -> 어떻게 생성하고 바꿀지 고민 필요
-  // const [mySessionId, setMySessionId] = useState('SessionA');
-  // const [mySessionId, setMySessionId] = useState(
-  //   `asdsad${Math.floor(Math.random() * 100)}`
-  // );
-  const [mySessionId, setMySessionId] = useState('');
-
-  // ck) << OpenVidu >>
-  // ck) 현재 연결된 세션
+  // << OpenVidu >>
+  // 현재 연결된 세션
   const [session, setSession] = useState<Session | undefined>(undefined);
 
-  // ck) 본인의 카메라/마이크 스트림
+  // 본인의 카메라/마이크 스트림
   const [publisher, setPublisher] = useState<Publisher | undefined>(undefined);
-  // ck) 같은 세션에 있는 다른 참가자 스트림 목록
+  // 같은 세션에 있는 다른 참가자 스트림 목록
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
-  // ck) 현재 사용 중인 카메라 장치 정보
+  // 현재 사용 중인 카메라 장치 정보
   const [currentVideoDevice, setCurrentVideoDevice] = useState<Device | null>(
     null
   );
 
-  // ck) 현재 사용 중인 마이크 장치 정보
+  // 현재 사용 중인 마이크 장치 정보
   const [currentMicDevice, setCurrentMicDevice] = useState<Device | null>(null);
 
-  // ck) 카메라, 마이크 상태 관리
+  // 카메라, 마이크 상태 관리
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
@@ -109,6 +107,28 @@ const GameRoom = () => {
   const { userInfo } = useAuthStore();
   const { roomCode } = useRoomStore();
   const setRoomCode = useRoomStore((state) => state.setRoomCode);
+  const { stompClient } = useWebSocketContext();
+  const {
+    clearSubscription,
+    clearEmotionSubscription,
+    clearChatMessages,
+    emotionLogs: socketEmotionLogs,
+    emotionSubscription,
+  } = useSocketStore();
+
+  // emotion 메시지 처리
+  useEffect(() => {
+    if (emotionSubscription) {
+      console.log('GameRoom - Using existing emotion subscription');
+    }
+  }, [emotionSubscription]);
+
+  // emotion 메시지 처리
+  useEffect(() => {
+    socketEmotionLogs.forEach((log) => {
+      updateEmotionLog(log.userName, log.emotionResult);
+    });
+  }, [socketEmotionLogs]);
 
   useEffect(() => {
     if (userInfo?.nickname) {
@@ -122,47 +142,46 @@ const GameRoom = () => {
     }
 
     if (roomCode) {
-      setMySessionId(roomCode);
-      // console.log('roomCode', roomCode);
+      setMyRoomCode(roomCode);
     } else {
-      setMySessionId('1111');
-      // alert('게임방에 입장해주세요');
-      // navigation('/room-list');
+      setMyRoomCode('');
     }
   }, []);
 
   useEffect(() => {
-    loadModels('/models')
-      .then(() => console.log('✅ face-api models loaded'))
-      .catch(console.error);
+    const modelLoad = async () => {
+      try {
+        await loadModels('/models');
+        console.log('✅ face-api models loaded');
+      } catch (error) {
+        console.error('load error: ', error);
+      }
+    };
+    modelLoad();
   }, []);
 
   useEffect(() => {
-    if (myUserName && mySessionId && session === undefined) {
+    if (session) return;
+
+    if (myUserName && myRoomCode && session === undefined) {
       joinSession();
     }
-  }, [myUserName, mySessionId]);
+  }, [myUserName, myRoomCode]);
 
-  // // ck) 세션ID 입력값 변경
-  // const handleChangeSessionId = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setMySessionId(e.target.value);
-  // };
-
-  // ck) 구독자 삭제
+  // 구독자 삭제
   const deleteSubscriber = (streamManager: StreamManager) => {
     setSubscribers((prev) => prev.filter((sub) => sub !== streamManager));
   };
 
-  // ck) 세션 참가
+  // 세션 참가
   const joinSession = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    // ck) add - 사용자 닉네임? 기준으로 이미 세션에 참가중이면 새로운 세션 참가 막기
 
     OV.current = new OpenVidu();
     const mySession = OV.current.initSession();
 
     mySession.on('streamCreated', (event: StreamEvent) => {
-      // ck) 사용자 정보 추출
+      // 사용자 정보 추출
       const clientData = JSON.parse(
         event.stream.connection.data.split('%')[0]
       ).clientData;
@@ -180,7 +199,6 @@ const GameRoom = () => {
 
     mySession.on('streamDestroyed', (event: StreamEvent) => {
       deleteSubscriber(event.stream.streamManager);
-      // ck) add - 구독자 수 줄어들면 position 위치도 변하게
     });
 
     mySession.on('exception', (exception: ExceptionEvent) => {
@@ -188,8 +206,8 @@ const GameRoom = () => {
     });
 
     try {
-      // ck) getToken 분리
-      const token = await getToken(mySessionId);
+      // getToken 분리
+      const token = await getToken(myRoomCode);
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
@@ -257,7 +275,7 @@ const GameRoom = () => {
     }
   };
 
-  // ck) 세션 퇴장
+  // 세션 퇴장
   const leaveSession = useCallback(() => {
     if (session) {
       session.disconnect();
@@ -267,28 +285,42 @@ const GameRoom = () => {
     setSession(undefined);
     setSubscribers([]);
 
-    // ck) 세션 ID 초기화 수정
-    // setMySessionId(`asdsad${Math.floor(Math.random() * 100)}`);
-    setMySessionId(roomCode || '');
-    // ck) 사용자 이름 초기화 수정
+    // 세션 ID 초기화 수정
+    setMyRoomCode(roomCode || '');
+    // 사용자 이름 초기화 수정
     setMyUserName(
       userInfo?.nickname || 'Participant' + Math.floor(Math.random() * 100)
     );
 
-    // setMainStreamManager(undefined);
     setPublisher(undefined);
 
-    // ck) 카메라, 마이크 연결 끊기
+    // 카메라, 마이크 연결 끊기
     setCurrentVideoDevice(null);
     setCurrentMicDevice(null);
 
+    // 웹소켓 연결 해제 및 소켓 스토어 초기화
+    if (stompClient?.connected) {
+      stompClient.deactivate();
+    }
+    clearSubscription();
+    clearEmotionSubscription();
+    clearChatMessages();
+
     setRoomCode('');
     outGameRoom();
-    console.log('종료된건가?');
     navigation('/room-list');
-  }, [session, userInfo]);
+  }, [
+    session,
+    userInfo,
+    stompClient,
+    clearSubscription,
+    clearEmotionSubscription,
+    clearChatMessages,
+    roomCode,
+    navigation,
+  ]);
 
-  // ck) 새로고침 시, 세션 연결만 종료
+  // 새로고침 시, 세션 연결만 종료
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (session) {
@@ -305,7 +337,7 @@ const GameRoom = () => {
   const toggleAudio = () => {
     if (publisher) {
       const newAudioState = !isAudioEnabled;
-      publisher.publishAudio(newAudioState);
+      if (newAudioState) publisher.publishAudio(newAudioState);
       setIsAudioEnabled(newAudioState);
     }
   };
@@ -314,8 +346,8 @@ const GameRoom = () => {
     if (publisher) {
       const newVideoState = !isVideoEnabled;
       publisher.publishVideo(newVideoState);
+      publisher.videos;
       setIsVideoEnabled(newVideoState);
-      // setCurrentVideoDevice(null);
     }
   };
 
@@ -349,11 +381,9 @@ const GameRoom = () => {
           mirror: false,
         } as any);
 
-        // await session.unpublish(mainStreamManager as Publisher);
         await session.unpublish(publisher as Publisher);
         await session.publish(newPublisher);
         setCurrentVideoDevice(newVideoDevice);
-        // setMainStreamManager(newPublisher);
         setPublisher(newPublisher);
       }
     }
@@ -371,38 +401,14 @@ const GameRoom = () => {
           mirror: false,
         } as any);
 
-        // await session.unpublish(mainStreamManager as Publisher);
         await session.unpublish(publisher as Publisher);
         await session.publish(newPublisher);
         setCurrentMicDevice(newMicDevice);
-        // setMainStreamManager(newPublisher);
         setPublisher(newPublisher);
       }
     }
   };
 
-  // option 1) 원형 ---------------------
-  // const getParticipantPosition = (
-  //   index: number,
-  //   _totalParticipants: number
-  // ): string => {
-  //   const positions = {
-  //     1: 'col-span-1 col-start-1 min-w-[150px]',
-  //     2: 'col-span-1 col-start-1 row-span-1 row-start-4 min-w-[150px]',
-  //     3: 'col-span-1 col-start-7 max-h-[200px] min-h-[120px] min-w-[150px]',
-  //     4: 'col-span-1 col-start-7 row-span-1 row-start-4 max-h-[200px] min-h-[120px] min-w-[150px]',
-  //     5: 'row-span-1 row-start-1 col-span-1 col-start-4 max-h-[200px] min-h-[150px] min-w-[150px]',
-  //     // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
-  //   };
-  //   return positions[index as keyof typeof positions] || '';
-  // };
-
-  // const myPosition =
-  // 'row-span-1 col-span-1 col-start-4 row-start-4 max-h-[140px] min-w-[150px]';
-
-  // ----------------------------------------
-
-  // option 2) 3:3
   const getParticipantPosition = (
     index: number,
     _totalParticipants: number
@@ -413,13 +419,10 @@ const GameRoom = () => {
       3: 'col-span-2 col-start-1 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
       4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
       5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]',
-      // 6: 'col-span-1 col-start-3 row-span-2 row-start-5 aspect-video w-full max-w-[300px] min-w-[150px]',
     };
     return positions[index as keyof typeof positions] || '';
   };
 
-  // const myPosition =
-  //   'col-span-1 col-start-3 row-span-1 row-start-4 min-h-[150px]';
   const myPosition =
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
@@ -612,36 +615,6 @@ const GameRoom = () => {
 
   return (
     <>
-      {/* {session === undefined ? (
-        <div id="join">
-          <div id="join-dialog" className="jumbotron vertical-center">
-            <div className="text-white">GameRoom</div>
-            <div className="mb-2 w-100 h-30 bg-amber-200 flex justify-center flex-col">
-              <h1 className="text-2xl mb-3 flex justify-center">
-                게임 대기방 Waiting Room
-              </h1>
-              <div className="flex justify-center mb-2">
-                <label>Participant: </label>
-                {myUserName}
-              </div>
-              <div className="flex justify-center">
-                <label>Session: </label> */}
-      {/* {mySessionId} */}
-      {/* <input
-                  className="form-control w-30"
-                  type="text"
-                  id="sessionId"
-                  value={mySessionId}
-                  onChange={handleChangeSessionId}
-                  required
-                />
-              </div>
-            </div>
-            <GameButton text="시작하기" size="small" onClick={joinSession} />
-          </div>
-        </div>
-      ) : null} */}
-
       {session !== undefined ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
@@ -723,22 +696,23 @@ const GameRoom = () => {
                         </div>
                         <div className="w-full h-full flex items-center justify-center">
                           <UserVideoComponent streamManager={sub} />
-
-                          {/* {sub.isVideoEnabled ? (
-                        <UserVideoComponent streamManager={sub} />
-                        ) : (
-                          <VideoOff />
-                        )} */}
                         </div>
                       </div>
                     </div>
-                    <div className="absolute bottom-1 mb-2 left-1 z-20">
+                    <div className="absolute bottom-1 mb-2 left-1 z-20  gap-4 flex flex-row">
+                      {/* <FaceApiEmotion
+                      streamManager={sub}
+                      name={sub.nickname}
+                      onEmotionUpdate={(emotionResult) =>
+                        updateEmotionLog(sub.nickname!, emotionResult)
+                      }
+                      isLogReady={false}
+                      setIsLogReady={setIsLogReady}
+                    /> */}
                       <EmotionLog
-                        streamManager={sub}
-                        name={sub.nickname}
-                        onEmotionUpdate={(emotionResult) =>
-                          updateEmotionLog(sub.nickname, emotionResult)
-                        }
+                        name={sub.nickname!}
+                        emotion={emotionLogs[sub.nickname!] || undefined}
+                        isLogReady={isLogReady}
                       />
                     </div>
                   </div>
@@ -779,13 +753,24 @@ const GameRoom = () => {
                 </div>
                 <div className="absolute bottom-1 mb-2 left-1 z-20">
                   {publisher && (
-                    <EmotionLog
-                      streamManager={publisher}
-                      name="나"
-                      onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog('나', emotionResult)
-                      }
-                    />
+                    <div className="flex flex-row gap-4">
+                      <FaceApiEmotion
+                        streamManager={publisher}
+                        name={myUserName}
+                        // userIndex={order}
+                        roomCode={roomCode}
+                        onEmotionUpdate={(emotionResult) =>
+                          updateEmotionLog(myUserName, emotionResult)
+                        }
+                        isLogReady={isLogReady}
+                        setIsLogReady={setIsLogReady}
+                      />
+                      <EmotionLog
+                        name={myUserName}
+                        emotion={emotionLogs[myUserName] || undefined}
+                        isLogReady={isLogReady}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
