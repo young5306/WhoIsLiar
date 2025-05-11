@@ -82,5 +82,9 @@ public class ChatSocketService {
 	public void sendTurnSkip(String roomCode, String nickname) {
 		sendSystemMessage(roomCode, nickname + "님이 차례를 스킵하였습니다.", ChatType.TURN_SKIP);
 	}
+
+	public void guessSubmitted(String roomCode, String guessWord) {
+		sendAfterCommit(roomCode, "라이어가 " + guessWord + "(을)를 제출했습니다.", ChatType.GUESS_SUBMITTED);
+	}
 }
 
