@@ -37,7 +37,7 @@ const LiarResultModal = ({ onClose }: Props) => {
         { targetNickname: null, voteCount: 1 }, // skip 투표
       ],
       selected: 'user_05',
-      detected: false,
+      detected: true,
       liarNickname: 'user_05',
       liarId: 7,
       skip: true,
