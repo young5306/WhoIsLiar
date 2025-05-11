@@ -40,6 +40,7 @@ import GameButton from '../../components/common/GameButton';
 import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
+import { VideoOff, MicOff } from 'lucide-react';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -337,7 +338,17 @@ const GameRoom = () => {
   const toggleAudio = () => {
     if (publisher) {
       const newAudioState = !isAudioEnabled;
-      if (newAudioState) publisher.publishAudio(newAudioState);
+      const audioTrack = publisher.stream.getMediaStream().getAudioTracks()[0];
+
+      if (audioTrack) {
+        // 오디오 트랙의 활성 상태를 제어
+        audioTrack.enabled = newAudioState;
+        publisher.publishAudio(newAudioState);
+        // console.log(`🔊 오디오 상태: ${newAudioState ? '켜짐' : '꺼짐'}`);
+      } else {
+        console.warn('⚠️ 오디오 트랙이 존재하지 않습니다.');
+      }
+
       setIsAudioEnabled(newAudioState);
     }
   };
@@ -345,67 +356,18 @@ const GameRoom = () => {
   const toggleVideo = () => {
     if (publisher) {
       const newVideoState = !isVideoEnabled;
-      publisher.publishVideo(newVideoState);
-      publisher.videos;
+      const videoTrack = publisher.stream.getMediaStream().getVideoTracks()[0];
+
+      if (videoTrack) {
+        // 비디오 트랙의 활성 상태를 제어
+        videoTrack.enabled = newVideoState;
+        publisher.publishVideo(newVideoState);
+        // console.log(`📷 비디오 상태: ${newVideoState ? '켜짐' : '꺼짐'}`);
+      } else {
+        console.warn('⚠️ 비디오 트랙이 존재하지 않습니다.');
+      }
+
       setIsVideoEnabled(newVideoState);
-    }
-  };
-
-  const switchCamera = async () => {
-    if (
-      !OV.current ||
-      !publisher ||
-      !session ||
-      !currentVideoDevice ||
-      !currentMicDevice
-    )
-      return;
-
-    const devices = await OV.current.getDevices();
-    const videoDevices = devices.filter(
-      (device) => device.kind === 'videoinput'
-    );
-    const micDevices = devices.filter((device) => device.kind === 'audioinput');
-
-    if (videoDevices.length > 1) {
-      const newVideoDevice = videoDevices.find(
-        (device) => device.deviceId !== currentVideoDevice.deviceId
-      );
-      if (publisher && newVideoDevice) {
-        const prevPublishAudio = publisher.publishAudio;
-
-        const newPublisher = OV.current.initPublisher(undefined, {
-          videoSource: newVideoDevice.deviceId,
-          publishAudio: prevPublishAudio ?? true,
-          publishVideo: true,
-          mirror: false,
-        } as any);
-
-        await session.unpublish(publisher as Publisher);
-        await session.publish(newPublisher);
-        setCurrentVideoDevice(newVideoDevice);
-        setPublisher(newPublisher);
-      }
-    }
-    if (micDevices.length > 1) {
-      const newMicDevice = micDevices.find(
-        (device) => device.deviceId !== currentMicDevice.deviceId
-      );
-      if (publisher && newMicDevice) {
-        const prevPublishVideo = publisher.publishVideo;
-
-        const newPublisher = OV.current.initPublisher(undefined, {
-          MicSource: newMicDevice.deviceId,
-          publishVideo: prevPublishVideo ?? true,
-          publishAudio: true,
-          mirror: false,
-        } as any);
-
-        await session.unpublish(publisher as Publisher);
-        await session.publish(newPublisher);
-        setCurrentMicDevice(newMicDevice);
-        setPublisher(newPublisher);
-      }
     }
   };
 
@@ -669,6 +631,10 @@ const GameRoom = () => {
 
               {/* Video 영역 */}
               {subscribers.map((sub, index) => {
+                // console.log(
+                //   `Subscriber ${sub.nickname} audio active:`,
+                //   sub.stream.audioActive
+                // );
                 return (
                   <div
                     key={sub.id || index}
@@ -689,28 +655,43 @@ const GameRoom = () => {
                         className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
                       />
                     )}
-                    <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
-                      <div className="w-full h-full relative">
-                        <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                          {sub.nickname}
-                        </div>
-                        <div className="w-full h-full flex items-center justify-center">
-                          <UserVideoComponent streamManager={sub} />
+                    <div className="flex flex-row justify-start items-center gap-2">
+                      <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
+                        <div className="w-full h-full relative">
+                          <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
+                            <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                              {sub.nickname}
+                            </div>
+                            {!sub.stream.audioActive && (
+                              <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
+                                <MicOff size={19} color="red" opacity={50} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
+                            {sub.stream.videoActive ? (
+                              <UserVideoComponent streamManager={sub} />
+                            ) : (
+                              <div className="w-full h-full flex justify-center">
+                                <VideoOff size={50} />
+                              </div>
+                            )}
 
-                          {/* {sub.isVideoEnabled ? (
+                            {/* {sub.isVideoEnabled ? (
                         <UserVideoComponent streamManager={sub} />
                         ) : (
                           <VideoOff />
                         )} */}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
-                      <EmotionLog
-                        name={sub.nickname!}
-                        emotion={emotionLogs[sub.nickname!] || undefined}
-                        isLogReady={isLogReady}
-                      />
+                      <div>
+                        <EmotionLog
+                          name={sub.nickname!}
+                          emotion={emotionLogs[sub.nickname!] || undefined}
+                          isLogReady={isLogReady}
+                        />
+                      </div>
                     </div>
                   </div>
                 );
@@ -732,25 +713,35 @@ const GameRoom = () => {
                     className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
                   />
                 )}
-                <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
-                  <div className="w-full min-h-[150px] max-h-[170px] relative">
-                    <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                      나
-                    </div>
-                    <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
-                      {publisher && isVideoEnabled ? (
-                        <UserVideoComponent streamManager={publisher} />
-                      ) : (
-                        <div className="text-5xl font-bold w-full max-h-[170px] min-h-[150px] flex justify-center items-center">
-                          Me
+                <div className="flex flex-row justify-start items-center gap-2">
+                  <div className="w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                    <div className="w-full min-h-[150px] max-h-[170px] relative">
+                      <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
+                        <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                          나
                         </div>
-                      )}
+                        {isAudioEnabled ? null : (
+                          <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
+                            <MicOff size={19} color="red" opacity={50} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
+                        {publisher && isVideoEnabled ? (
+                          <UserVideoComponent streamManager={publisher} />
+                        ) : (
+                          <div className="text-5xl font-bold w-full max-h-[170px] min-h-[150px] flex justify-center items-center">
+                            <VideoOff size={50} />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="absolute bottom-1 mb-2 left-1 z-20">
-                  {publisher && (
-                    <div className="flex flex-row gap-4">
+                  {/* {publisher && isVideoEnabled ? ( */}
+                  {publisher &&
+                  publisher.stream.getMediaStream().getVideoTracks()[0]
+                    ?.readyState === 'live' ? (
+                    <div>
                       <FaceApiEmotion
                         streamManager={publisher}
                         name={myUserName}
@@ -768,6 +759,14 @@ const GameRoom = () => {
                         isLogReady={isLogReady}
                       />
                     </div>
+                  ) : (
+                    <>
+                      <EmotionLog
+                        name={myUserName}
+                        emotion={emotionLogs[myUserName] || undefined}
+                        isLogReady={isLogReady}
+                      />
+                    </>
                   )}
                 </div>
               </div>
@@ -782,7 +781,6 @@ const GameRoom = () => {
                 isVideoEnabled={isVideoEnabled}
                 onToggleAudio={toggleAudio}
                 onToggleVideo={toggleVideo}
-                onSwitchCamera={switchCamera}
                 onLeaveSession={leaveSession}
               />
             </div>

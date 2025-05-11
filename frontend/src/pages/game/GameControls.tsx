@@ -13,7 +13,6 @@ interface GameControlsProps {
   isVideoEnabled: boolean;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
-  onSwitchCamera: () => void;
   onLeaveSession: () => void;
 }
 
@@ -22,7 +21,6 @@ const GameControls = ({
   isVideoEnabled,
   onToggleAudio,
   onToggleVideo,
-  // onSwitchCamera,
   onLeaveSession,
 }: GameControlsProps) => {
   const handleSettings = () => {
