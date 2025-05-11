@@ -614,10 +614,11 @@ const GameRoom = () => {
     if (latest.chatType == 'GUESS_SUBMITTED') {
       const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
-      console.log('추측!', latest.content);
+
       if (word) {
         console.log('💡라이어가 추측한 제시어', word);
         setGuessedWord(word);
+        setShowLiarResultModal(false);
         setShowGuessedWord(true);
 
         setTimeout(async () => {
@@ -986,7 +987,7 @@ const GameRoom = () => {
             liarNickname: voteResult.liarNickname,
           }}
           results={voteResult.results}
-          // 이후 로직
+          // 이후 로직 (스킵일 때만 사용)
           onClose={async () => {
             setShowLiarResultModal(false);
 
