@@ -8,22 +8,21 @@ interface SttTextProps {
 
 const SttText: React.FC<SttTextProps> = ({ sttResult }) => {
   const [displayText, setDisplayText] = useState<string>('');
-  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (sttResult) {
+      console.log('SttText received result:', sttResult);
       setDisplayText(sttResult.text);
-      setIsVisible(true);
-
-      // 3초 후에 텍스트를 숨김
     }
   }, [sttResult]);
 
-  if (!isVisible) return null;
+  if (!displayText) return null;
 
   return (
-    <div className="absolute top-0 left-0 right-0 p-2 bg-black bg-opacity-70 text-white text-center z-50">
-      <span className="text-sm">{displayText}</span>
+    <div className="absolute bottom-0 left-0 right-0 z-50">
+      <div className="bg-black bg-opacity-70 text-blue-300 px-3 py-1.5 text-center">
+        <div className="text-xs">{displayText}</div>
+      </div>
     </div>
   );
 };
