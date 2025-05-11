@@ -25,6 +25,9 @@ import {
   endTurn,
   ScoreResponse,
   getScores,
+  endRound,
+  setRound,
+  endGame,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -446,13 +449,14 @@ const GameRoom = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
-  const timerRef = useRef<TimerRef>(null);
+  const speechTimerRef = useRef<TimerRef>(null);
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
   const [selectedTargetNickname, setSelectedTargetNickname] = useState<
     string | null
   >(null);
   const selectedTargetRef = useRef<string | null>(null);
+  const voteTimerRef = useRef<TimerRef>(null);
   // 투표 결과 관련
   const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
   const [showVoteResultModal, setShowVoteResultModal] = useState(false);
@@ -463,6 +467,7 @@ const GameRoom = () => {
   // 점수 관련
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const scoreTimerRef = useRef<TimerRef>(null);
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
   useEffect(() => {
@@ -529,7 +534,7 @@ const GameRoom = () => {
       if (nickname) {
         setSpeakingPlayer(nickname);
         console.log('🎤 발언자:', nickname);
-        // timerRef.current?.startTimer(20);
+        // speechTimerRef.current?.startTimer(20);
       }
     }
 
@@ -539,7 +544,7 @@ const GameRoom = () => {
       setSpeakingPlayer('');
       setIsVoting(true);
       setSelectedTargetNickname(null);
-      // timerRef.current?.startTimer(10); // 10초 안에 투표
+      // voteTimerRef.current?.startTimer(10); // 10초 안에 투표
     }
 
     // 라이어 제시어 추측 제출
@@ -577,14 +582,14 @@ const GameRoom = () => {
 
   useEffect(() => {
     if (speakingPlayer) {
-      timerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
+      speechTimerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
     }
   }, [speakingPlayer]);
 
   useEffect(() => {
     if (isVoting) {
       setTimeout(() => {
-        timerRef.current?.startTimer(10);
+        voteTimerRef.current?.startTimer(10);
       }, 0); // 다음 이벤트 루프에서 실행
     }
   }, [isVoting]);
@@ -658,8 +663,47 @@ const GameRoom = () => {
       const result = await getScores(roomCode!);
       setScoreData(result);
       setShowScoreModal(true);
+      scoreTimerRef.current?.startTimer(10);
     } catch (error) {
       console.error('점수 조회 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (showScoreModal && scoreData) {
+      scoreTimerRef.current?.startTimer(10);
+    }
+  }, [showScoreModal, scoreData]);
+
+  // 점수 모달 이후 로직 (마지막 라운드인지 구분)
+  const handleScoreTimeEnd = async () => {
+    try {
+      setShowScoreModal(false);
+
+      // 다음 라운드 세팅
+      if (roundNumber < totalRoundNumber) {
+        await endRound(roomCode!, roundNumber);
+        await setRound(roomCode!);
+
+        const playerInfo = await getPlayerInfo(roomCode!);
+        const roomInfo = await getRoomData(roomCode!);
+
+        setRoundNumber(playerInfo.data.roundNumber);
+        setMyWord(playerInfo.data.word);
+        setCategory(roomInfo.roomInfo.category);
+        setParticipants(playerInfo.data.participants);
+
+        await startRound(roomCode!, playerInfo.data.roundNumber);
+        await startTurn(roomCode!, playerInfo.data.roundNumber);
+      }
+      // 마지막 라운드 종료 후 게임 종료
+      else {
+        await endRound(roomCode!, roundNumber);
+        await endGame(roomCode!);
+        navigation('/waiting-room');
+      }
+    } catch (error) {
+      console.error('라운드 종료 처리 실패:', error);
     }
   };
 
@@ -672,23 +716,25 @@ const GameRoom = () => {
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
               {/* --- 발언시간 --- */}
-              {/* 발언자만 skip 버튼 표시 */}
-              {myUserName === speakingPlayer && (
-                <GameButton
-                  text="Skip"
-                  size="small"
-                  variant="neon"
-                  onClick={() => handleSkipTurn(roomCode)}
-                />
-              )}
-              {/* 타이머는 모두에게 표시 */}
-              {speakingPlayer && (
-                <Timer
-                  ref={timerRef}
-                  onTimeEnd={() => console.log('⏰ 타이머 종료')}
-                  size="medium"
-                />
-              )}
+              <>
+                {/* 발언자만 skip 버튼 표시 */}
+                {myUserName === speakingPlayer && (
+                  <GameButton
+                    text="Skip"
+                    size="small"
+                    variant="neon"
+                    onClick={() => handleSkipTurn(roomCode)}
+                  />
+                )}
+                {/* 발언 타이머는 모두에게 표시 */}
+                {speakingPlayer && (
+                  <Timer
+                    ref={speechTimerRef}
+                    onTimeEnd={() => console.log('⏰ 타이머 종료')}
+                    size="medium"
+                  />
+                )}
+              </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
                 <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
@@ -701,7 +747,7 @@ const GameRoom = () => {
                     />
                   )}
                   <Timer
-                    ref={timerRef}
+                    ref={voteTimerRef}
                     onTimeEnd={handleVotingEnd}
                     size="medium"
                   />
@@ -918,13 +964,28 @@ const GameRoom = () => {
 
       {/* 점수 */}
       {showScoreModal && scoreData && (
-        <ScoreModal
-          type={voteResult?.detected ? 'liar-win' : 'civilian-win'}
-          roundNumber={roundNumber}
-          totalRoundNumber={totalRoundNumber}
-          scores={scoreData.scores}
-          onClose={() => setShowScoreModal(false)}
-        />
+        <>
+          <ScoreModal
+            type={
+              roundNumber < totalRoundNumber
+                ? voteResult?.detected
+                  ? 'liar-win'
+                  : 'civilian-win'
+                : 'final-score'
+            }
+            roundNumber={roundNumber}
+            totalRoundNumber={totalRoundNumber}
+            scores={scoreData.scores}
+            onClose={() => setShowScoreModal(false)}
+          />
+          <div className="absolute top-4 right-4 z-50">
+            <Timer
+              ref={scoreTimerRef}
+              onTimeEnd={handleScoreTimeEnd}
+              size="medium"
+            />
+          </div>
+        </>
       )}
     </>
   );
