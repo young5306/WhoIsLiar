@@ -163,7 +163,12 @@ const RoomListPage = () => {
         <div className="text-gray-0 headline-medium">
           {userInfo?.nickname}님 안녕하세요!
         </div>
-        <GameButton text="로그아웃" size="small" onClick={handleLogout} />
+        <GameButton
+          text="로그아웃"
+          size="small"
+          variant="gray"
+          onClick={handleLogout}
+        />
       </div>
       <div className="flex items-end justify-between mb-5">
         <div className="flex items-center gap-2">
@@ -261,6 +266,7 @@ const RoomListPage = () => {
                   <GameButton
                     text="입장"
                     size="small"
+                    variant="gray"
                     onClick={() => handleJoinRoom(room)}
                   />
                 </div>

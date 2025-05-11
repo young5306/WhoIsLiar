@@ -149,7 +149,7 @@ export const outRoom = async (roomCode: string) => {
 export const submitVotes = async (
   roomCode: string,
   roundNumber: number,
-  targetParticipantNickname: string
+  targetParticipantNickname: string | null
 ) => {
   const res = await api.post(`/rounds/${roomCode}/${roundNumber}/votes`, {
     targetParticipantNickname,
@@ -161,9 +161,7 @@ export const getVoteResult = async (
   roomCode: string,
   roundNumber: number
 ): Promise<VoteResultResponse> => {
-  const res = await api.get(
-    `/rounds/${roomCode}/rounds/${roundNumber}/votes/results`
-  );
+  const res = await api.get(`/rounds/${roomCode}/${roundNumber}/votes/results`);
   return res.data.data;
 };
 
@@ -172,18 +170,13 @@ export const submitWordGuess = async (
   roundNumber: number,
   guessText: string
 ): Promise<WordGuessResponse> => {
-  const res = await api.post(
-    `/rounds/${roomCode}/rounds/${roundNumber}/guess`,
-    {
-      guessText,
-    }
-  );
+  const res = await api.post(`/rounds/${roomCode}/${roundNumber}/guess`, {
+    guessText,
+  });
   return res.data.data;
 };
 
-export const getRoomScores = async (
-  roomCode: string
-): Promise<ScoreResponse> => {
-  const res = await api.get(`/rounds/${roomCode}/scores`);
+export const getScores = async (roomCode: string): Promise<ScoreResponse> => {
+  const res = await api.get(`/rounds/${roomCode}/score`);
   return res.data.data;
 };
