@@ -1,95 +1,91 @@
-// LiarResultModal.tsx
 import { useEffect, useState } from 'react';
-import {
-  submitWordGuess,
-  // getVoteResult,
-  VoteResultResponse,
-} from '../../services/api/GameService';
+import { submitWordGuess } from '../../services/api/GameService';
 import { useRoomStore } from '../../stores/useRoomStore';
 import GameButton2 from '../common/GameButton2';
 import { notify } from '../common/Toast';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 interface Props {
+  roundNumber: number;
+  totalRoundNumber: number;
+  result: {
+    detected: boolean;
+    skip: boolean;
+    liarNickname?: string;
+  };
+  results: {
+    targetNickname: string | null;
+    voteCount: number;
+  }[];
   onClose: () => void;
 }
 
-const LiarResultModal = ({ onClose }: Props) => {
+const LiarResultModal = ({
+  roundNumber,
+  totalRoundNumber,
+  result,
+  results,
+  onClose,
+}: Props) => {
   const { roomCode } = useRoomStore();
-  const [result, setResult] = useState<VoteResultResponse | null>(null);
+  const { userInfo } = useAuthStore();
+
+  // 제시어 추측 입력창 (라이어용)
   const [input, setInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    // const fetchResult = async () => {
-    //   try {
-    //     const response = await getVoteResult(roomCode!, roundNumber);
-    //     setResult(response);
-    //   } catch (err) {
-    //     notify({ type: 'error', text: '투표결과 조회 실패' });
-    //   }
-    // };
-    // fetchResult();
-
-    // 더미 데이터 사용
-    const dummy: VoteResultResponse = {
-      results: [
-        { targetNickname: 'user_05', voteCount: 3 },
-        { targetNickname: 'user_02', voteCount: 2 },
-        { targetNickname: null, voteCount: 1 }, // skip 투표
-      ],
-      selected: 'user_05',
-      detected: true,
-      liarNickname: 'user_05',
-      liarId: 7,
-      skip: true,
-    };
-    setResult(dummy);
-  }, [roomCode]);
-
-  if (!result) return null;
-  const { detected, liarNickname, skip } = result;
-  const roundNumber = 3; // 로컬 스토리지에서 들고 와야함
-
+  // 제시어 추측 제출 (라이어용)
   const handleSubmit = async () => {
     if (!input.trim()) {
       return notify({ type: 'warning', text: '제시어를 입력하세요.' });
     }
 
     try {
+      setIsSubmitting(true);
       await submitWordGuess(roomCode!, roundNumber, input.trim());
       notify({ type: 'success', text: '제시어가 제출되었습니다!' });
+      // onClose();
     } catch (error: any) {
       const msg =
         error?.response?.data?.message || '제시어 제출에 실패했습니다.';
       notify({ type: 'error', text: msg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // skip 투표 수 계산
-  const skipCount =
-    result.results.find((r) => r.targetNickname === null)?.voteCount || 0;
+  // skip 모달 - skip 수
+  const skipCount = results.find((r) => !r.targetNickname)?.voteCount || 0;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg  text-center text-gray-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* /총 라운드 수*/}
-        <p className="headline-xlarge mb-2">ROUND {roundNumber}/5</p>{' '}
+  // liar found/ liar not found/ skip 모달 표시
+  const renderContent = () => {
+    if (result.skip) {
+      return (
+        <div className="flex flex-col items-center gap-3 mt-5">
+          <div className="text-primary-600 display-medium flex items-center justify-center gap-2">
+            <img src="assets/mask_smile.png" className="w-15 h-16 pt-1" />
+            SKIP
+          </div>
+          <div className="display-medium text-primary-600">
+            Skip Votes: {skipCount}
+          </div>
+        </div>
+      );
+    }
+
+    if (result.detected) {
+      const isLiar = userInfo?.nickname === result.liarNickname;
+
+      return (
         <div className="flex flex-col items-center gap-3">
           <div className="text-primary-600 display-medium flex items-center justify-center gap-2 mt-5">
-            <img src="assets/mask_smile.png" className="w-13 h-14 pt-1" />
-            {skip ? 'SKIP!' : detected ? 'LIAR FOUND!' : 'LIAR NOT FOUND!'}
+            <img src="assets/mask-fill.png" className="w-13 h-14 pt-1" />
+            LIAR FOUND!
           </div>
-          {detected && !skip && (
-            <div className="display-medium text-primary-600">
-              {liarNickname}
-            </div>
-          )}
-          {detected && !skip && (
+          <div className="display-medium text-primary-600">
+            {result.liarNickname}
+          </div>
+          {isLiar && (
             <>
               <input
                 value={input}
@@ -100,15 +96,36 @@ const LiarResultModal = ({ onClose }: Props) => {
               <GameButton2 text="제출" onClick={handleSubmit} />
             </>
           )}
-          {!detected && !skip && (
-            <img src="assets/timer.png" className="w-20 h-20 mt-10" />
-          )}
-          {skip && (
-            <div className="display-medium text-primary-600 mt-4">
-              Skip Votes: {skipCount}
-            </div>
-          )}
         </div>
+      );
+    }
+
+    return (
+      <div className="text-primary-600 display-medium flex items-center justify-center gap-2 mt-5">
+        <img src="assets/mask_smile.png" className="w-15 h-16 pt-1" />
+        LIAR NOT FOUND!
+      </div>
+    );
+  };
+
+  // skip 모달 닫기
+  useEffect(() => {
+    if (result.skip) {
+      // 2초 후 모달 자동 닫기 (SKIP인 경우)
+      const timer = setTimeout(() => {
+        onClose();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [result.skip, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
+      <div className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0">
+        <p className="headline-xlarge mb-2">
+          ROUND {roundNumber}/{totalRoundNumber}
+        </p>
+        {renderContent()}
       </div>
     </div>
   );

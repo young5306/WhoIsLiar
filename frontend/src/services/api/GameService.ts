@@ -170,12 +170,9 @@ export const submitWordGuess = async (
   roundNumber: number,
   guessText: string
 ): Promise<WordGuessResponse> => {
-  const res = await api.post(
-    `/rounds/${roomCode}/rounds/${roundNumber}/guess`,
-    {
-      guessText,
-    }
-  );
+  const res = await api.post(`/rounds/${roomCode}/${roundNumber}/guess`, {
+    guessText,
+  });
   return res.data.data;
 };
 

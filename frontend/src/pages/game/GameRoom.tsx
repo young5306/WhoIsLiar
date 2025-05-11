@@ -22,6 +22,7 @@ import {
   submitVotes,
   VoteResultResponse,
   getVoteResult,
+  endTurn,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -40,6 +41,7 @@ import GameButton from '../../components/common/GameButton';
 import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
+import LiarResultModal from '../../components/modals/LiarResultModal';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -430,6 +432,7 @@ const GameRoom = () => {
   const chatMessages = useSocketStore((state) => state.chatMessages); // 메세지 변경만 감지
 
   // 게임 초기화용 상태
+  const [currentTurn, setCurrentTurn] = useState(1);
   const [roundNumber, setRoundNumber] = useState<number>(1);
   const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
   const [participants, setParticipants] = useState<
@@ -450,6 +453,7 @@ const GameRoom = () => {
   // 투표 결과 관련
   const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
   const [showVoteResultModal, setShowVoteResultModal] = useState(false);
+  const [showLiarResultModal, setShowLiarResultModal] = useState(false);
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
   useEffect(() => {
@@ -597,12 +601,24 @@ const GameRoom = () => {
 
   // 투표 타이머 종료 시 최종 투표 제출
   const handleVotingEnd = async () => {
+    console.log('투표 제출', currentTurn, selectedTargetRef.current);
     try {
-      const target = selectedTargetRef.current;
+      const target =
+        currentTurn >= 3 && !selectedTargetRef.current
+          ? myUserName // 3번째 턴에서 투표 안할 경우 본인 투표 (페널티)
+          : selectedTargetRef.current;
       await submitVotes(roomCode!, roundNumber, target);
       console.log('투표 완료:', target);
+      // 초기화
+      setSelectedTargetNickname(null);
+      selectedTargetRef.current = null;
       setIsVoting(false);
+
+      // 투표 집계 기다리기 (1초) - 로직 수정 필요
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const result = await getVoteResult(roomCode!, roundNumber);
+      console.log('✅투표 결과 조회 api', result);
       setVoteResult(result);
       setShowVoteResultModal(true);
     } catch (err) {
@@ -639,12 +655,14 @@ const GameRoom = () => {
               {/* --- 투표 시간 --- */}
               {isVoting && (
                 <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
-                  <GameButton
-                    text="기권"
-                    size="small"
-                    variant="gray"
-                    onClick={handleVoteSkip}
-                  />
+                  {currentTurn < 3 && (
+                    <GameButton
+                      text="기권"
+                      size="small"
+                      variant="gray"
+                      onClick={handleVoteSkip}
+                    />
+                  )}
                   <Timer
                     ref={timerRef}
                     onTimeEnd={handleVotingEnd}
@@ -812,7 +830,36 @@ const GameRoom = () => {
           totalRoundNumber={totalRoundNumber}
           onClose={() => {
             setShowVoteResultModal(false);
-            // setShowLiarResultModal(true); // 다음 단계
+            setShowLiarResultModal(true); // 다음 단계
+          }}
+        />
+      )}
+
+      {showLiarResultModal && voteResult && (
+        <LiarResultModal
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          result={{
+            detected: voteResult.detected,
+            skip: voteResult.skip,
+            liarNickname: voteResult.liarNickname,
+          }}
+          results={voteResult.results}
+          // 이후 로직
+          onClose={async () => {
+            setShowLiarResultModal(false);
+
+            if (voteResult?.skip && userInfo?.nickname === hostNickname) {
+              try {
+                await endTurn(roomCode!, roundNumber);
+                await startTurn(roomCode!, roundNumber);
+                console.log('SKIP 이후 다음 턴 시작');
+              } catch (e) {
+                console.error('다음 턴 시작 실패', e);
+              }
+            }
+
+            setCurrentTurn((prev) => prev + 1);
           }}
         />
       )}

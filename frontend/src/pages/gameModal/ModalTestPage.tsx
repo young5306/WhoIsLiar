@@ -28,9 +28,14 @@ const ModalTestPage = () => {
 
       <div className="flex flex-wrap gap-4">
         <GameButton
-          text="Liar Modal"
+          text="Liar Found Modal"
           onClick={() => setOpenModal('liar-found')}
         />
+        <GameButton
+          text="Liar Not Found Modal"
+          onClick={() => setOpenModal('liar-not-found')}
+        />
+        <GameButton text="Skip Modal" onClick={() => setOpenModal('skip')} />
         <GameButton
           text="Liar Win Modal"
           onClick={() => setOpenModal('liar-win')}
@@ -54,7 +59,45 @@ const ModalTestPage = () => {
       </div>
 
       {openModal === 'liar-found' && (
-        <LiarResultModal onClose={() => setOpenModal(null)} />
+        <LiarResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={{ detected: true, skip: false, liarNickname: '홍길동' }}
+          results={[
+            { targetNickname: 'user1', voteCount: 2 },
+            { targetNickname: 'user2', voteCount: 1 },
+            { targetNickname: null, voteCount: 3 },
+          ]}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === 'liar-not-found' && (
+        <LiarResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={{ detected: false, skip: false }}
+          results={[
+            { targetNickname: 'user1', voteCount: 2 },
+            { targetNickname: 'user2', voteCount: 1 },
+            { targetNickname: null, voteCount: 3 },
+          ]}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === 'skip' && (
+        <LiarResultModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          result={{ detected: false, skip: true }}
+          results={[
+            { targetNickname: 'user1', voteCount: 2 },
+            { targetNickname: 'user2', voteCount: 1 },
+            { targetNickname: null, voteCount: 3 },
+          ]}
+          onClose={() => setOpenModal(null)}
+        />
       )}
 
       {openModal === 'liar-win' && (
