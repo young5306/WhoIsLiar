@@ -610,7 +610,7 @@ const GameRoom = () => {
       // voteTimerRef.current?.startTimer(10); // 10초 안에 투표
     }
 
-    // 라이어 제시어 추측 제출
+    // 라이어 제시어 추측 제출 (liar found 모달 이후 로직)
     if (latest.chatType == 'GUESS_SUBMITTED') {
       const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
@@ -718,6 +718,28 @@ const GameRoom = () => {
       setShowVoteResultModal(true);
     } catch (err) {
       console.error('투표 제출 실패:', err);
+    }
+  };
+
+  // liar result modal 이후 로직
+  const handleLiarResultModalClose = async () => {
+    setShowLiarResultModal(false);
+
+    if (voteResult?.skip) {
+      if (userInfo?.nickname === hostNickname) {
+        try {
+          await endTurn(roomCode!, roundNumber);
+          await startTurn(roomCode!, roundNumber);
+          console.log('SKIP 이후 다음 턴 시작');
+        } catch (e) {
+          console.error('다음 턴 시작 실패', e);
+        }
+      }
+      setCurrentTurn((prev) => prev + 1);
+    }
+
+    if (!voteResult?.detected && !voteResult?.skip) {
+      await fetchAndShowScore();
     }
   };
 
@@ -987,26 +1009,11 @@ const GameRoom = () => {
             liarNickname: voteResult.liarNickname,
           }}
           results={voteResult.results}
-          // 이후 로직 (스킵일 때만 사용)
-          onClose={async () => {
-            setShowLiarResultModal(false);
-
-            if (voteResult?.skip && userInfo?.nickname === hostNickname) {
-              try {
-                await endTurn(roomCode!, roundNumber);
-                await startTurn(roomCode!, roundNumber);
-                console.log('SKIP 이후 다음 턴 시작');
-              } catch (e) {
-                console.error('다음 턴 시작 실패', e);
-              }
-            }
-
-            setCurrentTurn((prev) => prev + 1);
-          }}
+          onClose={handleLiarResultModalClose}
         />
       )}
 
-      {/* 라이어가 추측한 제시어 표시 */}
+      {/* 라이어가 추측한 제시어 표시 모달 */}
       {showGuessedWord && guessedWord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">

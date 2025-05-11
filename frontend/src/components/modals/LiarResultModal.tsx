@@ -133,6 +133,16 @@ const LiarResultModal = ({
     }
   }, [result.skip, onClose]);
 
+  // liar not found 모달 - 5초 후 자동 닫기
+  useEffect(() => {
+    if (!result.skip && !result.detected) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [result.detected, result.skip, onClose]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
       <div className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0">
