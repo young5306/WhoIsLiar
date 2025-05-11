@@ -29,6 +29,8 @@ import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
+import { sttService, SttResult } from '../../services/api/SttService';
+import SttText from '../../components/SttText';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -104,6 +106,10 @@ const GameRoom = () => {
     emotionLogs: socketEmotionLogs,
     emotionSubscription,
   } = useSocketStore();
+
+  const [sttResults, setSttResults] = useState<
+    Record<string, SttResult | null>
+  >({});
 
   // emotion 메시지 처리
   useEffect(() => {
@@ -415,6 +421,64 @@ const GameRoom = () => {
   const myPosition =
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
+  // STT 결과 처리 함수
+  const handleSttResult = (result: SttResult) => {
+    console.log('GameRoom received STT result:', result); // 디버깅 로그 추가
+    setSttResults((prev) => {
+      const newResults = {
+        ...prev,
+        [result.speaker]: result,
+      };
+      console.log('Updated STT results:', newResults); // 디버깅 로그 추가
+      return newResults;
+    });
+  };
+
+  // 세션 참가 시 STT 시작
+  useEffect(() => {
+    console.log('Session or publisher changed:', { session, publisher }); // 상태 변경 로그
+    if (session && publisher) {
+      console.log('Starting STT service for publisher...'); // 디버깅을 위한 로그 추가
+      try {
+        sttService.start(handleSttResult);
+      } catch (error) {
+        console.error('Error starting STT service:', error);
+      }
+    }
+    return () => {
+      console.log('Cleaning up STT service...'); // 디버깅을 위한 로그 추가
+      try {
+        sttService.stop();
+      } catch (error) {
+        console.error('Error stopping STT service:', error);
+      }
+    };
+  }, [session, publisher]);
+
+  // 구독자들의 오디오 스트림 처리
+  useEffect(() => {
+    console.log('Subscribers changed:', subscribers); // 구독자 변경 로그
+    subscribers.forEach((sub) => {
+      if (sub.nickname) {
+        console.log('Processing audio stream for subscriber:', sub.nickname); // 디버깅을 위한 로그 추가
+        try {
+          sttService.processStreamAudio(sub, (result) => {
+            handleSttResult({
+              ...result,
+              speaker: sub.nickname || 'unknown',
+            });
+          });
+        } catch (error) {
+          console.error(
+            'Error processing audio stream for subscriber:',
+            sub.nickname,
+            error
+          );
+        }
+      }
+    });
+  }, [subscribers]);
+
   return (
     <>
       {session !== undefined ? (
@@ -440,21 +504,16 @@ const GameRoom = () => {
                       <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                         {sub.nickname}
                       </div>
+                      <SttText
+                        sttResult={sttResults[sub.nickname || '']}
+                        speaker={sub.nickname || 'unknown'}
+                      />
                       <div className="w-full h-full flex items-center justify-center">
                         <UserVideoComponent streamManager={sub} />
                       </div>
                     </div>
                   </div>
                   <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
-                    {/* <FaceApiEmotion
-                      streamManager={sub}
-                      name={sub.nickname}
-                      onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog(sub.nickname!, emotionResult)
-                      }
-                      isLogReady={false}
-                      setIsLogReady={setIsLogReady}
-                    /> */}
                     <EmotionLog
                       name={sub.nickname!}
                       emotion={emotionLogs[sub.nickname!] || undefined}
@@ -471,14 +530,11 @@ const GameRoom = () => {
                     <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                       나
                     </div>
+                    <SttText sttResult={sttResults['current']} speaker="나" />
                     <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
-                      {publisher && isVideoEnabled ? (
+                      {publisher !== undefined ? (
                         <UserVideoComponent streamManager={publisher} />
-                      ) : (
-                        <div className="text-5xl font-bold w-full max-h-[170px] min-h-[150px] flex justify-center items-center">
-                          Me
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </div>
