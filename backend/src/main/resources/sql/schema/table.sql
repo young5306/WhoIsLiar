@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS participants_rounds (
     `order` INT NOT NULL,
     is_liar BOOLEAN NOT NULL,
     target_participant_id BIGINT,
+    has_voted BOOLEAN NOT NULL DEFAULT FALSE,
     score INT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL,
     FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,

@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -39,6 +40,10 @@ public class ParticipantRound {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "target_participant_id")
 	private Participant targetParticipant;
+
+	@Column(name = "has_voted", nullable = false)
+	@ColumnDefault("false")
+	private boolean hasVoted;
 
 	@Column(nullable = false)
 	private int score = 0;

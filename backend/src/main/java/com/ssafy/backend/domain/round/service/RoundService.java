@@ -385,6 +385,8 @@ public class RoundService {
 
 		round.setWinner(winnerEnum);
 
+		chatSocketService.guessSubmitted(roomCode, req.guessText());
+
 		return new GuessResponseDto(isCorrect, winnerEnum.name());
 	}
 
