@@ -102,7 +102,15 @@ const GameRoom = () => {
     clearEmotionSubscription,
     clearChatMessages,
     emotionLogs: socketEmotionLogs,
+    emotionSubscription,
   } = useSocketStore();
+
+  // emotion 메시지 처리
+  useEffect(() => {
+    if (emotionSubscription) {
+      console.log('GameRoom - Using existing emotion subscription');
+    }
+  }, [emotionSubscription]);
 
   // emotion 메시지 처리
   useEffect(() => {
