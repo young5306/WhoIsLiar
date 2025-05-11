@@ -1,18 +1,10 @@
 import { create } from 'zustand';
-import { FaceApiResult } from '../services/api/FaceApiService';
+import { EmotionLogMessage } from '../services/api/FaceApiService';
 interface ChatMessage {
   sender: string;
   content: string;
   chatType: string;
 }
-
-interface EmotionLog {
-  roomCode: string;
-  order: number;
-  userName: string;
-  emotionResult: FaceApiResult;
-}
-
 interface SocketStore {
   subscription: any;
   setSubscription: (subscription: any) => void;
@@ -23,8 +15,8 @@ interface SocketStore {
   chatMessages: ChatMessage[];
   addChatMessage: (message: ChatMessage) => void;
   clearChatMessages: () => void;
-  emotionLogs: EmotionLog[];
-  addEmotionLog: (log: EmotionLog) => void;
+  emotionLogs: EmotionLogMessage[];
+  addEmotionLog: (log: EmotionLogMessage) => void;
   clearEmotionLog: () => void;
 }
 

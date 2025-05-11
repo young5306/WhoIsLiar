@@ -13,7 +13,7 @@ export type Expressions = {
   [key in Emotion]: number; // 감정 확률
 };
 
-export interface EmotionLog {
+export interface EmotionLogMessage {
   roomCode: string;
   order: number;
   userName: string;
