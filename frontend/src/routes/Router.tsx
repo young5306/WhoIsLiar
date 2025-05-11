@@ -78,14 +78,7 @@ const Router = () => {
         />
       </Route>
       <Route path="/rule-book" element={<RuleBookPage />} />
-      <Route
-        path="/modal"
-        element={
-          <ProtectedRoute>
-            <ModalTestPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/modal" element={<ModalTestPage />} />
     </Routes>
   );
 };
