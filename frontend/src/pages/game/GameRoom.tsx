@@ -427,7 +427,6 @@ const GameRoom = () => {
     'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
 
   /////////////////////게임 진행 코드 시작/////////////////////
-  const { clearChatMessages, subscription, addChatMessage } = useSocketStore();
   const chatMessages = useSocketStore((state) => state.chatMessages); // 메세지 변경만 감지
 
   // 게임 초기화용 상태
