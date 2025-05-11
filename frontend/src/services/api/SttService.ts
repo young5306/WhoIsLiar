@@ -14,9 +14,7 @@ class SttService {
   private mediaStreamSource: MediaStreamAudioSourceNode | null = null;
 
   constructor() {
-    console.log('Initializing STT Service...');
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      console.log('Speech Recognition is supported');
       const SpeechRecognition = (window.SpeechRecognition ||
         window.webkitSpeechRecognition) as any;
       this.recognition = new SpeechRecognition();

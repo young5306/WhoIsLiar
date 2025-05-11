@@ -11,7 +11,6 @@ const SttText: React.FC<SttTextProps> = ({ sttResult }) => {
 
   useEffect(() => {
     if (sttResult) {
-      console.log('SttText received result:', sttResult);
       setDisplayText(sttResult.text);
     }
   }, [sttResult]);
