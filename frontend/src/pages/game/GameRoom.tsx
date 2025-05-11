@@ -23,6 +23,8 @@ import {
   VoteResultResponse,
   getVoteResult,
   endTurn,
+  ScoreResponse,
+  getScores,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -42,6 +44,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import LiarResultModal from '../../components/modals/LiarResultModal';
+import ScoreModal from '../../components/modals/ScoreModal';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -454,6 +457,12 @@ const GameRoom = () => {
   const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
   const [showVoteResultModal, setShowVoteResultModal] = useState(false);
   const [showLiarResultModal, setShowLiarResultModal] = useState(false);
+  // liar found 관련
+  const [guessedWord, setGuessedWord] = useState<string | null>(null);
+  const [showGuessedWord, setShowGuessedWord] = useState(false);
+  // 점수 관련
+  const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
   useEffect(() => {
@@ -531,6 +540,23 @@ const GameRoom = () => {
       setIsVoting(true);
       setSelectedTargetNickname(null);
       // timerRef.current?.startTimer(10); // 10초 안에 투표
+    }
+
+    // 라이어 제시어 추측 제출
+    if (latest.chatType == 'GUESS_SUBMITTED') {
+      const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
+      const word = match?.[1] || null;
+      console.log('추측!', latest.content);
+      if (word) {
+        console.log('💡라이어가 추측한 제시어', word);
+        setGuessedWord(word);
+        setShowGuessedWord(true);
+
+        setTimeout(async () => {
+          setShowGuessedWord(false);
+          await fetchAndShowScore();
+        }, 2000);
+      }
     }
   }, [chatMessages]);
 
@@ -623,6 +649,17 @@ const GameRoom = () => {
       setShowVoteResultModal(true);
     } catch (err) {
       console.error('투표 제출 실패:', err);
+    }
+  };
+
+  // 점수 조회 및 모달 표시
+  const fetchAndShowScore = async () => {
+    try {
+      const result = await getScores(roomCode!);
+      setScoreData(result);
+      setShowScoreModal(true);
+    } catch (error) {
+      console.error('점수 조회 실패:', error);
     }
   };
 
@@ -835,6 +872,7 @@ const GameRoom = () => {
         />
       )}
 
+      {/* 라이어 예측 결과 모달 (liar found / liar not found / skip) */}
       {showLiarResultModal && voteResult && (
         <LiarResultModal
           roundNumber={roundNumber}
@@ -861,6 +899,31 @@ const GameRoom = () => {
 
             setCurrentTurn((prev) => prev + 1);
           }}
+        />
+      )}
+
+      {/* 라이어가 추측한 제시어 표시 */}
+      {showGuessedWord && guessedWord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
+            <p className="text-2xl font-bold mb-2">
+              라이어가 제시어로 제출한 단어는
+            </p>
+            <p className="text-4xl font-extrabold text-red-600">
+              {guessedWord}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 점수 */}
+      {showScoreModal && scoreData && (
+        <ScoreModal
+          type={voteResult?.detected ? 'liar-win' : 'civilian-win'}
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          scores={scoreData.scores}
+          onClose={() => setShowScoreModal(false)}
         />
       )}
     </>

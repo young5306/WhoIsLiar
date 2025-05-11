@@ -176,9 +176,7 @@ export const submitWordGuess = async (
   return res.data.data;
 };
 
-export const getRoomScores = async (
-  roomCode: string
-): Promise<ScoreResponse> => {
-  const res = await api.get(`/rounds/${roomCode}/scores`);
+export const getScores = async (roomCode: string): Promise<ScoreResponse> => {
+  const res = await api.get(`/rounds/${roomCode}/score`);
   return res.data.data;
 };

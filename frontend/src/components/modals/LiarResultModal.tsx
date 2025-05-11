@@ -4,6 +4,7 @@ import { useRoomStore } from '../../stores/useRoomStore';
 import GameButton2 from '../common/GameButton2';
 import { notify } from '../common/Toast';
 import { useAuthStore } from '../../stores/useAuthStore';
+import useSocketStore from '../../stores/useSocketStore';
 
 interface Props {
   roundNumber: number;
@@ -32,7 +33,7 @@ const LiarResultModal = ({
 
   // 제시어 추측 입력창 (라이어용)
   const [input, setInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // ui 추가
 
   // 제시어 추측 제출 (라이어용)
   const handleSubmit = async () => {
@@ -43,8 +44,18 @@ const LiarResultModal = ({
     try {
       setIsSubmitting(true);
       await submitWordGuess(roomCode!, roundNumber, input.trim());
-      notify({ type: 'success', text: '제시어가 제출되었습니다!' });
-      // onClose();
+      notify({
+        type: 'success',
+        text: `제시어 ${input.trim()}(이)가 제출되었습니다!`,
+      });
+
+      //////////// 웹소켓 메시지 (임시 코드) ////////////
+      useSocketStore.getState().addChatMessage({
+        sender: 'SYSTEM',
+        content: `라이어가 ${input.trim()}(을)를 제출했습니다`,
+        chatType: 'GUESS_SUBMITTED',
+      });
+      ///////////////////////////////////////////////
     } catch (error: any) {
       const msg =
         error?.response?.data?.message || '제시어 제출에 실패했습니다.';
@@ -93,7 +104,11 @@ const LiarResultModal = ({
                 placeholder="라이어 제시어 추측"
                 className="px-3 py-3 mt-6 w-[98%] rounded border outline-none border-primary-600 bg-gray-900 text-gray-0 headline-medium placeholder-gray-0/60 focus:ring-2 focus:ring-primary-600/60"
               />
-              <GameButton2 text="제출" onClick={handleSubmit} />
+              <GameButton2
+                text="제출"
+                onClick={handleSubmit}
+                // disabled={isSubmitting}
+              />
             </>
           )}
         </div>
@@ -108,10 +123,9 @@ const LiarResultModal = ({
     );
   };
 
-  // skip 모달 닫기
+  // skip 모달 - 2초 후 자동 닫기
   useEffect(() => {
     if (result.skip) {
-      // 2초 후 모달 자동 닫기 (SKIP인 경우)
       const timer = setTimeout(() => {
         onClose();
       }, 2000);
