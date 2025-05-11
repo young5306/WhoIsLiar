@@ -775,207 +775,99 @@ const GameRoom = () => {
   return (
     <>
       {session !== undefined ? (
-        <>
-          <div className="w-full h-full flex flex-col px-8">
-            <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
-              {/* --- 발언시간 --- */}
-              <>
-                {/* 발언자만 skip 버튼 표시 */}
-                {myUserName === speakingPlayer && (
-                  <GameButton
-                    text="Skip"
-                    size="small"
-                    variant="neon"
-                    onClick={() => handleSkipTurn(roomCode)}
-                  />
-                )}
-                {/* 발언 타이머는 모두에게 표시 */}
-                {speakingPlayer && (
-                  <Timer
-                    ref={speechTimerRef}
-                    onTimeEnd={() => console.log('⏰ 타이머 종료')}
-                    size="medium"
-                  />
-                )}
-              </>
-              {/* --- 투표 시간 --- */}
-              {isVoting && (
-                <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
-                  {currentTurn < 3 && (
-                    <GameButton
-                      text="기권"
-                      size="small"
-                      variant="gray"
-                      onClick={handleVoteSkip}
-                    />
-                  )}
-                  <Timer
-                    ref={voteTimerRef}
-                    onTimeEnd={handleVotingEnd}
-                    size="medium"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="text-white w-full h-full grid grid-cols-7">
-              <GameInfo
-                round={roundNumber}
-                turn={gameState.turn} // 이거 안받는데
-                category={category}
-                topic={
-                  myWord
-                    ? myWord
-                    : '당신은 라이어입니다! 제시어를 추측해보세요.'
-                }
-                isLiar={playerState.isLiar} // 투표 결과 조회 때 받음
-              />
+        <div className="w-full h-full flex flex-col px-8">
+          <div className="text-white w-full h-full grid grid-cols-7">
+            <GameInfo
+              round={gameState.round}
+              turn={gameState.turn}
+              category={gameState.category}
+              topic={gameState.topic}
+              isLiar={playerState.isLiar}
+            />
 
-              {/* Video 영역 */}
-              {subscribers.map((sub, index) => (
-                <div
-                  key={sub.id || index}
-                  className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
-                >
-                  <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
-                    <div className="w-full h-full relative">
-                      <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                        {sub.nickname}
-                      </div>
-                      <SttText
-                        sttResult={sttResults[sub.nickname || '']}
-                        speaker={sub.nickname || 'unknown'}
-                      />
-                      <div className="w-full h-full flex items-center justify-center">
-                        <UserVideoComponent streamManager={sub} />
-                      </div>
+            {/* Video 영역 */}
+            {subscribers.map((sub, index) => (
+              <div
+                key={sub.id || index}
+                className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)}`}
+              >
+                <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
+                  <div className="w-full h-full relative">
+                    <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                      {sub.nickname}
+                    </div>
+                    <SttText
+                      sttResult={sttResults[sub.nickname || '']}
+                      speaker={sub.nickname || 'unknown'}
+                    />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <UserVideoComponent streamManager={sub} />
                     </div>
                   </div>
-                  <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
+                </div>
+                <div className="absolute bottom-1 mb-2 left-1 z-20 gap-4 flex flex-row">
+                  <EmotionLog
+                    name={sub.nickname!}
+                    emotion={emotionLogs[sub.nickname!] || undefined}
+                    isLogReady={isLogReady}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* my video */}
+            <div className={`relative ${myPosition}`}>
+              <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                <div className="w-full min-h-[150px] max-h-[170px] relative">
+                  <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                    나
+                  </div>
+                  <SttText sttResult={sttResults['current']} speaker="나" />
+                  <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
+                    {publisher !== undefined ? (
+                      <UserVideoComponent streamManager={publisher} />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <div className="absolute bottom-1 mb-2 left-1 z-20">
+                {publisher && (
+                  <div className="flex flex-row gap-4">
+                    <FaceApiEmotion
+                      streamManager={publisher}
+                      name={myUserName}
+                      roomCode={roomCode}
+                      onEmotionUpdate={(emotionResult) =>
+                        updateEmotionLog(myUserName, emotionResult)
+                      }
+                      isLogReady={isLogReady}
+                      setIsLogReady={setIsLogReady}
+                    />
                     <EmotionLog
-                      name={sub.nickname!}
-                      emotion={emotionLogs[sub.nickname!] || undefined}
+                      name={myUserName}
+                      emotion={emotionLogs[myUserName] || undefined}
                       isLogReady={isLogReady}
                     />
-              {subscribers.map((sub, index) => {
-                return (
-                  <div
-                    key={sub.id || index}
-                    onClick={() => isVoting && handleSelectTarget(sub.nickname)}
-                    className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)} 
-                    ${isVoting ? 'cursor-pointer' : ''}
-                    ${
-                      sub.nickname === speakingPlayer
-                        ? 'ring-4 ring-point-neon'
-                        : ''
-                    }`}
-                  >
-                    {/* 선택된 타겟에 과녁 이미지 */}
-                    {selectedTargetNickname === sub.nickname && (
-                      <img
-                        src="assets/target.png"
-                        alt="타겟"
-                        className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
-                      />
-                    )}
-                    <div className="w-full h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
-                      <div className="w-full h-full relative">
-                        <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                          {sub.nickname}
-                        </div>
-                        <div className="w-full h-full flex items-center justify-center">
-                          <UserVideoComponent streamManager={sub} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-1 mb-2 left-1 z-20  gap-4 flex flex-row">
-                      {/* <FaceApiEmotion
-                      streamManager={sub}
-                      name={sub.nickname}
-                      onEmotionUpdate={(emotionResult) =>
-                        updateEmotionLog(sub.nickname!, emotionResult)
-                      }
-                      isLogReady={false}
-                      setIsLogReady={setIsLogReady}
-                    /> */}
-                      <EmotionLog
-                        name={sub.nickname!}
-                        emotion={emotionLogs[sub.nickname!] || undefined}
-                        isLogReady={isLogReady}
-                      />
-                    </div>
                   </div>
-                );
-              })}
-
-              {/* my video */}
-              <div
-                onClick={() => isVoting && handleSelectTarget(myUserName)}
-                className={`relative ${myPosition} 
-                ${isVoting ? 'cursor-pointer' : ''}
-                ${
-                  myUserName === speakingPlayer ? 'ring-4 ring-point-neon' : ''
-                }`}
-              >
-                {selectedTargetNickname === myUserName && (
-                  <img
-                    src="assets/target.png"
-                    alt="타겟"
-                    className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
-                  />
                 )}
-                <div className="w-full min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
-                  <div className="w-full min-h-[150px] max-h-[170px] relative">
-                    <div className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                      나
-                    </div>
-                    <SttText sttResult={sttResults['current']} speaker="나" />
-                    <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
-                      {publisher !== undefined ? (
-                        <UserVideoComponent streamManager={publisher} />
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute bottom-1 mb-2 left-1 z-20">
-                  {publisher && (
-                    <div className="flex flex-row gap-4">
-                      <FaceApiEmotion
-                        streamManager={publisher}
-                        name={myUserName}
-                        // userIndex={order}
-                        roomCode={roomCode}
-                        onEmotionUpdate={(emotionResult) =>
-                          updateEmotionLog(myUserName, emotionResult)
-                        }
-                        isLogReady={isLogReady}
-                        setIsLogReady={setIsLogReady}
-                      />
-                      <EmotionLog
-                        name={myUserName}
-                        emotion={emotionLogs[myUserName] || undefined}
-                        isLogReady={isLogReady}
-                      />
-                    </div>
-                  )}
-                </div>
               </div>
-            </div>
-
-            <div className="mb-2 mt-1 text-white">
-              <div className="z-10 justify-center">
-                <GameChat />
-              </div>
-              <GameControls
-                isAudioEnabled={isAudioEnabled}
-                isVideoEnabled={isVideoEnabled}
-                onToggleAudio={toggleAudio}
-                onToggleVideo={toggleVideo}
-                onSwitchCamera={switchCamera}
-                onLeaveSession={leaveSession}
-              />
             </div>
           </div>
-        </>
+
+          <div className="mb-2 mt-1 text-white">
+            <div className="z-10 justify-center">
+              <GameChat />
+            </div>
+            <GameControls
+              isAudioEnabled={isAudioEnabled}
+              isVideoEnabled={isVideoEnabled}
+              onToggleAudio={toggleAudio}
+              onToggleVideo={toggleVideo}
+              onSwitchCamera={switchCamera}
+              onLeaveSession={leaveSession}
+            />
+          </div>
+        </div>
       ) : null}
 
       {/* 투표 진행 화면 */}
