@@ -14,7 +14,8 @@ const LiarNotFoundModal = ({
   onClose,
 }: Props) => {
   useEffect(() => {
-    const timer = setTimeout(onNext, 5000);
+    console.log('onNext: liar not found 모달 다음 로직 준비');
+    const timer = setTimeout(onNext, 2000);
     return () => clearTimeout(timer);
   }, [onNext]);
 

@@ -790,21 +790,25 @@ const GameRoom = () => {
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
+        console.log('현재 라운드', roundNumber);
         await endRound(roomCode!, roundNumber);
         await setRound(roomCode!);
 
-        const playerInfo = await getPlayerInfo(roomCode!);
-        const roomInfo = await getRoomData(roomCode!);
+        const playerInfoRes = await getPlayerInfo(roomCode!);
+        const roomInfoRes = await getRoomData(roomCode!);
+        console.log('✅playerInfoRes', playerInfoRes);
+        console.log('✅roomInfoRes', roomInfoRes);
+        console.log('✅세팅 끝');
 
-        setRoundNumber(playerInfo.data.roundNumber);
-        setMyWord(playerInfo.data.word);
-        setCategory(roomInfo.roomInfo.category);
+        setRoundNumber(playerInfoRes.data.roundNumber);
+        setMyWord(playerInfoRes.data.word);
+        setCategory(roomInfoRes.roomInfo.category);
         // setParticipants(playerInfo.data.participants);
 
-        console.log('다음 라운드', playerInfo.data.roundNumber);
+        console.log('다음 라운드', playerInfoRes.data.roundNumber);
         if (myUserName === hostNickname) {
-          await startRound(roomCode!, playerInfo.data.roundNumber);
-          await startTurn(roomCode!, playerInfo.data.roundNumber);
+          await startRound(roomCode!, playerInfoRes.data.roundNumber);
+          await startTurn(roomCode!, playerInfoRes.data.roundNumber);
         }
       }
       // 마지막 라운드 종료 후 게임 종료
@@ -1184,8 +1188,8 @@ const GameRoom = () => {
             type={
               roundNumber < totalRoundNumber
                 ? voteResult?.detected
-                  ? 'liar-win'
-                  : 'civilian-win'
+                  ? 'civilian-win'
+                  : 'liar-win'
                 : 'final-score'
             }
             roundNumber={roundNumber}
