@@ -510,6 +510,7 @@ const GameRoom = () => {
   // const hasParticipants = participants.length > 0;
   // console.log('hasParticipants', hasParticipants, participants.length);
 
+  // '나'를 제외한 참가자 순서대로 재정렬
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
 
@@ -525,6 +526,7 @@ const GameRoom = () => {
     setSortedPraticipants(sorted);
   }, [participants]);
 
+  // 정렬된 순서에 따라 position 부여
   useEffect(() => {
     if (
       !sortedParticipants ||
@@ -811,7 +813,7 @@ const GameRoom = () => {
         setRoundNumber(playerInfo.data.roundNumber);
         setMyWord(playerInfo.data.word);
         setCategory(roomInfo.roomInfo.category);
-        // setParticipants(playerInfo.data.participants);
+        setParticipants(playerInfo.data.participants);
 
         console.log('다음 라운드', playerInfo.data.roundNumber);
         if (myUserName === hostNickname) {
