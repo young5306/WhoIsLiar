@@ -372,9 +372,9 @@ const GameRoom = () => {
 
     return () => {
       // 컴포넌트 언마운트 시 플래그 제거 (정상적인 페이지 이동)
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       sessionStorage.removeItem('isInGameRoom');
       sessionStorage.removeItem('shouldRedirect');
-      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [session, publisher]);
 
