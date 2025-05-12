@@ -12,6 +12,8 @@ import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
@@ -70,15 +72,12 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		List<Round> rounds = roundRepository.findByRoom(room);
-		List<Participant> participants = participantRepository.findByRoomAndActive(room);
 
 		// ParticipantRound -> Round -> Participant -> Room 순서로 삭제
 		for (Round round : rounds) {
 			participantRoundRepository.deleteByRound(round);
 		}
 		roundRepository.deleteAll(rounds);
-		participantRepository.deleteAll(participants);
-		roomRepository.delete(room);
 
 		chatSocketService.gameEnded(roomCode);
 	}
@@ -434,8 +433,11 @@ public class RoundService {
 
 		round.setRoundStatus(RoundStatus.finished);
 		round.setUpdatedAt(LocalDateTime.now());
-
 		roundRepository.save(round);
+
+		if (req.roundNumber() == room.getRoundCount()) {
+			deleteGame(req.roomCode());
+		}
 	}
 
 	@Transactional

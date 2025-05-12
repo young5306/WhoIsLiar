@@ -215,8 +215,8 @@ public class RoundController {
 	}
 
 	@Operation(
-		summary = "라운드 종료",
-		description = "요청 받은 roomCode, roundNumber에 해당하는 라운드를 finished 상태로 전환합니다."
+		summary = "라운드 종료 및 게임 종료 처리",
+		description = "현재 라운드를 종료하며, 이 라운드가 마지막 라운드인 경우 게임 전체를 종료(데이터 삭제 포함)합니다."
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "라운드 상태가 finished로 변경되었습니다."),
