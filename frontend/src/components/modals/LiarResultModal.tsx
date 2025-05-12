@@ -117,12 +117,20 @@ const LiarResultModal = ({
   };
 
   // skip 모달 - 2초 후 자동 닫기
+  console.log('Modal render - result.skip:', result.skip);
+
   useEffect(() => {
+    console.log('Skip useEffect triggered - result.skip:', result.skip);
     if (result.skip) {
+      console.log('Setting up skip timer');
       const timer = setTimeout(() => {
+        console.log('Skip timer completed, calling onClose');
         onClose();
       }, 2000);
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('Cleaning up skip timer');
+        clearTimeout(timer);
+      };
     }
   }, [result.skip, onClose]);
 
