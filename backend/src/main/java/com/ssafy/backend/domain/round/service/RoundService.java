@@ -254,6 +254,13 @@ public class RoundService {
 			pr.voteTargetParticipant(null);
 		}
 
+		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
+		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
+
+		if (allVoted) {
+			chatSocketService.voteCompleted(roomCode);
+		}
+
 		return new VoteResponseDto(
 			myNickname,
 			targetNickname
