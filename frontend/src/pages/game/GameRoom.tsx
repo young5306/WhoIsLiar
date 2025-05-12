@@ -300,14 +300,6 @@ const GameRoom = () => {
       session.disconnect();
     }
 
-    // OpenVidu 퍼블리셔 미디어 스트림 중지
-    if (publisher) {
-      const mediaStream = publisher.stream.getMediaStream();
-      mediaStream
-        ?.getTracks()
-        .forEach((track: MediaStreamTrack) => track.stop());
-    }
-
     OV.current = null;
     setSession(undefined);
     setSubscribers([]);
@@ -348,20 +340,56 @@ const GameRoom = () => {
     navigation,
   ]);
 
-  // 새로고침 시, 세션 연결만 종료
+  // 컴포넌트 내부
   useEffect(() => {
+    // 컴포넌트 마운트 시 플래그 설정
+    sessionStorage.setItem('isInGameRoom', 'true');
+
+    // beforeunload - 새로고침 이벤트 처리 (room-list 이동)
     const handleBeforeUnload = () => {
-      if (session) {
-        // session.disconnect();
-        leaveSession();
+      // 미디어 트랙 정리
+      if (publisher && publisher.stream && publisher.stream.getMediaStream) {
+        try {
+          const mediaStream = publisher.stream.getMediaStream();
+          if (mediaStream) {
+            mediaStream.getTracks().forEach((track) => track.stop());
+          }
+        } catch (err) {
+          console.error('Error stopping tracks on page unload:', err);
+        }
       }
+
+      // 세션 연결 해제
+      if (session) {
+        session.disconnect();
+      }
+
+      // 새로고침 감지를 위한 플래그 설정
+      sessionStorage.setItem('shouldRedirect', 'true');
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      // 컴포넌트 언마운트 시 플래그 제거 (정상적인 페이지 이동)
+      sessionStorage.removeItem('isInGameRoom');
+      sessionStorage.removeItem('shouldRedirect');
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [session]);
+  }, [session, publisher]);
+
+  // 다른 useEffect에서 새로고침 후 감지 및 리다이렉션
+  useEffect(() => {
+    const isInGameRoom = sessionStorage.getItem('isInGameRoom');
+    const shouldRedirect = sessionStorage.getItem('shouldRedirect');
+
+    if (isInGameRoom && shouldRedirect) {
+      // 새로고침 후 감지되면 room-list로 리다이렉트
+      sessionStorage.removeItem('isInGameRoom');
+      sessionStorage.removeItem('shouldRedirect');
+      navigation('/room-list');
+    }
+  }, [navigation]);
 
   const toggleAudio = () => {
     if (publisher) {
