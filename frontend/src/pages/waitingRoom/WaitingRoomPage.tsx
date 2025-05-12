@@ -855,6 +855,7 @@ const WaitingRoomContent = () => {
             <div className="flex gap-2">
               <GameButton
                 text="방 나가기"
+                variant="gray"
                 size="small"
                 onClick={() => setIsConfirmModalOpen(true)}
               />
