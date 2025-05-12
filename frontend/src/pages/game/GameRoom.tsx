@@ -1060,7 +1060,7 @@ const GameRoom = () => {
         id="vote-overlay" // 마우스 위치 조정을 위한 ID
         className="fixed inset-0 z-20 pointer-events-none transition-opacity duration-500" // 화면 전체 덮는 레이어
         style={{
-          opacity: isVoting ? 1 : 0,
+          opacity: isVoting ? 0.8 : 0,
           background:
             'radial-gradient(circle at var(--x, 50vw) var(--y, 50vh), transparent 80px, rgba(0,0,0,0.8) 10px)', // 마우스 위치에 원형 밝은 영역 (마우스 주변 80px까지 밝고, 10px까지 fade)
           pointerEvents: 'none',
@@ -1177,7 +1177,7 @@ const GameRoom = () => {
         </div>
       )}
 
-      {/* 점수 */}
+      {/* 점수 모달 */}
       {showScoreModal && scoreData && (
         <>
           <ScoreModal
