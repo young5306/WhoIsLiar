@@ -791,8 +791,10 @@ const GameRoom = () => {
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
         console.log('현재 라운드', roundNumber);
-        await endRound(roomCode!, roundNumber);
-        await setRound(roomCode!);
+        if (myUserName === hostNickname) {
+          await endRound(roomCode!, roundNumber);
+          await setRound(roomCode!);
+        }
 
         const playerInfoRes = await getPlayerInfo(roomCode!);
         const roomInfoRes = await getRoomData(roomCode!);
@@ -858,13 +860,23 @@ const GameRoom = () => {
               {/* --- 투표 시간 --- */}
               {isVoting && (
                 <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
-                  {currentTurn < 3 && (
+                  {currentTurn < 3 ? (
                     <GameButton
                       text="기권"
                       size="small"
-                      variant="gray"
+                      variant={
+                        selectedTargetNickname === null ? 'neon' : 'gray'
+                      }
                       onClick={handleVoteSkip}
                     />
+                  ) : (
+                    <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
+                      ※ 시간 내에 투표하지 않으면{' '}
+                      <span className="text-primary-600 font-bold">
+                        자기 자신
+                      </span>
+                      에게 투표됩니다
+                    </div>
                   )}
                   <Timer
                     ref={voteTimerRef}
@@ -1079,8 +1091,14 @@ const GameRoom = () => {
           totalRoundNumber={totalRoundNumber}
           onNext={() => {
             setShowVoteResultModal(false);
+            const isLastTurn = currentTurn === 3;
+
             if (voteResult.skip) {
-              setShowSkipModal(true);
+              if (isLastTurn) {
+                setShowLiarNotFoundModal(true); // 마지막 턴이면 skip 무시하고 liar not found 처리
+              } else {
+                setShowSkipModal(true); // 마지막 턴이 아니면 기존처럼 skip 모달
+              }
             } else if (voteResult.detected) {
               setShowLiarFoundModal(true);
             } else {
