@@ -48,10 +48,12 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class RoundService {
 
 	private final RoomRepository roomRepository;
@@ -219,6 +221,7 @@ public class RoundService {
 	}
 
 	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
+
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
@@ -228,35 +231,55 @@ public class RoundService {
 		String myNickname = SecurityUtils.getCurrentNickname();
 		if (myNickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
 
+		log.info("{}, {}, {},{}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지1");
 		SessionEntity session = sessionRepository.findByNickname(myNickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
 
+		log.info("{}, {}, {},{}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지2");
 		Participant self = participantRepository.findByRoomAndSessionAndActive(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
 
+		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지3");
 		ParticipantRound pr = participantRoundRepository.findByRoundAndParticipant(round, self)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지4");
+
 		String targetNickname = null;
 		if (request.targetParticipantNickname() != null) {
+			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함");
 			SessionEntity targetSession = sessionRepository.findByNickname(request.targetParticipantNickname())
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함2");
 			Participant target = participantRepository.findBySessionAndActive(targetSession)
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함3");
 			if (!target.getRoom().equals(room)) {
 				throw new CustomException(ResponseCode.INVALID_REQUEST);
 			}
+			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함4");
 			pr.voteTargetParticipant(target);
 			targetNickname = target.getSession().getNickname();
 		} else {
 			pr.voteTargetParticipant(null);
+			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단 생략함");
 		}
 
-		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
-		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
 
+		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"거의 다옴");
+		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
+		roundVotes.forEach(pp ->
+			log.debug("participant={}, hasVoted={}, target={}",
+				pp.getParticipant().getId(),
+				pp.isHasVoted(),
+				pp.getTargetParticipant()));
+
+		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"얍");
+
+		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
+		log.debug(">>> allVoted = {}", allVoted);
 		if (allVoted) {
 			chatSocketService.voteCompleted(roomCode);
 		}
