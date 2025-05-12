@@ -438,6 +438,7 @@ public class RoundService {
 		roundRepository.save(round);
 	}
 
+	@Transactional
 	public void updateTurn(TurnUpdateRequestDto req) {
 		Room room = roomRepository.findByRoomCode(req.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -446,6 +447,7 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		round.incrementTurn();
+		participantRoundRepository.resetHasVotedByRound(round);
 
 		roundRepository.save(round);
 	}
