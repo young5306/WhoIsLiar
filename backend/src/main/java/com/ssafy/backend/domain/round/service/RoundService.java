@@ -221,32 +221,41 @@ public class RoundService {
 	}
 
 	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
+		log.info("9");
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		log.info("8");
 		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String myNickname = SecurityUtils.getCurrentNickname();
+		log.info("7");
 		if (myNickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
 
+		log.info("6");
 		SessionEntity session = sessionRepository.findByNickname(myNickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
 
+		log.info("5");
 		Participant self = participantRepository.findByRoomAndSessionAndActive(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
 
+		log.info("4");
 		ParticipantRound pr = participantRoundRepository.findByRoundAndParticipant(round, self)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String targetNickname = null;
 		if (request.targetParticipantNickname() != null) {
+			log.info("3");
 			SessionEntity targetSession = sessionRepository.findByNickname(request.targetParticipantNickname())
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+			log.info("2");
 			Participant target = participantRepository.findBySessionAndActive(targetSession)
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+			log.info("1");
 			if (!target.getRoom().equals(room)) {
 				throw new CustomException(ResponseCode.INVALID_REQUEST);
 			}
