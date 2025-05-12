@@ -90,5 +90,9 @@ public class ChatSocketService {
 	public void voteCompleted(String roomCode) {
 		sendAfterCommit(roomCode, "모든 플레이어가 투표를 완료했습니다.", ChatType.VOTE_SUBMITTED);
 	}
+
+	public void sendHint(String roomCode, String summary) {
+		sendAfterCommit(roomCode, summary, ChatType.HINT);
+	}
 }
 
