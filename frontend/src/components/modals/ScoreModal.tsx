@@ -21,13 +21,19 @@ const ScoreModal = ({
   roundNumber,
   totalRoundNumber,
   scores,
-  // onClose,
+  onClose,
 }: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
-      <div className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="headline-xlarge">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>
