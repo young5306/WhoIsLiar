@@ -300,6 +300,14 @@ const GameRoom = () => {
       session.disconnect();
     }
 
+    // OpenVidu 퍼블리셔 미디어 스트림 중지
+    if (publisher) {
+      const mediaStream = publisher.stream.getMediaStream();
+      mediaStream
+        ?.getTracks()
+        .forEach((track: MediaStreamTrack) => track.stop());
+    }
+
     OV.current = null;
     setSession(undefined);
     setSubscribers([]);
@@ -331,6 +339,7 @@ const GameRoom = () => {
   }, [
     session,
     userInfo,
+    publisher,
     stompClient,
     clearSubscription,
     clearEmotionSubscription,
@@ -343,7 +352,8 @@ const GameRoom = () => {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (session) {
-        session.disconnect();
+        // session.disconnect();
+        leaveSession();
       }
     };
 
