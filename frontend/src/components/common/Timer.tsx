@@ -1,9 +1,15 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useEffect,
+} from 'react';
 import { motion } from 'framer-motion';
 
 interface TimerProps {
   onTimeEnd?: () => void;
   size?: 'small' | 'medium' | 'large';
+  onMount?: () => void;
 }
 
 export interface TimerRef {
@@ -11,10 +17,14 @@ export interface TimerRef {
 }
 
 const Timer = forwardRef<TimerRef, TimerProps>(
-  ({ onTimeEnd, size = 'medium' }, ref) => {
+  ({ onTimeEnd, size = 'medium', onMount }, ref) => {
     const [timeLeft, setTimeLeft] = React.useState(0);
     const timerRef = useRef<number>();
     const initialTime = useRef(0);
+
+    useEffect(() => {
+      onMount?.();
+    }, [onMount]);
 
     const sizeClasses = {
       small: {

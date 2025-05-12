@@ -260,11 +260,11 @@ public class RoundService {
 		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 			@Override
 			public void afterCommit() {
-				log.debug("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
+				log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
 				checkAndNotifyVoteCompleted(roomCode, round.getId());
 			}
 		});
-		log.debug("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
+		log.info("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
 
 		return new VoteResponseDto(
 			myNickname,
