@@ -12,7 +12,7 @@ import {
 import {
   getToken,
   Subscriber,
-  GameState,
+  // GameState,
   PlayerState,
   outRoom,
   getPlayerInfo,
@@ -106,13 +106,13 @@ const GameRoom = () => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
-  const [gameState, _setGameState] = useState<GameState>({
-    round: 1,
-    turn: 1,
-    category: '',
-    topic: '',
-    message: [],
-  });
+  // const [gameState, _setGameState] = useState<GameState>({
+  //   round: 1,
+  //   turn: 1,
+  //   category: '',
+  //   topic: '',
+  //   message: [],
+  // });
 
   const [playerState, _setPlayerState] = useState<PlayerState>({
     currentPlayer: '',
@@ -889,7 +889,8 @@ const GameRoom = () => {
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
                 round={roundNumber}
-                turn={gameState.turn} // 이거 안받는데
+                totalRoundNumber={totalRoundNumber}
+                turn={currentTurn}
                 category={category}
                 topic={
                   myWord
