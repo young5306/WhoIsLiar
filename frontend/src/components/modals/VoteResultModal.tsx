@@ -17,8 +17,8 @@ const VoteResultModal = ({
   result,
   onClose,
 }: Props) => {
-  const [visibleItems, setVisibleItems] = useState<VoteResultItem[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // const [visibleItems, setVisibleItems] = useState<VoteResultItem[]>([]);
+  // const [currentIndex, setCurrentIndex] = useState(0);
   const [sortedResults, setSortedResults] = useState<VoteResultItem[]>([]);
 
   useEffect(() => {
@@ -27,25 +27,11 @@ const VoteResultModal = ({
       (a, b) => a.voteCount - b.voteCount
     );
     setSortedResults(sorted);
-    setVisibleItems([]); // 초기화
-    setCurrentIndex(0);
+
+    // 3초 뒤 모달 자동 닫기
+    const timeout = setTimeout(onClose, 3000);
+    return () => clearTimeout(timeout);
   }, [result]);
-
-  useEffect(() => {
-    if (!sortedResults.length) return;
-
-    const interval = setInterval(() => {
-      setVisibleItems((prev) => [...prev, sortedResults[currentIndex]]);
-      setCurrentIndex((prev) => prev + 1);
-    }, 1000); // 투표 결과 1초마다 하나씩 순차적으로 출력
-
-    if (currentIndex >= sortedResults.length) {
-      clearInterval(interval);
-      setTimeout(onClose, 3000); // 3초 뒤 다음 로직
-    }
-
-    return () => clearInterval(interval);
-  }, [currentIndex, sortedResults, onClose]);
 
   return (
     <div className="fixed inset-0 bg-gray-900/70 z-50 flex items-center justify-center">
@@ -67,7 +53,8 @@ const VoteResultModal = ({
         </div>
 
         <ul className="space-y-3 mt-5">
-          {visibleItems.map((item, idx) => (
+          {/* {visibleItems.map((item, idx) => ( */}
+          {sortedResults.map((item, idx) => (
             <li
               key={idx}
               className="flex items-center justify-between bg-gray-800 rounded px-6 py-3 headline-medium"
