@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import BackgroundMusic from '../components/common/BackgroundMusic';
 
 const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
   {
@@ -48,6 +49,9 @@ const Layout = () => {
       <div className="relative w-full h-full pt-8 z-10">
         <Outlet />
       </div>
+
+      {/* 배경음악 컨트롤 */}
+      <BackgroundMusic />
     </div>
   );
 };
