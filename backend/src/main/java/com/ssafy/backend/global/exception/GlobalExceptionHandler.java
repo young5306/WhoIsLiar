@@ -38,6 +38,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(NoSuchElementException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public CommonResponse<Void> handleNoSuch(NoSuchElementException ex) {
+		ex.printStackTrace();
 		return CommonResponse.failure(ResponseCode.NOT_FOUND);
 	}
 

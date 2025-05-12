@@ -4,7 +4,6 @@ import { useRoomStore } from '../../stores/useRoomStore';
 import GameButton2 from '../common/GameButton2';
 import { notify } from '../common/Toast';
 import { useAuthStore } from '../../stores/useAuthStore';
-import useSocketStore from '../../stores/useSocketStore';
 
 interface Props {
   roundNumber: number;
@@ -50,14 +49,6 @@ const LiarResultModal = ({
         type: 'success',
         text: `제시어 ${input.trim()}(이)가 제출되었습니다!`,
       });
-
-      //////////// 웹소켓 메시지 (임시 코드) ////////////
-      useSocketStore.getState().addChatMessage({
-        sender: 'SYSTEM',
-        content: `라이어가 ${input.trim()}(을)를 제출했습니다`,
-        chatType: 'GUESS_SUBMITTED',
-      });
-      ///////////////////////////////////////////////
     } catch (error: any) {
       const msg =
         error?.response?.data?.message || '제시어 제출에 실패했습니다.';
@@ -126,12 +117,20 @@ const LiarResultModal = ({
   };
 
   // skip 모달 - 2초 후 자동 닫기
+  console.log('Modal render - result.skip:', result.skip);
+
   useEffect(() => {
+    console.log('Skip useEffect triggered - result.skip:', result.skip);
     if (result.skip) {
+      console.log('Setting up skip timer');
       const timer = setTimeout(() => {
+        console.log('Skip timer completed, calling onClose');
         onClose();
       }, 2000);
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('Cleaning up skip timer');
+        clearTimeout(timer);
+      };
     }
   }, [result.skip, onClose]);
 

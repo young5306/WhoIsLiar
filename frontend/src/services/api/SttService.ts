@@ -23,7 +23,7 @@ class SttService {
       this.recognition.lang = 'ko-KR';
 
       this.recognition.onresult = (event: any) => {
-        console.log('Speech recognition result:', event);
+        // console.log('Speech recognition result:', event);
         if (this.onResultCallback) {
           const result = event.results[event.results.length - 1];
           const text = result[0].transcript;
@@ -42,14 +42,13 @@ class SttService {
       };
 
       this.recognition.onend = () => {
-        console.log('Speech recognition ended');
         if (this.isListening) {
           this.start(this.onResultCallback!);
         }
       };
 
       this.recognition.onstart = () => {
-        console.log('Speech recognition started');
+        // console.log('Speech recognition started');
       };
     } else {
       console.error('Speech Recognition is not supported in this browser');
@@ -57,7 +56,6 @@ class SttService {
   }
 
   public start(onResult: (result: SttResult) => void) {
-    console.log('Starting STT...');
     if (!this.recognition) {
       console.error('Speech recognition is not supported');
       return;
@@ -67,20 +65,20 @@ class SttService {
     this.isListening = true;
     try {
       this.recognition.start();
-      console.log('STT started successfully');
+      // console.log('STT started successfully');
     } catch (error) {
       console.error('Error starting STT:', error);
     }
   }
 
   public stop() {
-    console.log('Stopping STT...');
+    // console.log('Stopping STT...');
     if (!this.recognition) return;
 
     this.isListening = false;
     try {
       this.recognition.stop();
-      console.log('STT stopped successfully');
+      // console.log('STT stopped successfully');
     } catch (error) {
       console.error('Error stopping STT:', error);
     }
@@ -101,7 +99,7 @@ class SttService {
     streamManager: StreamManager,
     onResult: (result: SttResult) => void
   ) {
-    console.log('Processing stream audio...');
+    // console.log('Processing stream audio...');
     const audioTrack = streamManager.stream
       .getMediaStream()
       .getAudioTracks()[0];
@@ -134,7 +132,7 @@ class SttService {
         const average = dataArray.reduce((a, b) => a + b) / bufferLength;
         if (average > 50) {
           // 임계값 조정 가능
-          console.log('Audio level threshold reached:', average);
+          // console.log('Audio level threshold reached:', average);
           this.start(onResult);
         }
 
@@ -142,7 +140,7 @@ class SttService {
       };
 
       processAudio();
-      console.log('Audio processing started');
+      // console.log('Audio processing started');
     } catch (error) {
       console.error('Error processing audio stream:', error);
     }
