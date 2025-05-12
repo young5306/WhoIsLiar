@@ -26,6 +26,7 @@ public class ChatService {
 	private final SessionRepository sessionRepository;
 	private final ParticipantRepository participantRepository;
 	private final ChatRepository chatRepository;
+	private final ChatSocketService chatSocketService;
 
 	@Transactional
 	public void summarizeAndSave(ChatSummaryRequestDto request) {
@@ -51,5 +52,7 @@ public class ChatService {
 			.build();
 
 		chatRepository.save(chat);
+
+		chatSocketService.sendHint(participant.getRoom().getRoomCode(), SecurityUtils.getCurrentNickname(), summary);
 	}
 }

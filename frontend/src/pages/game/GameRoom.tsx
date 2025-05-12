@@ -133,6 +133,8 @@ const GameRoom = () => {
     Record<string, SttResult | null>
   >({});
 
+  const sttServiceStarted = useRef(false);
+
   // emotion 메시지 처리
   useEffect(() => {
     if (emotionSubscription) {
@@ -419,31 +421,35 @@ const GameRoom = () => {
 
   // 세션 참가 시 STT 시작
   useEffect(() => {
-    console.log('Session or publisher changed:', { session, publisher }); // 상태 변경 로그
-    if (session && publisher) {
-      console.log('Starting STT service for publisher...'); // 디버깅을 위한 로그 추가
+    if (session && publisher && !sttServiceStarted.current) {
+      console.log('Starting STT service for publisher...');
       try {
         sttService.start(handleSttResult);
+        sttServiceStarted.current = true;
       } catch (error) {
         console.error('Error starting STT service:', error);
       }
     }
+
     return () => {
-      console.log('Cleaning up STT service...'); // 디버깅을 위한 로그 추가
-      try {
-        sttService.stop();
-      } catch (error) {
-        console.error('Error stopping STT service:', error);
+      if (sttServiceStarted.current) {
+        console.log('Cleaning up STT service...');
+        try {
+          sttService.stop();
+          sttServiceStarted.current = false;
+        } catch (error) {
+          console.error('Error stopping STT service:', error);
+        }
       }
     };
   }, [session, publisher]);
 
   // 구독자들의 오디오 스트림 처리
   useEffect(() => {
-    console.log('Subscribers changed:', subscribers); // 구독자 변경 로그
+    if (!sttServiceStarted.current) return;
+
     subscribers.forEach((sub) => {
       if (sub.nickname) {
-        console.log('Processing audio stream for subscriber:', sub.nickname); // 디버깅을 위한 로그 추가
         try {
           sttService.processStreamAudio(sub, (result) => {
             handleSttResult({
@@ -575,6 +581,28 @@ const GameRoom = () => {
       // voteTimerRef.current?.startTimer(10); // 10초 안에 투표
     }
 
+    // 모든 플레이어 투표 종료 후
+    if (latest.chatType == 'VOTE_SUBMITTED') {
+      console.log('💡모든 플레이어 투표 완료');
+
+      (async () => {
+        try {
+          // 초기화
+          setSelectedTargetNickname(null);
+          selectedTargetRef.current = null;
+          setIsVoting(false);
+
+          const result = await getVoteResult(roomCode!, roundNumber);
+          console.log('✅투표 결과 조회 api', result);
+
+          setVoteResult(result);
+          setShowVoteResultModal(true);
+        } catch (error) {
+          console.error('투표 결과 조회 실패:', error);
+        }
+      })();
+    }
+
     // 라이어 제시어 추측 제출 (liar found 모달 이후 로직)
     if (latest.chatType == 'GUESS_SUBMITTED') {
       const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
@@ -669,18 +697,6 @@ const GameRoom = () => {
           : selectedTargetRef.current;
       await submitVotes(roomCode!, roundNumber, target);
       console.log('투표 완료:', target);
-      // 초기화
-      setSelectedTargetNickname(null);
-      selectedTargetRef.current = null;
-      setIsVoting(false);
-
-      // 투표 집계 기다리기 (1초) - 로직 수정 필요
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const result = await getVoteResult(roomCode!, roundNumber);
-      console.log('✅투표 결과 조회 api', result);
-      setVoteResult(result);
-      setShowVoteResultModal(true);
     } catch (err) {
       console.error('투표 제출 실패:', err);
     }
@@ -795,7 +811,7 @@ const GameRoom = () => {
               </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
-                <div className="absolute top-6 right-6 z-60 flex gap-2 items-center">
+                <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
                   {currentTurn < 3 && (
                     <GameButton
                       text="기권"
@@ -848,7 +864,7 @@ const GameRoom = () => {
                       <img
                         src="assets/target.png"
                         alt="타겟"
-                        className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
+                        className="absolute top-1/2 left-1/2 w-20 h-20 z-50 -translate-x-1/2 -translate-y-1/2"
                       />
                     )}
                     <div className="flex flex-row justify-start items-center gap-2">
@@ -994,7 +1010,7 @@ const GameRoom = () => {
       {/* 투표 진행 화면 */}
       <div
         id="vote-overlay" // 마우스 위치 조정을 위한 ID
-        className="fixed inset-0 z-50 pointer-events-none transition-opacity duration-500" // 화면 전체 덮는 레이어
+        className="fixed inset-0 z-20 pointer-events-none transition-opacity duration-500" // 화면 전체 덮는 레이어
         style={{
           opacity: isVoting ? 1 : 0,
           background:

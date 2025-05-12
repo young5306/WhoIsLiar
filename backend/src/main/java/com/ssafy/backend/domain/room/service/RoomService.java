@@ -27,6 +27,7 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -195,7 +196,10 @@ public class RoomService {
 	// 전체 방 목록을 조회
 	@Transactional(readOnly = true)
 	public RoomsListResponse getRoomsList() {
-		List<Room> rooms = roomRepository.findAll();
+		// List<Room> rooms = roomRepository.findAll();
+		List<Room> rooms = roomRepository.findAll(
+			Sort.by(Sort.Direction.DESC, "createdAt")
+		);
 		List<RoomInfo> roomInfos = rooms.stream()
 			.map(room -> {
 				int count = participantRepository.countByRoomAndIsActiveTrue(room);
@@ -235,7 +239,10 @@ public class RoomService {
 
 	/** roomName을 포함한 방들을 검색합니다. */
 	public RoomsSearchResponse searchRooms(String roomName) {
-		var rooms = roomRepository.findByRoomNameContaining(roomName);
+		// var rooms = roomRepository.findByRoomNameContaining(roomName);
+		var rooms = roomRepository.findByRoomNameContaining(roomName,
+			Sort.by(Sort.Direction.DESC, "createdAt")
+		);
 		var result = rooms.stream()
 			.map(room -> {
 				int count = participantRepository.countByRoom(room);
