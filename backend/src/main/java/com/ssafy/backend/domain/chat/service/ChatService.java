@@ -53,6 +53,6 @@ public class ChatService {
 
 		chatRepository.save(chat);
 
-		chatSocketService.sendHint(participant.getRoom().getRoomCode(), summary);
+		chatSocketService.sendHint(participant.getRoom().getRoomCode(), SecurityUtils.getCurrentNickname(), summary);
 	}
 }

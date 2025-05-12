@@ -35,6 +35,19 @@ public class ChatSocketService {
 		}
 	}
 
+	private void sendAfterCommit(String roomCode, ChatMessage message) {
+		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCommit() {
+					messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+				}
+			});
+		} else {
+			messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		}
+	}
+
 	public void playerLeft(String roomCode, String nickname) {
 		sendAfterCommit(roomCode, nickname + "님이 퇴장하였습니다.playerleft", ChatType.PLAYER_LEAVE);
 	}
@@ -91,8 +104,9 @@ public class ChatSocketService {
 		sendAfterCommit(roomCode, "모든 플레이어가 투표를 완료했습니다.", ChatType.VOTE_SUBMITTED);
 	}
 
-	public void sendHint(String roomCode, String summary) {
-		sendAfterCommit(roomCode, summary, ChatType.HINT);
+	public void sendHint(String roomCode, String senderNickname, String summary) {
+		ChatMessage message = new ChatMessage(senderNickname, summary, ChatType.HINT);
+		sendAfterCommit(roomCode, message);
 	}
 }
 
