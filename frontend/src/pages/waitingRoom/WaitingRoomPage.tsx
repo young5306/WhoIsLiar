@@ -561,13 +561,19 @@ const WaitingRoomContent = () => {
   const handleStartGame = async () => {
     try {
       if (contextRoomCode) {
-        await Promise.all([
-          setRound(contextRoomCode),
-          startGame(contextRoomCode),
-        ]);
+        // setRound 먼저 실행하고 응답 대기
+        await setRound(contextRoomCode);
+        console.log('✅setRound 완료');
+
+        // setRound 성공 후 startGame 실행
+        await startGame(contextRoomCode);
+        console.log('✅startGame 완료');
+
+        // 모든 API 호출이 성공적으로 완료된 후 페이지 이동
         navigate('/game-room');
       }
     } catch (error) {
+      console.error('게임 시작 중 오류:', error);
       notify({
         type: 'error',
         text: '게임 시작에 실패했습니다.',
