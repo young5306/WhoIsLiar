@@ -118,7 +118,7 @@ const GameRoom = () => {
   const OV = useRef<OpenVidu | null>(null);
 
   const { userInfo } = useAuthStore();
-  const { roomCode } = useRoomStore();
+  const { roomCode, clearRoomCode } = useRoomStore();
   const setRoomCode = useRoomStore((state) => state.setRoomCode);
   const { stompClient } = useWebSocketContext();
   const {
@@ -339,19 +339,22 @@ const GameRoom = () => {
     navigation,
   ]);
 
-  // 새로고침 시, 세션 연결만 종료
+  // 새로고침 시 처리
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
       if (session) {
         session.disconnect();
       }
+      clearRoomCode(); // roomCode 초기화
+      return (e.returnValue = '');
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [session]);
+  }, [session, clearRoomCode]);
 
   const toggleAudio = () => {
     if (publisher) {

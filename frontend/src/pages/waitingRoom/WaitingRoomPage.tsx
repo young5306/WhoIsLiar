@@ -581,6 +581,19 @@ const WaitingRoomContent = () => {
     }
   };
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      clearRoomCode(); // roomCode 초기화
+      return (e.returnValue = '');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [clearRoomCode]);
+
   return (
     <div className="w-screen h-screen flex overflow-hidden px-[4%]">
       {/* Left section */}
