@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -68,6 +71,8 @@ public class RoundService {
 	private final GptService gptService;
 	private final SessionRepository sessionRepository;
 	private final ChatSocketService chatSocketService;
+
+	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
 
 	@Transactional
 	public void deleteGame(String roomCode) {
@@ -273,15 +278,24 @@ public class RoundService {
 		);
 	}
 
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void checkAndNotifyVoteCompleted(String roomCode, Long roundId) {
 		Round round = roundRepository.findById(roundId)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		int currentTurn = round.getTurn();
+
+		Integer lastTurn = lastNotifiedTurn.get(roundId);
+		if (lastTurn != null && lastTurn == currentTurn) {
+			return;
+		}
 
 		long total = participantRoundRepository.countByRound(round);
 		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
 
 		if (voted == total) {
 			chatSocketService.voteCompleted(roomCode);
+			lastNotifiedTurn.put(roundId, currentTurn);
 		}
 	}
 
