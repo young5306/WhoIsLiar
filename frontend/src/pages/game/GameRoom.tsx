@@ -475,9 +475,6 @@ const GameRoom = () => {
   const [currentTurn, setCurrentTurn] = useState(1);
   const [roundNumber, setRoundNumber] = useState<number>(1);
   const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
-  // const [participants, setParticipants] = useState<
-  //   Array<{ participantNickname: string; order: number }>
-  // >([]);
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
@@ -503,6 +500,52 @@ const GameRoom = () => {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const scoreTimerRef = useRef<TimerRef>(null);
 
+  // 참가자 관련 (참가자 순서 지정)
+  const [participants, setParticipants] = useState<
+    Array<{ participantNickname: string; order: number }>
+  >([]);
+  const [sortedParticipants, setSortedPraticipants] = useState<
+    Array<{ participantNickname: string; order: number }>
+  >([]);
+  // const hasParticipants = participants.length > 0;
+  // console.log('hasParticipants', hasParticipants, participants.length);
+
+  useEffect(() => {
+    if (!myUserName || participants.length === 0) return;
+
+    const filtered = participants.filter(
+      (p) => p.participantNickname !== myUserName
+    );
+
+    const sorted = [...filtered]
+      .sort((a, b) => a.order - b.order)
+      .map((p, index) => ({ ...p, order: index + 1 }));
+
+    console.log('participants 정렬 순서 ', sorted);
+    setSortedPraticipants(sorted);
+  }, [participants]);
+
+  useEffect(() => {
+    if (
+      !sortedParticipants ||
+      sortedParticipants.length === 0 ||
+      subscribers.length === 0
+    )
+      return;
+
+    setSubscribers((prev) =>
+      prev.map((sub) => {
+        const matched = sortedParticipants.find(
+          (p) => p.participantNickname === (sub as Subscriber).nickname
+        );
+        (sub as Subscriber).position = matched
+          ? matched.order
+          : (sub as Subscriber).position;
+        return sub;
+      })
+    );
+  }, [sortedParticipants]);
+
   // 방정보(방장, 카테고리), 라운드 세팅 개인정보 조회
   useEffect(() => {
     const setupGameInfo = async () => {
@@ -517,6 +560,8 @@ const GameRoom = () => {
         setMyWord(playerInfoRes.data.word);
         setCategory(roomInfoRes.roomInfo.category);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
+
+        setParticipants(playerInfoRes.data.participants);
 
         console.log('✅playerInfoRes', playerInfoRes);
         console.log('✅roomInfoRes', roomInfoRes);
@@ -590,6 +635,7 @@ const GameRoom = () => {
     // 모든 플레이어 투표 종료 후
     if (latest.chatType == 'VOTE_SUBMITTED') {
       console.log('💡모든 플레이어 투표 완료');
+      console.log(latest);
 
       (async () => {
         try {
@@ -713,8 +759,12 @@ const GameRoom = () => {
     setShowLiarResultModal(false);
 
     // skip 모달 이후
+    console.log(voteResult?.skip);
+
     if (voteResult?.skip) {
       if (myUserName === hostNickname) {
+        console.log(myUserName, hostNickname);
+
         try {
           await endTurn(roomCode!, roundNumber);
           await startTurn(roomCode!, roundNumber);
@@ -791,7 +841,7 @@ const GameRoom = () => {
 
   return (
     <>
-      {session !== undefined ? (
+      {session !== undefined && sortedParticipants.length > 0 ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
@@ -853,11 +903,17 @@ const GameRoom = () => {
                 //   `Subscriber ${sub.nickname} audio active:`,
                 //   sub.stream.audioActive
                 // );
+                const position = sortedParticipants.find(
+                  (p) => p.participantNickname === (sub as Subscriber).nickname
+                )?.order;
+
+                // console.log('위치', sub.nickname, position);
+
                 return (
                   <div
                     key={sub.id || index}
                     onClick={() => isVoting && handleSelectTarget(sub.nickname)}
-                    className={`relative ${getParticipantPosition(index + 1, subscribers.length + 1)} 
+                    className={`relative ${getParticipantPosition(position!, subscribers.length)} 
                     ${isVoting ? 'cursor-pointer' : ''}
                     ${
                       sub.nickname === speakingPlayer
