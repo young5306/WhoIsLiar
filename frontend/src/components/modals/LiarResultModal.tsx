@@ -19,6 +19,7 @@ interface Props {
     voteCount: number;
   }[];
   onClose: () => void;
+  onNext: () => void;
 }
 
 const LiarResultModal = ({
@@ -27,6 +28,7 @@ const LiarResultModal = ({
   result,
   results,
   onClose,
+  onNext,
 }: Props) => {
   const { roomCode } = useRoomStore();
   const { userInfo } = useAuthStore();
@@ -144,8 +146,14 @@ const LiarResultModal = ({
   }, [result.detected, result.skip, onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
-      <div className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70"
+      onClick={onNext}
+    >
+      <div
+        className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="headline-xlarge mb-2">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>
