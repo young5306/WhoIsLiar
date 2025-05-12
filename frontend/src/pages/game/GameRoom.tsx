@@ -133,6 +133,8 @@ const GameRoom = () => {
     Record<string, SttResult | null>
   >({});
 
+  const sttServiceStarted = useRef(false);
+
   // emotion 메시지 처리
   useEffect(() => {
     if (emotionSubscription) {
@@ -419,31 +421,35 @@ const GameRoom = () => {
 
   // 세션 참가 시 STT 시작
   useEffect(() => {
-    console.log('Session or publisher changed:', { session, publisher }); // 상태 변경 로그
-    if (session && publisher) {
-      console.log('Starting STT service for publisher...'); // 디버깅을 위한 로그 추가
+    if (session && publisher && !sttServiceStarted.current) {
+      console.log('Starting STT service for publisher...');
       try {
         sttService.start(handleSttResult);
+        sttServiceStarted.current = true;
       } catch (error) {
         console.error('Error starting STT service:', error);
       }
     }
+
     return () => {
-      console.log('Cleaning up STT service...'); // 디버깅을 위한 로그 추가
-      try {
-        sttService.stop();
-      } catch (error) {
-        console.error('Error stopping STT service:', error);
+      if (sttServiceStarted.current) {
+        console.log('Cleaning up STT service...');
+        try {
+          sttService.stop();
+          sttServiceStarted.current = false;
+        } catch (error) {
+          console.error('Error stopping STT service:', error);
+        }
       }
     };
   }, [session, publisher]);
 
   // 구독자들의 오디오 스트림 처리
   useEffect(() => {
-    console.log('Subscribers changed:', subscribers); // 구독자 변경 로그
+    if (!sttServiceStarted.current) return;
+
     subscribers.forEach((sub) => {
       if (sub.nickname) {
-        console.log('Processing audio stream for subscriber:', sub.nickname); // 디버깅을 위한 로그 추가
         try {
           sttService.processStreamAudio(sub, (result) => {
             handleSttResult({
