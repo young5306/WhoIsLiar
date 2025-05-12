@@ -91,7 +91,7 @@ public class AuthService {
 			// log.info("토큰검증 성공: nickname={}, token={}", s.getNickname(), token);
 			return s;
 		} catch (CustomException ex) {
-			log.warn("토큰검증 실패: token={}, 이유={}", token, ex.getResponseCode());
+			// log.warn("토큰검증 실패: token={}, 이유={}", token, ex.getResponseCode());
 			tokenFail.increment();
 			throw ex;
 		}
