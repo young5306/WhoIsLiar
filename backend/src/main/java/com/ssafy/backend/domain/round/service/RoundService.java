@@ -50,10 +50,12 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class RoundService {
 
 	private final RoomRepository roomRepository;
@@ -253,13 +255,16 @@ public class RoundService {
 		} else {
 			pr.voteTargetParticipant(null);
 		}
+		participantRoundRepository.save(pr);
 
 		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 			@Override
 			public void afterCommit() {
+				log.debug("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
 				checkAndNotifyVoteCompleted(roomCode, round.getId());
 			}
 		});
+		log.debug("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
 
 		return new VoteResponseDto(
 			myNickname,
