@@ -483,6 +483,7 @@ const GameRoom = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
+  const [isTimerReady, setIsTimerReady] = useState(false);
   const speechTimerRef = useRef<TimerRef>(null);
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
@@ -620,9 +621,8 @@ const GameRoom = () => {
       // 닉네임 파싱
       const nickname = latest.content.split('님의')[0]?.trim();
       if (nickname) {
-        setSpeakingPlayer(nickname);
         console.log('🎤 발언자:', nickname);
-        // speechTimerRef.current?.startTimer(20);
+        setSpeakingPlayer(nickname);
       }
     }
 
@@ -692,11 +692,18 @@ const GameRoom = () => {
     }
   };
 
+  // Timer 컴포넌트가 마운트되었는지 확인
+  const handleTimerMount = useCallback(() => {
+    console.log('Timer mounted');
+    setIsTimerReady(true);
+  }, []);
+
   useEffect(() => {
-    if (speakingPlayer) {
-      speechTimerRef.current?.startTimer(20); // 발언자 바뀌면 타이머 재시작
+    if (speakingPlayer && isTimerReady) {
+      console.log('타이머 시작:', speakingPlayer);
+      speechTimerRef.current?.startTimer(20);
     }
-  }, [speakingPlayer]);
+  }, [speakingPlayer, isTimerReady]);
 
   useEffect(() => {
     if (isVoting) {
@@ -861,11 +868,14 @@ const GameRoom = () => {
                 )}
                 {/* 발언 타이머는 모두에게 표시 */}
                 {speakingPlayer && (
-                  <Timer
-                    ref={speechTimerRef}
-                    onTimeEnd={() => console.log('⏰ 타이머 종료')}
-                    size="medium"
-                  />
+                  <div className="relative">
+                    <Timer
+                      ref={speechTimerRef}
+                      onTimeEnd={() => console.log('⏰ 타이머 종료')}
+                      size="medium"
+                      onMount={handleTimerMount}
+                    />
+                  </div>
                 )}
               </>
               {/* --- 투표 시간 --- */}
