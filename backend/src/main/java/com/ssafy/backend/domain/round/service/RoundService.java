@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -219,7 +220,7 @@ public class RoundService {
 		chatSocketService.roundStarted(request.roomCode(), request.roundNumber());
 	}
 
-	@Transactional
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
