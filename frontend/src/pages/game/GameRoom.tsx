@@ -1028,6 +1028,7 @@ const GameRoom = () => {
           }}
           results={voteResult.results}
           onClose={handleLiarResultModalClose}
+          onNext={() => setShowLiarResultModal(false)}
         />
       )}
 
