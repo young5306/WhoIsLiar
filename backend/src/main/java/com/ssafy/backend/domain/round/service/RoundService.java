@@ -217,6 +217,7 @@ public class RoundService {
 		chatSocketService.roundStarted(request.roomCode(), request.roundNumber());
 	}
 
+	@Transactional
 	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
