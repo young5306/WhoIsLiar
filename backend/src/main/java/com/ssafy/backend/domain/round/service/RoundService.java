@@ -48,10 +48,12 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class RoundService {
 
 	private final RoomRepository roomRepository;
@@ -255,8 +257,14 @@ public class RoundService {
 		}
 
 		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
-		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
+		roundVotes.forEach(pp ->
+			log.debug("participant={}, hasVoted={}, target={}",
+				pp.getParticipant().getId(),
+				pp.isHasVoted(),
+				pp.getTargetParticipant()));
 
+		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
+		log.debug(">>> allVoted = {}", allVoted);
 		if (allVoted) {
 			chatSocketService.voteCompleted(roomCode);
 		}
