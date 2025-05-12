@@ -508,13 +508,12 @@ const GameRoom = () => {
     const setupGameInfo = async () => {
       if (!roomCode || !myUserName) return;
       try {
-        const [playerInfoRes, roomInfoRes] = await Promise.all([
-          getPlayerInfo(roomCode),
-          getRoomData(roomCode),
-        ]);
+        // 순차적으로 API 호출
+        const playerInfoRes = await getPlayerInfo(roomCode);
+        const roomInfoRes = await getRoomData(roomCode);
+
         setRoundNumber(playerInfoRes.data.roundNumber);
         setTotalRoundNumber(playerInfoRes.data.totalRoundNumber);
-        // setParticipants(playerInfoRes.data.participants);
         setMyWord(playerInfoRes.data.word);
         setCategory(roomInfoRes.roomInfo.category);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
@@ -531,10 +530,17 @@ const GameRoom = () => {
 
         // 라운드 시작 및 턴 시작 API 순차 호출
         if (myUserName === roomInfoRes.roomInfo.hostNickname) {
-          await startRound(roomCode, playerInfoRes.data.roundNumber);
-          console.log('✅startRound 호출');
-          await startTurn(roomCode, playerInfoRes.data.roundNumber);
-          console.log('✅startTurn 호출');
+          try {
+            // startRound 먼저 실행
+            await startRound(roomCode, playerInfoRes.data.roundNumber);
+            console.log('✅startRound 호출 완료');
+
+            // startRound 성공 후 startTurn 실행
+            await startTurn(roomCode, playerInfoRes.data.roundNumber);
+            console.log('✅startTurn 호출 완료');
+          } catch (error) {
+            console.error('라운드/턴 시작 중 오류:', error);
+          }
         }
       } catch (error) {
         console.error('게임 정보 세팅 중 오류:', error);
