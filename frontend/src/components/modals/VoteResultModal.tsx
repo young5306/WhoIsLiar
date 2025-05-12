@@ -8,14 +8,14 @@ interface Props {
   roundNumber: number;
   totalRoundNumber: number;
   result: VoteResultResponse;
-  onClose: () => void;
+  onNext: () => void; // 다음 로직
 }
 
 const VoteResultModal = ({
   roundNumber,
   totalRoundNumber,
   result,
-  onClose,
+  onNext,
 }: Props) => {
   // const [visibleItems, setVisibleItems] = useState<VoteResultItem[]>([]);
   // const [currentIndex, setCurrentIndex] = useState(0);
@@ -29,7 +29,7 @@ const VoteResultModal = ({
     setSortedResults(sorted);
 
     // 3초 뒤 모달 자동 닫기
-    const timeout = setTimeout(onClose, 3000);
+    const timeout = setTimeout(onNext, 3000);
     return () => clearTimeout(timeout);
   }, [result]);
 

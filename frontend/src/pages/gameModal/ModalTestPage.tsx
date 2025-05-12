@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import GameButton from '../../components/common/GameButton';
-import LiarResultModal from '../../components/modals/LiarResultModal';
 import ScoreModal from '../../components/modals/ScoreModal';
 import VoteResultModal from '../../components/modals/VoteResultModal';
 import { VoteResultResponse } from '../../services/api/GameService';
+import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
+import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
+import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 
 const dummyVoteResult: VoteResultResponse = {
   results: [
@@ -34,17 +36,28 @@ const ModalTestPage = () => {
   return (
     <div className="p-10 space-y-4">
       <h1 className="text-2xl font-bold mb-4">모달 테스트 페이지</h1>
-
       <div className="flex flex-wrap gap-4">
         <GameButton
+          text="Vote Result Modal"
+          onClick={() => setOpenModal('vote')}
+        />
+      </div>
+      <div className="flex flex-wrap gap-4">
+        NEW
+        <GameButton
           text="Liar Found Modal"
-          onClick={() => setOpenModal('liar-found')}
+          onClick={() => setOpenModal('new-liar-found')}
         />
         <GameButton
           text="Liar Not Found Modal"
-          onClick={() => setOpenModal('liar-not-found')}
+          onClick={() => setOpenModal('new-liar-not-found')}
         />
-        <GameButton text="Skip Modal" onClick={() => setOpenModal('skip')} />
+        <GameButton
+          text="Skip Modal"
+          onClick={() => setOpenModal('new-skip')}
+        />
+      </div>
+      <div className="flex flex-wrap gap-4">
         <GameButton
           text="Liar Win Modal"
           onClick={() => setOpenModal('liar-win')}
@@ -61,54 +74,45 @@ const ModalTestPage = () => {
           text="Vote Result Modal"
           onClick={() => setOpenModal('vote')}
         />
-        <GameButton
-          text="Vote Result Modal"
-          onClick={() => setOpenModal('vote')}
-        />
       </div>
 
-      {openModal === 'liar-found' && (
-        <LiarResultModal
+      {openModal === 'vote' && (
+        <VoteResultModal
           roundNumber={2}
           totalRoundNumber={3}
-          result={{ detected: true, skip: false, liarNickname: '홍길동' }}
-          results={[
-            { targetNickname: 'user1', voteCount: 2 },
-            { targetNickname: 'user2', voteCount: 1 },
-            { targetNickname: null, voteCount: 3 },
-          ]}
-          onClose={() => setOpenModal(null)}
+          result={dummyVoteResult}
           onNext={() => setOpenModal(null)}
         />
       )}
 
-      {openModal === 'liar-not-found' && (
-        <LiarResultModal
+      {/* NEW */}
+
+      {openModal === 'new-liar-found' && (
+        <LiarFoundModal
           roundNumber={2}
           totalRoundNumber={3}
-          result={{ detected: false, skip: false }}
-          results={[
-            { targetNickname: 'user1', voteCount: 2 },
-            { targetNickname: 'user2', voteCount: 1 },
-            { targetNickname: null, voteCount: 3 },
-          ]}
-          onClose={() => setOpenModal(null)}
+          liarNickname="홍길동"
           onNext={() => setOpenModal(null)}
+          onClose={() => setOpenModal(null)}
         />
       )}
 
-      {openModal === 'skip' && (
-        <LiarResultModal
+      {openModal === 'new-liar-not-found' && (
+        <LiarNotFoundModal
           roundNumber={2}
           totalRoundNumber={3}
-          result={{ detected: false, skip: true }}
-          results={[
-            { targetNickname: 'user1', voteCount: 2 },
-            { targetNickname: 'user2', voteCount: 1 },
-            { targetNickname: null, voteCount: 3 },
-          ]}
-          onClose={() => setOpenModal(null)}
           onNext={() => setOpenModal(null)}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === 'new-skip' && (
+        <SkipModal
+          roundNumber={2}
+          totalRoundNumber={3}
+          skipCount={3}
+          onNext={() => setOpenModal(null)}
+          onClose={() => setOpenModal(null)}
         />
       )}
 
@@ -136,15 +140,6 @@ const ModalTestPage = () => {
           scores={dummyScores}
           roundNumber={5}
           totalRoundNumber={5}
-          onClose={() => setOpenModal(null)}
-        />
-      )}
-
-      {openModal === 'vote' && (
-        <VoteResultModal
-          roundNumber={2}
-          totalRoundNumber={3}
-          result={dummyVoteResult}
           onClose={() => setOpenModal(null)}
         />
       )}
