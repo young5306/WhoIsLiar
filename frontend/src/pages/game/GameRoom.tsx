@@ -28,6 +28,7 @@ import {
   endRound,
   setRound,
   endGame,
+  submitWordGuess,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -48,9 +49,12 @@ import GameButton from '../../components/common/GameButton';
 import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
-import LiarResultModal from '../../components/modals/LiarResultModal';
 import ScoreModal from '../../components/modals/ScoreModal';
 import { VideoOff, MicOff } from 'lucide-react';
+import SkipModal from '../../components/modals/liarResultModal/SkipModal';
+import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
+import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
+import { notify } from '../../components/common/Toast';
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -495,7 +499,9 @@ const GameRoom = () => {
   // 투표 결과 관련
   const [voteResult, setVoteResult] = useState<VoteResultResponse | null>(null);
   const [showVoteResultModal, setShowVoteResultModal] = useState(false);
-  const [showLiarResultModal, setShowLiarResultModal] = useState(false);
+  const [showSkipModal, setShowSkipModal] = useState(false);
+  const [showLiarFoundModal, setShowLiarFoundModal] = useState(false);
+  const [showLiarNotFoundModal, setShowLiarNotFoundModal] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -598,11 +604,6 @@ const GameRoom = () => {
     setupGameInfo();
   }, [roomCode, myUserName]);
 
-  // 웹소켓 메세지 채팅에 출력 (chatType 표시 제한 위해 로컬 병행 -> GameChat 컴포넌트에 prop 필요?)
-  // const [chatMessages, setChatMessages] = useState<
-  //   Array<{ sender: string; content: string; chatType: string }>
-  // >([]);
-
   // 방 바뀌면 채팅창 초기화
   useEffect(() => {
     clearChatMessages();
@@ -632,10 +633,9 @@ const GameRoom = () => {
       setSpeakingPlayer('');
       setIsVoting(true);
       setSelectedTargetNickname(null);
-      // voteTimerRef.current?.startTimer(10); // 10초 안에 투표
     }
 
-    // 모든 플레이어 투표 종료 후
+    // 모든 플레이어 투표 종료 후 (VoteResultModal 열기)
     if (latest.chatType == 'VOTE_SUBMITTED') {
       console.log('💡모든 플레이어 투표 완료');
       console.log(latest);
@@ -658,15 +658,16 @@ const GameRoom = () => {
       })();
     }
 
-    // 라이어 제시어 추측 제출 (liar found 모달 이후 로직)
+    // 라이어 제시어 추측 제출 후 (LiarFoundModal 이후 로직)
     if (latest.chatType == 'GUESS_SUBMITTED') {
       const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
 
       if (word) {
+        setShowLiarFoundModal(false);
+
         console.log('💡라이어가 추측한 제시어', word);
         setGuessedWord(word);
-        setShowLiarResultModal(false);
         setShowGuessedWord(true);
 
         setTimeout(async () => {
@@ -761,34 +762,6 @@ const GameRoom = () => {
       console.log('투표 완료:', target);
     } catch (err) {
       console.error('투표 제출 실패:', err);
-    }
-  };
-
-  // liar result modal 이후 로직
-  const handleLiarResultModalClose = async () => {
-    setShowLiarResultModal(false);
-
-    // skip 모달 이후
-    console.log(voteResult?.skip);
-
-    if (voteResult?.skip) {
-      if (myUserName === hostNickname) {
-        console.log(myUserName, hostNickname);
-
-        try {
-          await endTurn(roomCode!, roundNumber);
-          await startTurn(roomCode!, roundNumber);
-          console.log('SKIP 이후 다음 턴 시작');
-        } catch (e) {
-          console.error('다음 턴 시작 실패', e);
-        }
-      }
-      setCurrentTurn((prev) => prev + 1);
-    }
-
-    // liar not found 모달 이후
-    if (!voteResult?.detected && !voteResult?.skip) {
-      await fetchAndShowScore();
     }
   };
 
@@ -1094,32 +1067,99 @@ const GameRoom = () => {
         }}
       />
 
-      {/* 투표 결과 모달 */}
+      {/* 투표 결과 모달(voteResultModal) */}
       {showVoteResultModal && voteResult && (
         <VoteResultModal
           result={voteResult}
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
-          onClose={() => {
+          onNext={() => {
             setShowVoteResultModal(false);
-            setShowLiarResultModal(true); // 다음 단계
+            if (voteResult.skip) {
+              setShowSkipModal(true);
+            } else if (voteResult.detected) {
+              setShowLiarFoundModal(true);
+            } else {
+              setShowLiarNotFoundModal(true);
+            }
           }}
         />
       )}
 
-      {/* 라이어 예측 결과 모달 (liar found / liar not found / skip) */}
-      {showLiarResultModal && voteResult && (
-        <LiarResultModal
+      {/* 투표결과모달(voteResultModal) 후 로직 */}
+      {/* 1) SkipModal */}
+      {showSkipModal && voteResult && (
+        <SkipModal
+          skipCount={
+            voteResult.results.find((r) => !r.targetNickname)?.voteCount || 0
+          }
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
-          result={{
-            detected: voteResult.detected,
-            skip: voteResult.skip,
-            liarNickname: voteResult.liarNickname,
+          onNext={async () => {
+            // Skip 모달 이후 - 다음 턴으로
+            setShowSkipModal(false);
+
+            if (myUserName === hostNickname) {
+              try {
+                await endTurn(roomCode!, roundNumber);
+                await startTurn(roomCode!, roundNumber);
+                console.log('SKIP 이후 다음 턴 시작');
+              } catch (e) {
+                console.error('다음 턴 시작 실패', e);
+              }
+            }
+
+            setCurrentTurn((prev) => prev + 1);
           }}
-          results={voteResult.results}
-          onClose={handleLiarResultModalClose}
-          onNext={() => setShowLiarResultModal(false)}
+          onClose={() => {
+            setShowSkipModal(false);
+          }}
+        />
+      )}
+
+      {/* 2) LiarFoundModal */}
+      {showLiarFoundModal && voteResult && (
+        <LiarFoundModal
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          liarNickname={voteResult.liarNickname}
+          onNext={
+            // LiarFoundModal 이후 (라이어가 제시어 제출 버튼 클릭 시)
+            // 1. submitWordGuess api 호출
+            // 2. GUESS_SUBMITTED 이벤트 처리 (입력한 제시어 모달 띄우고, ScoreModal(CIVILIAN WIN) 열기)
+            async (word: string) => {
+              try {
+                await submitWordGuess(roomCode!, roundNumber, word);
+                notify({
+                  type: 'success',
+                  text: `제시어 ${word}(이)가 제출되었습니다!`,
+                });
+              } catch (err: any) {
+                const msg =
+                  err?.response?.data?.message || '제시어 제출에 실패했습니다.';
+                notify({ type: 'error', text: msg });
+              }
+            }
+          }
+          onClose={() => {
+            setShowLiarFoundModal(false);
+          }}
+        />
+      )}
+
+      {/* 3) LiarNotFoundModal */}
+      {showLiarNotFoundModal && voteResult && (
+        <LiarNotFoundModal
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          onNext={async () => {
+            // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
+            setShowLiarNotFoundModal(false);
+            await fetchAndShowScore();
+          }}
+          onClose={() => {
+            setShowLiarNotFoundModal(false);
+          }}
         />
       )}
 
