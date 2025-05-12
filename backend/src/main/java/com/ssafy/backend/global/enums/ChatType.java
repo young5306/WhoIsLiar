@@ -2,6 +2,7 @@ package com.ssafy.backend.global.enums;
 
 public enum ChatType {
 	NORMAL,
+	HINT,
 	ROUND_START,
 	ROUND_END,
 	PLAYER_JOIN,

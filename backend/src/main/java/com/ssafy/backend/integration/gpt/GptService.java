@@ -59,4 +59,34 @@ public class GptService {
 			.path("message").path("content")
 			.asText().trim();
 	}
+
+	public String getSummary(String speech) {
+		var messages = List.of(
+			// Map.of("role", "system", "content", "당신은 라이어게임의 음성 요약 도우미입니다."),
+			// Map.of("role", "user",   "content", "다음 음성 내용을 간결하게 요약해줘. 핵심 내용 문장만 짧고 간단하게. 누가말했는지는 필요없으니까 핵심 내용만. 마치 채팅 친거처럼 간단한 '입니다' 위주의 전달.: " + speech)
+			Map.of("role", "system", "content", "당신은 주어진 텍스트에서 핵심적인 힌트를 뽑아내는 전문가입니다."),
+			Map.of("role", "user",   "content", "주어지는 텍스트는 라이어 게임의 참가자들이 발언한 내용입니다.\n"
+				+ "텍스트 속에서 힌트를 추출하고, 힌트만 대답해주세요.\n"
+				+ "(예시: \"이건 밝은 색이야.\", \"주로 밤에 사용되는 물건이야.\")" + "텍스트 : "+speech)
+		);
+
+		var requestBody = Map.<String, Object>of(
+			"model",      "gpt-4o",
+			"messages",   messages,
+			"max_tokens", 100
+		);
+
+		JsonNode resp = webClient.post()
+			.uri("/chat/completions")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.bodyValue(requestBody)
+			.retrieve()
+			.bodyToMono(JsonNode.class)
+			.block();
+
+		return resp
+			.path("choices").get(0)
+			.path("message").path("content")
+			.asText().trim();
+	}
 }
