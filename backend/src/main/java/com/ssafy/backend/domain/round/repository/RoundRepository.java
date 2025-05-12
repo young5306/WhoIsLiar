@@ -19,16 +19,16 @@ public interface RoundRepository extends JpaRepository<Round, Long> {
 
 	Optional<Round> findTopByRoomOrderByRoundNumberDesc(Room room);
 
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	@Query("""
-      SELECT r
-      FROM Round r
-      JOIN FETCH r.room rm
-      WHERE rm.roomCode = :roomCode
-        AND r.roundNumber = :roundNumber
-    """)
-	Optional<Round> findByRoomCodeAndRoundNumberForUpdate(
-		@Param("roomCode") String roomCode,
-		@Param("roundNumber") int roundNumber
-	);
+	// @Lock(LockModeType.PESSIMISTIC_WRITE)
+	// @Query("""
+    //   SELECT r
+    //   FROM Round r
+    //   JOIN FETCH r.room rm
+    //   WHERE rm.roomCode = :roomCode
+    //     AND r.roundNumber = :roundNumber
+    // """)
+	// Optional<Round> findByRoomCodeAndRoundNumberForUpdate(
+	// 	@Param("roomCode") String roomCode,
+	// 	@Param("roundNumber") int roundNumber
+	// );
 }
