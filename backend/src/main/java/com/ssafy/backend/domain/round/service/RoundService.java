@@ -270,16 +270,16 @@ public class RoundService {
 
 		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"거의 다옴");
 		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
+		log.info("{}",roundVotes.get(0));
 		roundVotes.forEach(pp ->
-			log.debug("participant={}, hasVoted={}, target={}",
+			log.info("participant={}, hasVoted={}, target={}",
 				pp.getParticipant().getId(),
 				pp.isHasVoted(),
 				pp.getTargetParticipant()));
 
 		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"얍");
-
 		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
-		log.debug(">>> allVoted = {}", allVoted);
+		log.info(">>> allVoted = {}", allVoted);
 		if (allVoted) {
 			chatSocketService.voteCompleted(roomCode);
 		}
