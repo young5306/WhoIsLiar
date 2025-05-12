@@ -195,15 +195,24 @@ const WaitingRoomContent = () => {
 
   const checkMediaDevices = async () => {
     try {
-      // 카메라와 마이크 동시에 요청
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // 카메라와 마이크를 개별적으로 요청
+      const videoStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: 'user',
         },
+      });
+
+      const audioStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
+
+      // 스트림 병합
+      const stream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioStream.getAudioTracks(),
+      ]);
 
       // 카메라 설정
       if (videoRef.current) {
@@ -231,6 +240,11 @@ const WaitingRoomContent = () => {
       setIsMicOn(true);
     } catch (error) {
       console.error('Media devices check failed:', error);
+      // 디바이스 접근 실패 시 사용자에게 알림
+      notify({
+        type: 'error',
+        text: '카메라나 마이크에 접근할 수 없습니다. 디바이스가 연결되어 있는지 확인해주세요.',
+      });
     }
   };
 
