@@ -220,7 +220,7 @@ public class RoundService {
 		chatSocketService.roundStarted(request.roomCode(), request.roundNumber());
 	}
 
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Transactional
 	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -258,14 +258,20 @@ public class RoundService {
 		}
 		participantRoundRepository.save(pr);
 
-		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-			@Override
-			public void afterCommit() {
-				log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
-				checkAndNotifyVoteCompleted(roomCode, round.getId());
-			}
-		});
-		log.info("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
+		// TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+		// 	@Override
+		// 	public void afterCommit() {
+		// 		log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
+		// 		checkAndNotifyVoteCompleted(roomCode, round.getId());
+		// 	}
+		// });
+		// log.info("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
+
+		long total = participantRoundRepository.countByRound(round);
+		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
+		if (voted == total) {
+			chatSocketService.voteCompleted(roomCode);
+		}
 
 		return new VoteResponseDto(
 			myNickname,
