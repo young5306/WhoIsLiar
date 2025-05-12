@@ -507,8 +507,8 @@ const GameRoom = () => {
   const [sortedParticipants, setSortedPraticipants] = useState<
     Array<{ participantNickname: string; order: number }>
   >([]);
-  const hasParticipants = participants.length > 0;
-  console.log('hasParticipants', hasParticipants, participants.length);
+  // const hasParticipants = participants.length > 0;
+  // console.log('hasParticipants', hasParticipants, participants.length);
 
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
@@ -836,7 +836,7 @@ const GameRoom = () => {
 
   return (
     <>
-      {session !== undefined && hasParticipants ? (
+      {session !== undefined && sortedParticipants.length > 0 ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
@@ -898,12 +898,11 @@ const GameRoom = () => {
                 //   `Subscriber ${sub.nickname} audio active:`,
                 //   sub.stream.audioActive
                 // );
-                const position =
-                  sub.position ||
-                  sortedParticipants.find(
-                    (p) =>
-                      p.participantNickname === (sub as Subscriber).nickname
-                  )?.order;
+                const position = sortedParticipants.find(
+                  (p) => p.participantNickname === (sub as Subscriber).nickname
+                )?.order;
+
+                // console.log('위치', sub.nickname, position);
 
                 return (
                   <div
