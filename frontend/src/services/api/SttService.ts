@@ -42,7 +42,6 @@ class SttService {
       };
 
       this.recognition.onend = () => {
-        console.log('Speech recognition ended');
         if (this.isListening) {
           this.start(this.onResultCallback!);
         }
@@ -57,7 +56,6 @@ class SttService {
   }
 
   public start(onResult: (result: SttResult) => void) {
-    console.log('Starting STT...');
     if (!this.recognition) {
       console.error('Speech recognition is not supported');
       return;
