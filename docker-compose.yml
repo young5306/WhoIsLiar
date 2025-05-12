@@ -18,23 +18,17 @@ services:
 
   frontend:
     build:
-      context: ./frontend 
+      context: ./frontend
       dockerfile: Dockerfile
     image: frontend:latest
     container_name: frontend
     restart: always
     env_file:
-      - .env
+    - .env
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/custom.conf
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    depends_on:
-      - backend
+      - "5173:80"
     networks:
-      - app-network
+      - app-network                 
 
  
 networks:

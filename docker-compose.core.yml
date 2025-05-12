@@ -1,5 +1,18 @@
 version: "3.8"
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - app-network
+
   mysql:
     image: mysql:8.0
     container_name: mysql
@@ -38,7 +51,7 @@ services:
     restart: always
     command:
       - '--config.file=/etc/config/prometheus.yml'
-      - '--web.external-url=https://whoisliar.me/prometheus/'
+      - '--web.external-url=https://ssafy-gagu.site/prometheus/'
     volumes:
       - ./backend/prometheus.yml:/etc/config/prometheus.yml:ro
     ports:
@@ -52,7 +65,7 @@ services:
     restart: always
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SERVER_ROOT_URL=https://whoisliar.me/grafana/
+      - GF_SERVER_ROOT_URL=https://ssafy-gagu.site/grafana/
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - grafana-data:/var/lib/grafana
