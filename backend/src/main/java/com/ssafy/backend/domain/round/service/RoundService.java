@@ -12,6 +12,8 @@ import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
@@ -48,12 +50,10 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
-@Slf4j
 public class RoundService {
 
 	private final RoomRepository roomRepository;
@@ -72,15 +72,12 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		List<Round> rounds = roundRepository.findByRoom(room);
-		List<Participant> participants = participantRepository.findByRoomAndActive(room);
 
 		// ParticipantRound -> Round -> Participant -> Room 순서로 삭제
 		for (Round round : rounds) {
 			participantRoundRepository.deleteByRound(round);
 		}
 		roundRepository.deleteAll(rounds);
-		participantRepository.deleteAll(participants);
-		roomRepository.delete(room);
 
 		chatSocketService.gameEnded(roomCode);
 	}
@@ -221,7 +218,6 @@ public class RoundService {
 	}
 
 	public VoteResponseDto vote(String roomCode, int roundNumber, VoteRequestDto request) {
-
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
@@ -231,63 +227,55 @@ public class RoundService {
 		String myNickname = SecurityUtils.getCurrentNickname();
 		if (myNickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
 
-		log.info("{}, {}, {},{}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지1");
 		SessionEntity session = sessionRepository.findByNickname(myNickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
 
-		log.info("{}, {}, {},{}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지2");
 		Participant self = participantRepository.findByRoomAndSessionAndActive(room, session)
 			.orElseThrow(() -> new CustomException(ResponseCode.FORBIDDEN));
 
-		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지3");
 		ParticipantRound pr = participantRoundRepository.findByRoundAndParticipant(round, self)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지4");
-
 		String targetNickname = null;
 		if (request.targetParticipantNickname() != null) {
-			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함");
 			SessionEntity targetSession = sessionRepository.findByNickname(request.targetParticipantNickname())
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함2");
 			Participant target = participantRepository.findBySessionAndActive(targetSession)
 				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함3");
 			if (!target.getRoom().equals(room)) {
 				throw new CustomException(ResponseCode.INVALID_REQUEST);
 			}
-			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단함4");
 			pr.voteTargetParticipant(target);
 			targetNickname = target.getSession().getNickname();
 		} else {
 			pr.voteTargetParticipant(null);
-			log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"자 여기까지 투표를 일단 생략함");
 		}
 
-
-		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"거의 다옴");
-		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
-		log.info("{}",roundVotes.get(0));
-		roundVotes.forEach(pp ->
-			log.info("participant={}, hasVoted={}, target={}",
-				pp.getParticipant().getId(),
-				pp.isHasVoted(),
-				pp.getTargetParticipant()));
-
-		log.info("{}, {}, {}, {}",roomCode,myNickname,request.targetParticipantNickname(),"얍");
-		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
-		log.info(">>> allVoted = {}", allVoted);
-		if (allVoted) {
-			chatSocketService.voteCompleted(roomCode);
-		}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				checkAndNotifyVoteCompleted(roomCode, round.getId());
+			}
+		});
 
 		return new VoteResponseDto(
 			myNickname,
 			targetNickname
 		);
+	}
+
+	public void checkAndNotifyVoteCompleted(String roomCode, Long roundId) {
+		Round round = roundRepository.findById(roundId)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		long total = participantRoundRepository.countByRound(round);
+		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
+
+		if (voted == total) {
+			chatSocketService.voteCompleted(roomCode);
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -457,8 +445,11 @@ public class RoundService {
 
 		round.setRoundStatus(RoundStatus.finished);
 		round.setUpdatedAt(LocalDateTime.now());
-
 		roundRepository.save(round);
+
+		if (req.roundNumber() == room.getRoundCount()) {
+			deleteGame(req.roomCode());
+		}
 	}
 
 	@Transactional
