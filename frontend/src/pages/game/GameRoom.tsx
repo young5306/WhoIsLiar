@@ -590,6 +590,7 @@ const GameRoom = () => {
     // 모든 플레이어 투표 종료 후
     if (latest.chatType == 'VOTE_SUBMITTED') {
       console.log('💡모든 플레이어 투표 완료');
+      console.log(latest);
 
       (async () => {
         try {
@@ -713,8 +714,12 @@ const GameRoom = () => {
     setShowLiarResultModal(false);
 
     // skip 모달 이후
+    console.log(voteResult?.skip);
+
     if (voteResult?.skip) {
       if (myUserName === hostNickname) {
+        console.log(myUserName, hostNickname);
+
         try {
           await endTurn(roomCode!, roundNumber);
           await startTurn(roomCode!, roundNumber);
