@@ -58,7 +58,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		boolean exists = sessionRepository.existsByToken(AUTH_TOKEN);
 		if (!exists) {
-			log.warn("Invalid token: {}", AUTH_TOKEN);
+			// log.warn("Invalid token: {}", AUTH_TOKEN);
 			return false;
 		}
 
