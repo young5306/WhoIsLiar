@@ -469,9 +469,9 @@ const GameRoom = () => {
   const [currentTurn, setCurrentTurn] = useState(1);
   const [roundNumber, setRoundNumber] = useState<number>(1);
   const [totalRoundNumber, setTotalRoundNumber] = useState<number>(3);
-  const [_participants, setParticipants] = useState<
-    Array<{ participantNickname: string; order: number }>
-  >([]);
+  // const [participants, setParticipants] = useState<
+  //   Array<{ participantNickname: string; order: number }>
+  // >([]);
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
@@ -508,7 +508,7 @@ const GameRoom = () => {
         ]);
         setRoundNumber(playerInfoRes.data.roundNumber);
         setTotalRoundNumber(playerInfoRes.data.totalRoundNumber);
-        setParticipants(playerInfoRes.data.participants);
+        // setParticipants(playerInfoRes.data.participants);
         setMyWord(playerInfoRes.data.word);
         setCategory(roomInfoRes.roomInfo.category);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
@@ -575,14 +575,15 @@ const GameRoom = () => {
       // voteTimerRef.current?.startTimer(10); // 10초 안에 투표
     }
 
-    // 라이어 제시어 추측 제출
+    // 라이어 제시어 추측 제출 (liar found 모달 이후 로직)
     if (latest.chatType == 'GUESS_SUBMITTED') {
       const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
-      console.log('추측!', latest.content);
+
       if (word) {
         console.log('💡라이어가 추측한 제시어', word);
         setGuessedWord(word);
+        setShowLiarResultModal(false);
         setShowGuessedWord(true);
 
         setTimeout(async () => {
@@ -685,6 +686,30 @@ const GameRoom = () => {
     }
   };
 
+  // liar result modal 이후 로직
+  const handleLiarResultModalClose = async () => {
+    setShowLiarResultModal(false);
+
+    // skip 모달 이후
+    if (voteResult?.skip) {
+      if (myUserName === hostNickname) {
+        try {
+          await endTurn(roomCode!, roundNumber);
+          await startTurn(roomCode!, roundNumber);
+          console.log('SKIP 이후 다음 턴 시작');
+        } catch (e) {
+          console.error('다음 턴 시작 실패', e);
+        }
+      }
+      setCurrentTurn((prev) => prev + 1);
+    }
+
+    // liar not found 모달 이후
+    if (!voteResult?.detected && !voteResult?.skip) {
+      await fetchAndShowScore();
+    }
+  };
+
   // 점수 조회 및 모달 표시
   const fetchAndShowScore = async () => {
     try {
@@ -719,15 +744,20 @@ const GameRoom = () => {
         setRoundNumber(playerInfo.data.roundNumber);
         setMyWord(playerInfo.data.word);
         setCategory(roomInfo.roomInfo.category);
-        setParticipants(playerInfo.data.participants);
+        // setParticipants(playerInfo.data.participants);
 
-        await startRound(roomCode!, playerInfo.data.roundNumber);
-        await startTurn(roomCode!, playerInfo.data.roundNumber);
+        console.log('다음 라운드', playerInfo.data.roundNumber);
+        if (myUserName === hostNickname) {
+          await startRound(roomCode!, playerInfo.data.roundNumber);
+          await startTurn(roomCode!, playerInfo.data.roundNumber);
+        }
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
-        await endRound(roomCode!, roundNumber);
-        await endGame(roomCode!);
+        if (myUserName === hostNickname) {
+          await endRound(roomCode!, roundNumber);
+          await endGame(roomCode!);
+        }
         navigation('/waiting-room');
       }
     } catch (error) {
@@ -765,7 +795,7 @@ const GameRoom = () => {
               </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
-                <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
+                <div className="absolute top-6 right-6 z-60 flex gap-2 items-center">
                   {currentTurn < 3 && (
                     <GameButton
                       text="기권"
@@ -997,26 +1027,12 @@ const GameRoom = () => {
             liarNickname: voteResult.liarNickname,
           }}
           results={voteResult.results}
-          // 이후 로직
-          onClose={async () => {
-            setShowLiarResultModal(false);
-
-            if (voteResult?.skip && userInfo?.nickname === hostNickname) {
-              try {
-                await endTurn(roomCode!, roundNumber);
-                await startTurn(roomCode!, roundNumber);
-                console.log('SKIP 이후 다음 턴 시작');
-              } catch (e) {
-                console.error('다음 턴 시작 실패', e);
-              }
-            }
-
-            setCurrentTurn((prev) => prev + 1);
-          }}
+          onClose={handleLiarResultModalClose}
+          onNext={() => setShowLiarResultModal(false)}
         />
       )}
 
-      {/* 라이어가 추측한 제시어 표시 */}
+      {/* 라이어가 추측한 제시어 표시 모달 */}
       {showGuessedWord && guessedWord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">

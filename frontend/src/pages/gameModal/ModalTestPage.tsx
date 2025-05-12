@@ -78,6 +78,7 @@ const ModalTestPage = () => {
             { targetNickname: null, voteCount: 3 },
           ]}
           onClose={() => setOpenModal(null)}
+          onNext={() => setOpenModal(null)}
         />
       )}
 
@@ -92,6 +93,7 @@ const ModalTestPage = () => {
             { targetNickname: null, voteCount: 3 },
           ]}
           onClose={() => setOpenModal(null)}
+          onNext={() => setOpenModal(null)}
         />
       )}
 
@@ -106,6 +108,7 @@ const ModalTestPage = () => {
             { targetNickname: null, voteCount: 3 },
           ]}
           onClose={() => setOpenModal(null)}
+          onNext={() => setOpenModal(null)}
         />
       )}
 

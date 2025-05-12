@@ -254,6 +254,13 @@ public class RoundService {
 			pr.voteTargetParticipant(null);
 		}
 
+		List<ParticipantRound> roundVotes = participantRoundRepository.findByRound(round);
+		boolean allVoted = roundVotes.stream().allMatch(ParticipantRound::isHasVoted);
+
+		if (allVoted) {
+			chatSocketService.voteCompleted(roomCode);
+		}
+
 		return new VoteResponseDto(
 			myNickname,
 			targetNickname
@@ -431,6 +438,7 @@ public class RoundService {
 		roundRepository.save(round);
 	}
 
+	@Transactional
 	public void updateTurn(TurnUpdateRequestDto req) {
 		Room room = roomRepository.findByRoomCode(req.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -439,6 +447,7 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		round.incrementTurn();
+		participantRoundRepository.resetHasVotedByRound(round);
 
 		roundRepository.save(round);
 	}

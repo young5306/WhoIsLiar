@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -40,6 +41,10 @@ public class ParticipantRound {
 	@JoinColumn(name = "target_participant_id")
 	private Participant targetParticipant;
 
+	@Column(name = "has_voted", nullable = false)
+	@ColumnDefault("false")
+	private boolean hasVoted;
+
 	@Column(nullable = false)
 	private int score = 0;
 
@@ -48,18 +53,20 @@ public class ParticipantRound {
 
 	@Builder
 	public ParticipantRound(Participant participant, Round round, int order, boolean isLiar,
-		Participant targetParticipant, int score, LocalDateTime createdAt) {
+		Participant targetParticipant, boolean hasVoted, int score, LocalDateTime createdAt) {
 		this.participant = participant;
 		this.round = round;
 		this.order = order;
 		this.isLiar = isLiar;
 		this.targetParticipant = targetParticipant;
+		this.hasVoted = hasVoted;
 		this.score = score;
 		this.createdAt = createdAt;
 	}
 
 	public void voteTargetParticipant(Participant targetParticipant) {
 		this.targetParticipant = targetParticipant;
+		this.hasVoted = true;
 	}
 
 	public void addScore(int delta) {

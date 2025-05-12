@@ -19,6 +19,7 @@ interface Props {
     voteCount: number;
   }[];
   onClose: () => void;
+  onNext: () => void;
 }
 
 const LiarResultModal = ({
@@ -27,13 +28,14 @@ const LiarResultModal = ({
   result,
   results,
   onClose,
+  onNext,
 }: Props) => {
   const { roomCode } = useRoomStore();
   const { userInfo } = useAuthStore();
 
   // 제시어 추측 입력창 (라이어용)
   const [input, setInput] = useState('');
-  const [_isSubmitting, setIsSubmitting] = useState(false); // ui 추가
+  // const [isSubmitting, setIsSubmitting] = useState(false); // ui 추가
 
   // 제시어 추측 제출 (라이어용)
   const handleSubmit = async () => {
@@ -42,7 +44,7 @@ const LiarResultModal = ({
     }
 
     try {
-      setIsSubmitting(true);
+      // setIsSubmitting(true);
       await submitWordGuess(roomCode!, roundNumber, input.trim());
       notify({
         type: 'success',
@@ -61,7 +63,7 @@ const LiarResultModal = ({
         error?.response?.data?.message || '제시어 제출에 실패했습니다.';
       notify({ type: 'error', text: msg });
     } finally {
-      setIsSubmitting(false);
+      // setIsSubmitting(false);
     }
   };
 
@@ -133,9 +135,25 @@ const LiarResultModal = ({
     }
   }, [result.skip, onClose]);
 
+  // liar not found 모달 - 5초 후 자동 닫기
+  useEffect(() => {
+    if (!result.skip && !result.detected) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [result.detected, result.skip, onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
-      <div className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70"
+      onClick={onNext}
+    >
+      <div
+        className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="headline-xlarge mb-2">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>
