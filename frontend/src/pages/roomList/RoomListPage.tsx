@@ -223,57 +223,63 @@ const RoomListPage = () => {
       </div>
 
       <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
-        {rooms.map((room, idx) => (
-          <div
-            key={idx}
-            className="border-2 border-transparent hover:border-primary-600 flex items-center justify-between px-4 py-1 my-3 bg-gray-0/20 rounded-lg headline-medium w-full"
-            onDoubleClick={() => handleJoinRoom(room)}
-          >
-            <div className="flex items-center w-full text-gray-0">
-              <span className="w-20 text-center mr-8">{idx + 1}</span>
-              <span className="w-[30%] truncate">{room.roomName}</span>
-              <div className="w-[20%] flex items-center justify-start">
-                <Crown className="w-9 text-gray-0" />
-                <span className="truncate">{room.hostNickname}</span>
-              </div>
-
-              <div className="flex justify-between flex-1 items-center">
-                <div className="w-30 flex items-center justify-start">
-                  <img src="assets/people-white.svg" className="w-8 mr-2" />
-                  <span>{room.playerCount}/6</span>
+        {rooms.length === 0 ? (
+          <div className="text-center text-gray-400  headline-medium px-4 py-4 my-3 bg-gray-0/20 rounded-lg">
+            아직 생성된 방이 없습니다.
+          </div>
+        ) : (
+          rooms.map((room, idx) => (
+            <div
+              key={idx}
+              className="border-2 border-transparent hover:border-primary-600 flex items-center justify-between px-4 py-1 my-3 bg-gray-0/20 rounded-lg headline-medium w-full"
+              onDoubleClick={() => handleJoinRoom(room)}
+            >
+              <div className="flex items-center w-full text-gray-0">
+                <span className="w-20 text-center mr-8">{idx + 1}</span>
+                <span className="w-[30%] truncate">{room.roomName}</span>
+                <div className="w-[20%] flex items-center justify-start">
+                  <Crown className="w-9 text-gray-0" />
+                  <span className="truncate">{room.hostNickname}</span>
                 </div>
-                <span className="w-30 text-center">
-                  <span
-                    className={`${
-                      room.status === 'waiting'
-                        ? 'text-point-neon'
-                        : 'text-primary-600'
-                    }`}
-                  >
-                    {room.status === 'waiting' ? '대기중' : '게임중'}
+
+                <div className="flex justify-between flex-1 items-center">
+                  <div className="w-30 flex items-center justify-start">
+                    <img src="assets/people-white.svg" className="w-8 mr-2" />
+                    <span>{room.playerCount}/6</span>
+                  </div>
+                  <span className="w-30 text-center">
+                    <span
+                      className={`${
+                        room.status === 'waiting'
+                          ? 'text-point-neon'
+                          : 'text-primary-600'
+                      }`}
+                    >
+                      {room.status === 'waiting' ? '대기중' : '게임중'}
+                    </span>
                   </span>
-                </span>
 
-                <div className="w-12 flex justify-center">
-                  {room.isSecret ? (
-                    <img src="assets/lock.svg" className="w-8" />
-                  ) : (
-                    <div className="w-8" />
-                  )}
-                </div>
+                  <div className="w-12 flex justify-center">
+                    {room.isSecret ? (
+                      <img src="assets/lock.svg" className="w-8" />
+                    ) : (
+                      <div className="w-8" />
+                    )}
+                  </div>
 
-                <div className="w-30 flex justify-end">
-                  <GameButton
-                    text="입장"
-                    size="small"
-                    variant="gray"
-                    onClick={() => handleJoinRoom(room)}
-                  />
+                  <div className="w-30 flex justify-end">
+                    <GameButton
+                      text="입장"
+                      size="small"
+                      variant="gray"
+                      onClick={() => handleJoinRoom(room)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="flex justify-end mt-6 gap-6">

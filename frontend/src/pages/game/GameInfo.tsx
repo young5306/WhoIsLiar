@@ -1,5 +1,6 @@
 interface GameInfoProps {
   round: number;
+  totalRoundNumber: number;
   turn: number;
   category: string;
   topic: string;
@@ -8,7 +9,8 @@ interface GameInfoProps {
 
 const GameInfo = ({
   round,
-  // turn,
+  // totalRoundNumber,
+  turn,
   category,
   topic,
   isLiar,
@@ -16,8 +18,9 @@ const GameInfo = ({
   return (
     <div className="flex flex-col space-y-2 mb-4 col-start-1 col-span-2">
       {/* 라운드 */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-start items-end">
         <div className="text-red-600 text-3xl font-bold">ROUND {round}.</div>
+        <span className="text-sm text-red-600 ml-2">TURN {turn} / 3</span>
       </div>
 
       {/* 카테고리, 제시어 */}
