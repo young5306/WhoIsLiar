@@ -37,6 +37,7 @@ import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
+import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
@@ -474,7 +475,7 @@ public class RoundService {
 	}
 
 	@Transactional
-	public void updateTurn(TurnUpdateRequestDto req) {
+	public TurnUpdateResponse updateTurn(TurnUpdateRequestDto req) {
 		Room room = roomRepository.findByRoomCode(req.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
@@ -487,5 +488,7 @@ public class RoundService {
 		roundRepository.save(round);
 
 		lastNotifiedTurn.remove(round.getId());
+		
+		return new TurnUpdateResponse(round.getTurn());
 	}
 }
