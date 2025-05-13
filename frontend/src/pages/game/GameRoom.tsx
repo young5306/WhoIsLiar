@@ -1399,10 +1399,6 @@ const GameRoom = () => {
             async (word: string) => {
               try {
                 await submitWordGuess(roomCode!, roundNumber, word);
-                notify({
-                  type: 'success',
-                  text: `제시어 ${word}(이)가 제출되었습니다!`,
-                });
               } catch (err: any) {
                 const msg =
                   err?.response?.data?.message || '제시어 제출에 실패했습니다.';
