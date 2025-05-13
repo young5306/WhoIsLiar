@@ -475,7 +475,7 @@ const GameRoom = () => {
     return () => {
       // 컴포넌트 언마운트 시 플래그 제거
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      setIsInGame(false);
+      // setIsInGame(false);
     };
   }, [session, clearRoomCode]);
 
@@ -527,17 +527,17 @@ const GameRoom = () => {
     _totalParticipants: number
   ): string => {
     const positions = {
-      1: 'col-span-2 col-start-1 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px] mt-[15px]',
-      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[15px]',
-      3: 'col-span-2 col-start-1 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
-      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
-      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]',
+      1: 'col-span-2 col-start-1 row-span-2 row-start-2 h-fit min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px] mt-[15px]',
+      2: 'col-span-2 col-start-6 row-span-2 row-start-2 h-fit min-h-[150px] min-w-[180px] max-w-[200px] mt-[15px]',
+      3: 'col-span-2 col-start-1 row-span-2 row-start-6 h-fit min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
+      4: 'col-span-2 col-start-1 row-span-2 row-start-4 h-fit min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
+      5: 'col-span-2 col-start-6 row-span-2 row-start-4 h-fit min-h-[150px] min-w-[180px] max-w-[200px]',
     };
     return positions[index as keyof typeof positions] || '';
   };
 
   const myPosition =
-    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
+    'col-span-2 col-start-6 row-span-2 row-start-6 h-fit min-h-[150px] min-w-[180px] max-w-[200px]';
 
   // STT 결과 처리 함수
   const handleSttResult = (result: SttResult) => {
@@ -1140,15 +1140,9 @@ const GameRoom = () => {
 
               {/* Video 영역 */}
               {subscribers.map((sub, index) => {
-                // console.log(
-                //   `Subscriber ${sub.nickname} audio active:`,
-                //   sub.stream.audioActive
-                // );
                 const position = sortedParticipants.find(
                   (p) => p.participantNickname === (sub as Subscriber).nickname
                 )?.order;
-
-                // console.log('위치', sub.nickname, position);
 
                 return (
                   <div
@@ -1196,12 +1190,6 @@ const GameRoom = () => {
                                 <VideoOff size={50} />
                               </div>
                             )}
-
-                            {/* {sub.isVideoEnabled ? (
-                        <UserVideoComponent streamManager={sub} />
-                        ) : (
-                          <VideoOff />
-                        )} */}
                           </div>
                         </div>
                       </div>
@@ -1223,7 +1211,9 @@ const GameRoom = () => {
                 className={`relative ${myPosition} 
                 ${isVoting ? 'cursor-pointer' : ''}
                 ${
-                  myUserName === speakingPlayer ? 'ring-4 ring-point-neon' : ''
+                  myUserName === speakingPlayer
+                    ? 'ring-4 ring-point-neon rounded'
+                    : ''
                 }`}
               >
                 {selectedTargetNickname === myUserName && (
@@ -1246,7 +1236,7 @@ const GameRoom = () => {
                         speaker="나"
                         hintMessage={hintMessages[myUserName]}
                       />
-                      <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
+                      <div className="w-full min-h-[150px] max-h-[180px] flex items-center justify-center">
                         {publisher && isVideoEnabled ? (
                           <UserVideoComponent streamManager={publisher} />
                         ) : (
@@ -1298,6 +1288,8 @@ const GameRoom = () => {
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}
+                myUserName={myUserName}
+                speakingPlayer={speakingPlayer}
                 onToggleAudio={toggleAudio}
                 onToggleVideo={toggleVideo}
                 onLeaveSession={leaveSession}

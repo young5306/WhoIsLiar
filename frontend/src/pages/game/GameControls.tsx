@@ -11,6 +11,8 @@ import {
 interface GameControlsProps {
   isAudioEnabled: boolean;
   isVideoEnabled: boolean;
+  myUserName: string;
+  speakingPlayer: string;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onLeaveSession: () => void;
@@ -19,13 +21,15 @@ interface GameControlsProps {
 const GameControls = ({
   isAudioEnabled,
   isVideoEnabled,
+  myUserName,
+  speakingPlayer,
   onToggleAudio,
   onToggleVideo,
   onLeaveSession,
 }: GameControlsProps) => {
-  const handleSettings = () => {
-    // console.log('Settings');
-  };
+  // const handleSettings = () => {
+  // console.log('Settings');
+  // };
   return (
     <>
       {/* <div></div> */}
@@ -35,12 +39,12 @@ const GameControls = ({
           <div className="flex space-x-4">
             <button
               onClick={onToggleAudio}
-              className={`p-2 rounded-full ${isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'} cursor-pointer`}
+              className={`p-2 rounded-full ${myUserName === speakingPlayer && isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'} ${myUserName === speakingPlayer ? 'cursor-pointer' : 'cursor-not-allowed'}`}
             >
-              {isAudioEnabled ? (
+              {myUserName === speakingPlayer && isAudioEnabled ? (
                 <Mic className="h-5 w-5" />
               ) : (
-                <MicOff className="h-5 w-5" />
+                <MicOff className="h-5 w-5 " />
               )}
             </button>
 
