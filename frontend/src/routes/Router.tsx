@@ -71,9 +71,9 @@ const Router = () => {
         <Route
           path="/game-room"
           element={
-            // <GameRoomProtectedRoute>
-            <GameRoom />
-            // </GameRoomProtectedRoute>
+            <GameRoomProtectedRoute>
+              <GameRoom />
+            </GameRoomProtectedRoute>
           }
         />
       </Route>

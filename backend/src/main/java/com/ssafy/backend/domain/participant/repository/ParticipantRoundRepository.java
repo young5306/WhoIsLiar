@@ -30,4 +30,8 @@ public interface ParticipantRoundRepository extends JpaRepository<ParticipantRou
 	@Modifying
 	@Query("UPDATE ParticipantRound pr SET pr.hasVoted = false WHERE pr.round = :round")
 	void resetHasVotedByRound(@Param("round") Round round);
+
+	long countByRound(Round round);
+
+	long countByRoundAndHasVotedTrue(Round round);
 }
