@@ -134,7 +134,9 @@ export const skipTurn = async (roomCode: string) => {
 // 게임 종료(라운드 삭제)
 // [DELETE] /api/rounds/end
 export const endGame = async (roomCode: string, roundNumber: number) => {
-  const res = await api.delete(`/rounds/end`);
+  const res = await api.delete(`/rounds/end`, {
+    data: { roomCode, roundNumber },
+  });
   return res.data;
 };
 
