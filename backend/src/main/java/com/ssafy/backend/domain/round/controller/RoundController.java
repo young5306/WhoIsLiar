@@ -23,6 +23,7 @@ import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
+import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
@@ -241,11 +242,11 @@ public class RoundController {
 		@ApiResponse(responseCode = "404", description = "방 또는 라운드를 찾을 수 없습니다.")
 	})
 	@PostMapping("/turn/update")
-	public ResponseEntity<CommonResponse<Void>> updateTurn(
+	public ResponseEntity<CommonResponse<TurnUpdateResponse>> updateTurn(
 		@Valid @RequestBody TurnUpdateRequestDto request
 	) {
-		roundService.updateTurn(request);
-		return ok(null);
+		TurnUpdateResponse response = roundService.updateTurn(request);
+		return ok(response);
 	}
 
 	@PostMapping("/turn/skip")

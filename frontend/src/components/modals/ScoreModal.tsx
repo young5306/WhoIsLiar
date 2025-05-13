@@ -25,6 +25,8 @@ const ScoreModal = ({
 }: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
 
+  const sortedScores = [...scores].sort((a, b) => b.totalScore - a.totalScore);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60"
@@ -41,7 +43,7 @@ const ScoreModal = ({
         <img src={titleImage} alt="title" className="mx-auto mt-8 mb-10 h-18" />
 
         <ul className="space-y-2">
-          {scores.map((s, idx) => (
+          {sortedScores.map((s, idx) => (
             <li key={s.participantNickname} className="flex items-center gap-2">
               <div className="w-6 flex justify-center">
                 {idx < 3 && (

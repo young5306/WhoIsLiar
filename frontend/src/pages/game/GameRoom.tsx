@@ -21,7 +21,7 @@ import {
   submitVotes,
   VoteResultResponse,
   getVoteResult,
-  endTurn,
+  updateTurn,
   ScoreResponse,
   getScores,
   endRound,
@@ -35,8 +35,7 @@ import UserVideoComponent from './UserVideoComponent';
 import GameInfo from './GameInfo';
 import GameControls from './GameControls';
 
-import { FaceApiResult } from '../../services/api/FaceApiService';
-import { loadModels } from '../../services/api/FaceApiService';
+import { FaceApiResult, loadModels } from '../../services/api/FaceApiService';
 import GameChat from './GameChat';
 import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
@@ -49,11 +48,127 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { VideoOff, MicOff } from 'lucide-react';
+import { VideoOff, Info } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
 import { notify } from '../../components/common/Toast';
+
+// STT 디버깅 모달 컴포넌트
+const SttDebugModal = ({
+  isOpen,
+  onClose,
+  debugInfo,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  debugInfo: any;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-auto">
+      <div className="bg-gray-800 text-white p-6 rounded-lg max-w-3xl max-h-[80vh] overflow-auto">
+        <h2 className="text-xl font-bold mb-4">STT 디버깅 정보</h2>
+
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">상태 정보</h3>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="bg-gray-700 p-2 rounded">
+              <span className="font-medium">마이크 듣기: </span>
+              <span
+                className={
+                  debugInfo.isListening ? 'text-green-400' : 'text-red-400'
+                }
+              >
+                {debugInfo.isListening ? '활성화' : '비활성화'}
+              </span>
+            </div>
+            <div className="bg-gray-700 p-2 rounded">
+              <span className="font-medium">현재 발언자: </span>
+              <span>{debugInfo.currentSpeakingPlayer || '없음'}</span>
+            </div>
+            <div className="bg-gray-700 p-2 rounded">
+              <span className="font-medium">내 이름: </span>
+              <span>{debugInfo.myUserName || '없음'}</span>
+            </div>
+            <div className="bg-gray-700 p-2 rounded">
+              <span className="font-medium">음성 인식됨: </span>
+              <span
+                className={
+                  debugInfo.hasRecognizedSpeech
+                    ? 'text-green-400'
+                    : 'text-yellow-400'
+                }
+              >
+                {debugInfo.hasRecognizedSpeech ? '있음 ✅' : '없음 ❌'}
+              </span>
+            </div>
+            <div className="bg-gray-700 p-2 rounded col-span-2">
+              <span className="font-medium">마지막 인식 시간: </span>
+              <span>
+                {debugInfo.timeSinceLastRecognition !== null
+                  ? `${Math.round(debugInfo.timeSinceLastRecognition / 1000)}초 전`
+                  : '아직 없음'}
+              </span>
+            </div>
+            <div className="bg-gray-700 p-2 rounded col-span-2">
+              <span className="font-medium">누적 텍스트: </span>
+              <span className="text-green-300">
+                {debugInfo.accumulatedText || '없음'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">로그 (최근 순)</h3>
+          <div className="bg-gray-900 p-3 rounded h-60 overflow-y-auto">
+            {debugInfo.debugLogs &&
+              debugInfo.debugLogs
+                .slice()
+                .reverse()
+                .map((log: string, index: number) => (
+                  <div key={index} className="text-xs mb-1 font-mono">
+                    {log}
+                  </div>
+                ))}
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={async () => {
+              try {
+                const hasAccess = await sttService.checkMicrophoneAccess();
+                notify({
+                  type: hasAccess ? 'success' : 'error',
+                  text: hasAccess
+                    ? '마이크 접근 권한이 있습니다.'
+                    : '마이크 접근 권한이 없습니다!',
+                });
+              } catch (error) {
+                notify({
+                  type: 'error',
+                  text: '마이크 권한 확인 중 오류가 발생했습니다.',
+                });
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          >
+            마이크 권한 확인
+          </button>
+          <button
+            onClick={onClose}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
@@ -104,7 +219,7 @@ const GameRoom = () => {
   );
 
   // 카메라, 마이크 상태 관리
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
   const [playerState, _setPlayerState] = useState<PlayerState>({
@@ -227,10 +342,10 @@ const GameRoom = () => {
       await mySession.connect(token, { clientData: myUserName });
 
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
-        audioSource: undefined,
-        videoSource: undefined,
-        publishAudio: isAudioEnabled,
-        publishVideo: isVideoEnabled,
+        audioSource: undefined, // 기본 마이크 사용
+        videoSource: undefined, // 기본 카메라 사용
+        publishAudio: false, // 처음에는 마이크 꺼진 상태로 시작
+        publishVideo: true, // 비디오는 켜진 상태로 시작
         resolution: '640x480',
         frameRate: 30,
         insertMode: 'APPEND',
@@ -339,7 +454,7 @@ const GameRoom = () => {
 
   // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       // 세션 연결 해제
       if (session) {
         session.disconnect();
@@ -433,14 +548,30 @@ const GameRoom = () => {
         [result.speaker]: result,
       };
       console.log('Updated STT results:', newResults); // 디버깅 로그 추가
+
+      // 현재 발언자의 발언 내용을 직접 저장 (서비스에서도 저장되지만 확실히 하기 위해)
+      if (
+        result.speaker === 'current' &&
+        result.isFinal &&
+        speakingPlayer === myUserName &&
+        result.text.trim() !== ''
+      ) {
+        console.log('최종 발언 내용 직접 저장:', result.text);
+        // 강제로 텍스트 추가
+        sttService.forceAddText(result.text);
+      }
+
       return newResults;
     });
   };
 
+  // HINT 메시지를 처리하기 위한 상태
+  const [hintMessages, setHintMessages] = useState<Record<string, string>>({});
+
   // 세션 참가 시 STT 시작
   useEffect(() => {
     if (session && publisher && !sttServiceStarted.current) {
-      console.log('Starting STT service for publisher...');
+      console.log('Starting STT service...');
       try {
         sttService.start(handleSttResult);
         sttServiceStarted.current = true;
@@ -462,29 +593,9 @@ const GameRoom = () => {
     };
   }, [session, publisher]);
 
-  // 구독자들의 오디오 스트림 처리
-  useEffect(() => {
-    if (!sttServiceStarted.current) return;
+  // 구독자들의 오디오 스트림 처리는 더 이상 필요 없음
+  // 현재 발언자만 마이크를 활성화하고 그 오디오만 처리함
 
-    subscribers.forEach((sub) => {
-      if (sub.nickname) {
-        try {
-          sttService.processStreamAudio(sub, (result) => {
-            handleSttResult({
-              ...result,
-              speaker: sub.nickname || 'unknown',
-            });
-          });
-        } catch (error) {
-          console.error(
-            'Error processing audio stream for subscriber:',
-            sub.nickname,
-            error
-          );
-        }
-      }
-    });
-  }, [subscribers]);
   /////////////////////게임 진행 코드 시작/////////////////////
 
   const chatMessages = useSocketStore((state) => state.chatMessages); // 메세지 변경만 감지
@@ -627,29 +738,90 @@ const GameRoom = () => {
     const latest = chatMessages.at(-1);
 
     // NORMAL일 경우 무시
-    if (!latest || latest.chatType == 'NORMAL') return;
+    if (!latest) return;
+
+    if (latest.chatType === 'NORMAL') return;
 
     // 개인 발언
-    if (latest.chatType == 'TURN_START') {
+    if (latest.chatType === 'TURN_START') {
       console.log('💡TURN_START 수신 확인');
       // 닉네임 파싱
       const nickname = latest.content.split('님의')[0]?.trim();
       if (nickname) {
         console.log('🎤 발언자:', nickname);
         setSpeakingPlayer(nickname);
+        // STT 서비스에 현재 발언자 설정
+        sttService.setSpeakingPlayer(nickname, myUserName);
+
+        // 내가 발언자인 경우 마이크 강제 활성화, 아니면 비활성화
+        if (nickname === myUserName && publisher) {
+          console.log('🎤 내가 발언자입니다. 마이크 강제 켜기');
+          // 강제로 마이크 켜기 (상태와 관계없이)
+          publisher.publishAudio(true);
+          setIsAudioEnabled(true);
+
+          // 로그 추가로 마이크 상태 확인
+          setTimeout(() => {
+            const audioTrack = publisher.stream
+              .getMediaStream()
+              .getAudioTracks()[0];
+            console.log(
+              '🎤 내 마이크 상태:',
+              audioTrack?.enabled,
+              '활성화:',
+              publisher.stream.audioActive
+            );
+          }, 500);
+        } else if (publisher) {
+          console.log('🎤 내가 발언자가 아닙니다. 마이크 강제 끄기');
+          // 강제로 마이크 끄기 (상태와 관계없이)
+          publisher.publishAudio(false);
+          setIsAudioEnabled(false);
+        }
       }
     }
 
     // 모든 발언 종료 후 투표 시작
-    if (latest.chatType == 'ROUND_END') {
+    if (latest.chatType === 'ROUND_END') {
       console.log('💡투표 시작');
+
+      // 내가 마지막 발언자였으면 녹음 종료 및 요약 요청
+      if (myUserName === speakingPlayer) {
+        console.log('라운드 종료: 내가 마지막 발언자였으므로 마이크 종료');
+        // 요약 처리 제거 - 타이머에서만 처리
+        // sttService.finishSpeechRecording();
+      }
+
       setSpeakingPlayer('');
       setIsVoting(true);
       setSelectedTargetNickname(null);
+      // STT 서비스 발언자 초기화
+      sttService.clearSpeakingPlayer();
+
+      // 투표 시작 시 마이크 끄기
+      if (isAudioEnabled && publisher) {
+        console.log('🎤 투표 시작. 마이크 끄기');
+        // 마이크 직접 제어
+        publisher.publishAudio(false);
+        setIsAudioEnabled(false);
+      }
+    }
+
+    // HINT 메시지 처리
+    if (latest.chatType === 'HINT') {
+      console.log('💡HINT 메시지 수신:', latest);
+      console.log('💡발신자:', latest.sender, '내용:', latest.content);
+
+      // HINT 메시지는 sttSummary API의 결과로 WebSocket을 통해 받습니다
+      // sender는 발언자의 닉네임, content는 요약된 내용입니다
+      setHintMessages((prev) => ({
+        ...prev,
+        [latest.sender]: latest.content,
+      }));
     }
 
     // 모든 플레이어 투표 종료 후 (VoteResultModal 열기)
-    if (latest.chatType == 'VOTE_SUBMITTED') {
+    if (latest.chatType === 'VOTE_SUBMITTED') {
       console.log('💡모든 플레이어 투표 완료');
       console.log(latest);
 
@@ -672,7 +844,7 @@ const GameRoom = () => {
     }
 
     // 라이어 제시어 추측 제출 후 (LiarFoundModal 이후 로직)
-    if (latest.chatType == 'GUESS_SUBMITTED') {
+    if (latest.chatType === 'GUESS_SUBMITTED') {
       const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
 
@@ -689,7 +861,7 @@ const GameRoom = () => {
         }, 2000);
       }
     }
-  }, [chatMessages]);
+  }, [chatMessages, myUserName]);
 
   // 발언 skip 핸들러
   const handleSkipTurn = async (roomCode: string | null) => {
@@ -699,6 +871,14 @@ const GameRoom = () => {
     }
 
     try {
+      // 발언 종료 및 요약 처리
+      if (myUserName === speakingPlayer) {
+        console.log('발언 스킵: 내 턴이므로 녹음 종료 및 요약 요청');
+
+        // 즉시 녹음 종료 및 요약 처리
+        sttService.finishSpeechRecording();
+      }
+
       await skipTurn(roomCode);
       console.log('턴이 스킵되었습니다.');
     } catch (error) {
@@ -718,6 +898,16 @@ const GameRoom = () => {
       speechTimerRef.current?.startTimer(20);
     }
   }, [speakingPlayer, isTimerReady]);
+
+  // 발언 타이머 종료 시 처리
+  const handleSpeechTimerEnd = useCallback(() => {
+    console.log('⏰ 발언 타이머 종료');
+    // 내가 발언자인 경우 녹음 종료 및 요약 처리
+    if (myUserName === speakingPlayer) {
+      console.log('내 턴이 끝났으므로 녹음 종료 및 요약 요청');
+      sttService.finishSpeechRecording();
+    }
+  }, [myUserName, speakingPlayer]);
 
   useEffect(() => {
     if (isVoting) {
@@ -785,6 +975,13 @@ const GameRoom = () => {
       setScoreData(result);
       setShowScoreModal(true);
       scoreTimerRef.current?.startTimer(10);
+
+      console.log('현재 라운드 끝', roundNumber);
+      setCurrentTurn(1); // 초기화
+      if (myUserName === hostNickname) {
+        await endRound(roomCode!, roundNumber);
+        await setRound(roomCode!);
+      }
     } catch (error) {
       console.error('점수 조회 실패:', error);
     }
@@ -803,21 +1000,12 @@ const GameRoom = () => {
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
-        console.log('현재 라운드', roundNumber);
-        if (myUserName === hostNickname) {
-          await endRound(roomCode!, roundNumber);
-          await setRound(roomCode!);
-        }
-
         const playerInfoRes = await getPlayerInfo(roomCode!);
-        const roomInfoRes = await getRoomData(roomCode!);
         console.log('✅playerInfoRes', playerInfoRes);
-        console.log('✅roomInfoRes', roomInfoRes);
         console.log('✅세팅 끝');
 
         setRoundNumber(playerInfoRes.data.roundNumber);
         setMyWord(playerInfoRes.data.word);
-        setCategory(roomInfoRes.roomInfo.category);
         setParticipants(playerInfoRes.data.participants);
 
         console.log('다음 라운드', playerInfoRes.data.roundNumber);
@@ -829,8 +1017,7 @@ const GameRoom = () => {
       // 마지막 라운드 종료 후 게임 종료
       else {
         if (myUserName === hostNickname) {
-          await endRound(roomCode!, roundNumber);
-          await endGame(roomCode!);
+          await endGame(roomCode!, roundNumber);
         }
         navigation('/waiting-room');
       }
@@ -839,7 +1026,39 @@ const GameRoom = () => {
     }
   };
 
-  /////////////////////게임 진행 코드 끝/////////////////////
+  // 발언자 관련 추가 효과
+  const [showSttDebug, setShowSttDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>({
+    isListening: false,
+    currentSpeakingPlayer: null,
+    myUserName: null,
+    accumulatedText: '',
+    hasRecognizedSpeech: false,
+    debugLogs: [],
+  });
+
+  // 디버그 모달을 위한 정보 갱신 함수
+  const updateDebugInfo = useCallback(() => {
+    if (sttService) {
+      const currentDebugInfo = sttService.getDebugState();
+      setDebugInfo(currentDebugInfo);
+    }
+  }, []);
+
+  // 디버그 모달이 열렸을 때 디버깅 정보 갱신을 위한 인터벌 설정
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (showSttDebug) {
+      updateDebugInfo();
+      interval = setInterval(updateDebugInfo, 1000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [showSttDebug, updateDebugInfo]);
 
   return (
     <>
@@ -847,6 +1066,15 @@ const GameRoom = () => {
         <>
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+              {/* STT 디버깅 버튼 */}
+              <button
+                onClick={() => setShowSttDebug(true)}
+                className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center"
+                title="STT 디버깅"
+              >
+                <Info size={16} />
+              </button>
+
               {/* --- 발언시간 --- */}
               <>
                 {/* 발언자만 skip 버튼 표시 */}
@@ -863,7 +1091,7 @@ const GameRoom = () => {
                   <div className="relative">
                     <Timer
                       ref={speechTimerRef}
-                      onTimeEnd={() => console.log('⏰ 타이머 종료')}
+                      onTimeEnd={handleSpeechTimerEnd}
                       size="medium"
                       onMount={handleTimerMount}
                     />
@@ -952,15 +1180,16 @@ const GameRoom = () => {
                             <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                               {sub.nickname}
                             </div>
-                            {!sub.stream.audioActive && (
-                              <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
-                                <MicOff size={19} color="red" opacity={50} />
-                              </div>
-                            )}
                           </div>
                           <SttText
-                            sttResult={sttResults[sub.nickname || ''] || null}
-                            speaker={sub.nickname || 'unknown'}
+                            sttResult={
+                              sttResults[(sub as Subscriber).nickname || ''] ||
+                              null
+                            }
+                            speaker={(sub as Subscriber).nickname || 'unknown'}
+                            hintMessage={
+                              hintMessages[(sub as Subscriber).nickname || '']
+                            }
                           />
                           <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                             {sub.stream.videoActive ? (
@@ -1014,15 +1243,11 @@ const GameRoom = () => {
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                           나
                         </div>
-                        {isAudioEnabled ? null : (
-                          <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
-                            <MicOff size={19} color="red" opacity={50} />
-                          </div>
-                        )}
                       </div>
                       <SttText
                         sttResult={sttResults['current'] || null}
                         speaker="나"
+                        hintMessage={hintMessages[myUserName]}
                       />
                       <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                         {publisher && isVideoEnabled ? (
@@ -1137,7 +1362,7 @@ const GameRoom = () => {
 
             if (myUserName === hostNickname) {
               try {
-                await endTurn(roomCode!, roundNumber);
+                await updateTurn(roomCode!, roundNumber);
                 await startTurn(roomCode!, roundNumber);
                 console.log('SKIP 이후 다음 턴 시작');
               } catch (e) {
@@ -1214,6 +1439,10 @@ const GameRoom = () => {
       )}
 
       {/* 점수 모달 */}
+      {/* 
+        점수 모달 열 때(fetchAndShowScore) 라운드 종료(endRound), 다음 roundNumber 갱신(setRound)
+        점수 모달 타이머 끝날 때(handleScoreTimeEnd) 다음 라운드 개인정보 조회(getPlayerInfo)  
+      */}
       {showScoreModal && scoreData && (
         <>
           <ScoreModal
@@ -1238,6 +1467,13 @@ const GameRoom = () => {
           </div>
         </>
       )}
+
+      {/* STT 디버깅 모달 */}
+      <SttDebugModal
+        isOpen={showSttDebug}
+        onClose={() => setShowSttDebug(false)}
+        debugInfo={debugInfo}
+      />
     </>
   );
 };

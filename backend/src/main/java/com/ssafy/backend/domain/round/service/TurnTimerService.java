@@ -53,15 +53,13 @@ public class TurnTimerService {
 			return;
 		}
 
-		Room room = roomRepository.findByRoomCode(roomCode)
+		roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+		roundRepository.findByRoomAndRoundNumber(
+				roomRepository.findByRoomCode(roomCode).get(), roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-		List<ParticipantRound> turnList =
-			participantRoundRepository.findByRoundWithParticipantSession(round);
-		if (turnList.isEmpty()) throw new CustomException(ResponseCode.NOT_FOUND);
 
-		TurnState state = new TurnState(turnList, 0, null);
+		TurnState state = new TurnState(roundNumber, 0, null);
 		turnMap.put(roomCode, state);
 
 		startNextTurn(roomCode, state); // 첫 턴은 즉시 시작
@@ -80,25 +78,33 @@ public class TurnTimerService {
 	public void proceedToNextTurn(String roomCode) {
 		TurnState state = turnMap.get(roomCode);
 		if (state == null) return;
-
-		if (state.getIndex() >= state.getTurns().size()) {
-			chatSocketService.roundFullyEnded(roomCode);
-			turnMap.remove(roomCode);
-			return;
-		}
+		//
+		// if (state.getIndex() >= state.getTurns().size()) {
+		// 	chatSocketService.roundFullyEnded(roomCode);
+		// 	turnMap.remove(roomCode);
+		// 	return;
+		// }
 
 		// 이후 턴부터는 3초 대기
 		scheduler.schedule(() -> startNextTurn(roomCode, state), Instant.now().plusSeconds(TURN_DELAY_SECONDS));
 	}
 
 	private void startNextTurn(String roomCode, TurnState state) {
-		if (state.getIndex() >= state.getTurns().size()) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+		Round round = roundRepository.findByRoomAndRoundNumber(room, state.getRoundNumber())
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		List<ParticipantRound> turnList =
+			participantRoundRepository.findByRoundWithParticipantSession(round);
+
+		if (state.getIndex() >= turnList.size()) {
 			chatSocketService.roundFullyEnded(roomCode);
 			turnMap.remove(roomCode);
 			return;
 		}
 
-		ParticipantRound current = state.getTurns().get(state.getIndex());
+		ParticipantRound current = turnList.get(state.getIndex());
 		Long participantRoundId = current.getId();
 		int currentIndex = state.getIndex();
 
@@ -116,6 +122,14 @@ public class TurnTimerService {
 		chatSocketService.sendTurnStart(roomCode, nickname, TURN_DURATION_SECONDS);
 	}
 
+	public void cancelTurnSequence(String roomCode) {
+		TurnState state = turnMap.remove(roomCode);
+		if (state != null && state.getFuture() != null) {
+			state.getFuture().cancel(false);
+			log.info("TurnTimerService: roomCode={} 타이머 취소", roomCode);
+		}
+	}
+
 	@PreDestroy
 	public void shutdown() {
 		log.info("TurnTimerService 종료. 타이머 중지.");
@@ -130,17 +144,17 @@ public class TurnTimerService {
 	}
 
 	public static class TurnState {
-		private final List<ParticipantRound> turns;
+		private int roundNumber;
 		private int index;
 		private ScheduledFuture<?> future;
 
-		public TurnState(List<ParticipantRound> turns, int index, ScheduledFuture<?> future) {
-			this.turns = turns;
+		public TurnState(int roundNumber, int index, ScheduledFuture<?> future) {
+			this.roundNumber = roundNumber;
 			this.index = index;
 			this.future = future;
 		}
 
-		public List<ParticipantRound> getTurns() { return turns; }
+		public int getRoundNumber() {return roundNumber;}
 		public int getIndex() { return index; }
 		public ScheduledFuture<?> getFuture() { return future; }
 
