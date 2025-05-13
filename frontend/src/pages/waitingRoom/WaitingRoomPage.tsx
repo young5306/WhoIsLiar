@@ -594,6 +594,30 @@ const WaitingRoomContent = () => {
     };
   }, [clearRoomCode]);
 
+  ////////// 디바이스 장치 확인///////
+  // async function getAvailableDevices() {
+  //   try {
+  //     const devices = await navigator.mediaDevices.enumerateDevices();
+  //     if (devices.length === 0) {
+  //       console.log('No devices found.');
+  //       alert('장치를 찾을 수 없습니다. 브라우저를 재시작해보세요.');
+  //       return;
+  //     }
+
+  //     devices.forEach((device) => {
+  //       console.log(`${device.kind}: ${device.label} (ID: ${device.deviceId})`);
+  //     });
+  //     // alert('장치 목록을 콘솔에서 확인하세요.');
+  //   } catch (err) {
+  //     console.error('Device enumeration failed:', err);
+  //     alert('장치 목록 확인 중 오류가 발생했습니다.');
+  //   }
+  // }
+
+  // getAvailableDevices();
+
+  ///////////////////
+
   return (
     <div className="w-screen h-screen flex overflow-hidden px-[4%]">
       {/* Left section */}

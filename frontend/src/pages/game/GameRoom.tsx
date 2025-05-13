@@ -12,7 +12,6 @@ import {
 import {
   getToken,
   Subscriber,
-  // GameState,
   PlayerState,
   outRoom,
   getPlayerInfo,
@@ -78,6 +77,8 @@ const GameRoom = () => {
   };
 
   const [isLogReady, setIsLogReady] = useState(false);
+  // 새로고침 플래그
+  const [isInGame, setIsInGame] = useState(true);
 
   const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
@@ -106,14 +107,6 @@ const GameRoom = () => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
-  // const [gameState, _setGameState] = useState<GameState>({
-  //   round: 1,
-  //   turn: 1,
-  //   category: '',
-  //   topic: '',
-  //   message: [],
-  // });
-
   const [playerState, _setPlayerState] = useState<PlayerState>({
     currentPlayer: '',
     isLiar: false,
@@ -123,7 +116,7 @@ const GameRoom = () => {
 
   const { userInfo } = useAuthStore();
   const { roomCode, clearRoomCode } = useRoomStore();
-  const setRoomCode = useRoomStore((state) => state.setRoomCode);
+  // const setRoomCode = useRoomStore((state) => state.setRoomCode);
   const { stompClient } = useWebSocketContext();
   const {
     clearSubscription,
@@ -291,7 +284,6 @@ const GameRoom = () => {
     try {
       if (roomCode) {
         await outRoom(roomCode);
-        console.log('게임 종료');
       }
     } catch (error) {
       console.error('게임 종료 실패: ', error);
@@ -329,9 +321,10 @@ const GameRoom = () => {
     clearEmotionSubscription();
     clearChatMessages();
 
-    setRoomCode('');
+    clearRoomCode();
     outGameRoom();
-    navigation('/room-list');
+    // navigation('/room-list');
+    setIsInGame(false);
   }, [
     session,
     userInfo,
@@ -344,58 +337,39 @@ const GameRoom = () => {
     navigation,
   ]);
 
-  // 새로고침 시 처리
+  // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
-    // 컴포넌트 마운트 시 플래그 설정
-    sessionStorage.setItem('isInGameRoom', 'true');
-
-    // beforeunload - 새로고침 이벤트 처리 (room-list 이동)
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // 미디어 트랙 정리
-      if (publisher && publisher.stream && publisher.stream.getMediaStream) {
-        try {
-          const mediaStream = publisher.stream.getMediaStream();
-          if (mediaStream) {
-            mediaStream.getTracks().forEach((track) => track.stop());
-          }
-        } catch (err) {
-          console.error('Error stopping tracks on page unload:', err);
-        }
-      }
-
       // 세션 연결 해제
       if (session) {
         session.disconnect();
       }
 
-      // 새로고침 감지를 위한 플래그 설정
-      sessionStorage.setItem('shouldRedirect', 'true');
       clearRoomCode(); // roomCode 초기화
-      // return (e.returnValue = '');
+      outGameRoom();
+      // 미디어 트랙 정리
+      OV.current = null;
+      setPublisher(undefined);
+      // 카메라, 마이크 연결 끊기
+      setCurrentVideoDevice(null);
+      setCurrentMicDevice(null);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      // 컴포넌트 언마운트 시 플래그 제거 (정상적인 페이지 이동)
+      // 컴포넌트 언마운트 시 플래그 제거
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      sessionStorage.removeItem('isInGameRoom');
-      sessionStorage.removeItem('shouldRedirect');
+      setIsInGame(false);
     };
-  }, [session, clearRoomCode, publisher]);
+  }, [session, clearRoomCode]);
 
-  // 다른 useEffect에서 새로고침 후 감지 및 리다이렉션
+  // 새로고침 후 감지 및 redirect
   useEffect(() => {
-    const isInGameRoom = sessionStorage.getItem('isInGameRoom');
-    const shouldRedirect = sessionStorage.getItem('shouldRedirect');
-
-    if (isInGameRoom && shouldRedirect) {
-      // 새로고침 후 감지되면 room-list로 리다이렉트
-      sessionStorage.removeItem('isInGameRoom');
-      sessionStorage.removeItem('shouldRedirect');
+    if (!isInGame) {
       navigation('/room-list');
     }
-  }, [navigation]);
+  }, []);
 
   const toggleAudio = () => {
     if (publisher) {
