@@ -49,6 +49,7 @@ import com.ssafy.backend.domain.round.repository.RoundRepository;
 import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
+import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.enums.Winner;
 import com.ssafy.backend.global.exception.CustomException;
@@ -88,6 +89,7 @@ public class RoundService {
 			participantRoundRepository.deleteByRound(round);
 		}
 		roundRepository.deleteAll(rounds);
+		room.finishGame(RoomStatus.waiting);
 
 		chatSocketService.gameEnded(roomCode);
 	}
