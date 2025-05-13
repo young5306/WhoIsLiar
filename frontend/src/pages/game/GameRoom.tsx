@@ -774,9 +774,9 @@ const GameRoom = () => {
       scoreTimerRef.current?.startTimer(10);
 
       console.log('현재 라운드 끝', roundNumber);
+      setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
-        setCurrentTurn(1); // 초기화
         await setRound(roomCode!);
       }
     } catch (error) {
@@ -813,7 +813,9 @@ const GameRoom = () => {
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
-        await endGame(roomCode!);
+        if (myUserName === hostNickname) {
+          await endGame(roomCode!);
+        }
         navigation('/waiting-room');
       }
     } catch (error) {
