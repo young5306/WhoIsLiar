@@ -48,7 +48,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { VideoOff, Info } from 'lucide-react';
+import { VideoOff, MicOff, Info } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
@@ -277,7 +277,11 @@ const GameRoom = () => {
     } else {
       setMyRoomCode('');
     }
-  }, []);
+
+    if (speakingPlayer === myUserName) {
+      setIsAudioEnabled(true);
+    }
+  }, [userInfo, roomCode]);
 
   useEffect(() => {
     const modelLoad = async () => {
@@ -344,7 +348,7 @@ const GameRoom = () => {
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
         audioSource: undefined, // 기본 마이크 사용
         videoSource: undefined, // 기본 카메라 사용
-        publishAudio: false, // 처음에는 마이크 꺼진 상태로 시작
+        publishAudio: speakingPlayer === myUserName ? true : false, // 처음에는 마이크 꺼진 상태로 시작
         publishVideo: true, // 비디오는 켜진 상태로 시작
         resolution: '640x480',
         frameRate: 30,
@@ -1168,9 +1172,18 @@ const GameRoom = () => {
                       <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
+                            {/* <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                              {sub.nickname}
+                            </div> */}
                             <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                               {sub.nickname}
                             </div>
+                            {!sub.stream.audioActive && (
+                              <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
+                                <MicOff size={19} color="red" opacity={50} />
+                              </div>
+                            )}
+                            {/* </div> */}
                           </div>
                           <SttText
                             sttResult={
@@ -1227,9 +1240,17 @@ const GameRoom = () => {
                   <div className="w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                     <div className="w-full min-h-[150px] max-h-[170px] relative">
                       <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
+                        {/* <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                          나
+                        </div> */}
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                           나
                         </div>
+                        {isAudioEnabled ? null : (
+                          <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
+                            <MicOff size={19} color="red" opacity={50} />
+                          </div>
+                        )}
                       </div>
                       <SttText
                         sttResult={sttResults['current'] || null}

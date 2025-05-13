@@ -38,8 +38,10 @@ const GameControls = ({
         <div>
           <div className="flex space-x-4">
             <button
-              onClick={onToggleAudio}
-              className={`p-2 rounded-full ${myUserName === speakingPlayer && isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'} ${myUserName === speakingPlayer ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+              onClick={
+                myUserName === speakingPlayer ? onToggleAudio : undefined
+              }
+              className={`p-2 rounded-full ${myUserName === speakingPlayer && isAudioEnabled ? 'bg-transparent border border-gray-600 hover:opacity-80 hover:bg-gray-800' : 'bg-red-600 border border-red-600 hover:bg-red-700'} ${myUserName === speakingPlayer ? 'cursor-pointer' : 'cursor-not-allowed'}`}
             >
               {myUserName === speakingPlayer && isAudioEnabled ? (
                 <Mic className="h-5 w-5" />
@@ -50,7 +52,7 @@ const GameControls = ({
 
             <button
               onClick={onToggleVideo}
-              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'} cursor-pointer`}
+              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600 hover:opacity-80 hover:bg-gray-800' : 'bg-red-600 border border-red-600 hover:bg-red-700'} cursor-pointer`}
             >
               {isVideoEnabled ? (
                 <Video className="h-5 w-5" />
