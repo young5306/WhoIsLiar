@@ -53,15 +53,13 @@ public class TurnTimerService {
 			return;
 		}
 
-		Room room = roomRepository.findByRoomCode(roomCode)
+		roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
+		roundRepository.findByRoomAndRoundNumber(
+				roomRepository.findByRoomCode(roomCode).get(), roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-		List<ParticipantRound> turnList =
-			participantRoundRepository.findByRoundWithParticipantSession(round);
-		if (turnList.isEmpty()) throw new CustomException(ResponseCode.NOT_FOUND);
 
-		TurnState state = new TurnState(roundNumber, turnList, 0, null);
+		TurnState state = new TurnState(roundNumber, 0, null);
 		turnMap.put(roomCode, state);
 
 		startNextTurn(roomCode, state); // 첫 턴은 즉시 시작
@@ -80,12 +78,12 @@ public class TurnTimerService {
 	public void proceedToNextTurn(String roomCode) {
 		TurnState state = turnMap.get(roomCode);
 		if (state == null) return;
-
-		if (state.getIndex() >= state.getTurns().size()) {
-			chatSocketService.roundFullyEnded(roomCode);
-			turnMap.remove(roomCode);
-			return;
-		}
+		//
+		// if (state.getIndex() >= state.getTurns().size()) {
+		// 	chatSocketService.roundFullyEnded(roomCode);
+		// 	turnMap.remove(roomCode);
+		// 	return;
+		// }
 
 		// 이후 턴부터는 3초 대기
 		scheduler.schedule(() -> startNextTurn(roomCode, state), Instant.now().plusSeconds(TURN_DELAY_SECONDS));
@@ -147,19 +145,16 @@ public class TurnTimerService {
 
 	public static class TurnState {
 		private int roundNumber;
-		private final List<ParticipantRound> turns;
 		private int index;
 		private ScheduledFuture<?> future;
 
-		public TurnState(int roundNumber, List<ParticipantRound> turns, int index, ScheduledFuture<?> future) {
+		public TurnState(int roundNumber, int index, ScheduledFuture<?> future) {
 			this.roundNumber = roundNumber;
-			this.turns = turns;
 			this.index = index;
 			this.future = future;
 		}
 
 		public int getRoundNumber() {return roundNumber;}
-		public List<ParticipantRound> getTurns() { return turns; }
 		public int getIndex() { return index; }
 		public ScheduledFuture<?> getFuture() { return future; }
 
