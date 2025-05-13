@@ -6,6 +6,10 @@ import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.*;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+import org.springframework.web.socket.sockjs.transport.handler.WebSocketTransportHandler;
+import org.springframework.web.socket.sockjs.transport.handler.XhrPollingTransportHandler;
+import org.springframework.web.socket.sockjs.transport.handler.XhrStreamingTransportHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,10 +34,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		DefaultHandshakeHandler handshakeHandler = new DefaultHandshakeHandler();
 		registry.addEndpoint("/ws")
 			.setAllowedOriginPatterns("*")
 			.addInterceptors(authHandshakeInterceptor)
-			.withSockJS(); // SockJS fallback 사용
+			.withSockJS()
+			.setTransportHandlerOverrides(
+				new WebSocketTransportHandler(handshakeHandler),
+				new XhrStreamingTransportHandler(),
+				new XhrPollingTransportHandler()
+			);
 	}
 
 	@Override
