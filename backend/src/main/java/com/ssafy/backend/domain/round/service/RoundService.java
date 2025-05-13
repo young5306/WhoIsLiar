@@ -485,5 +485,7 @@ public class RoundService {
 		participantRoundRepository.resetHasVotedByRound(round);
 
 		roundRepository.save(round);
+
+		lastNotifiedTurn.remove(round.getId());
 	}
 }
