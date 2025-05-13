@@ -277,10 +277,6 @@ const GameRoom = () => {
     } else {
       setMyRoomCode('');
     }
-
-    if (speakingPlayer === myUserName) {
-      setIsAudioEnabled(true);
-    }
   }, [userInfo, roomCode]);
 
   useEffect(() => {
@@ -348,7 +344,7 @@ const GameRoom = () => {
       const publisherObj = await OV.current.initPublisherAsync(undefined, {
         audioSource: undefined, // 기본 마이크 사용
         videoSource: undefined, // 기본 카메라 사용
-        publishAudio: speakingPlayer === myUserName ? true : false, // 처음에는 마이크 꺼진 상태로 시작
+        publishAudio: false, // 처음에는 마이크 꺼진 상태로 시작
         publishVideo: true, // 비디오는 켜진 상태로 시작
         resolution: '640x480',
         frameRate: 30,
@@ -755,6 +751,7 @@ const GameRoom = () => {
       if (nickname) {
         console.log('🎤 발언자:', nickname);
         setSpeakingPlayer(nickname);
+
         // STT 서비스에 현재 발언자 설정
         sttService.setSpeakingPlayer(nickname, myUserName);
 
@@ -764,7 +761,6 @@ const GameRoom = () => {
           // 강제로 마이크 켜기 (상태와 관계없이)
           publisher.publishAudio(true);
           setIsAudioEnabled(true);
-
           // 로그 추가로 마이크 상태 확인
           setTimeout(() => {
             const audioTrack = publisher.stream
