@@ -76,9 +76,13 @@ public class RoundService {
 	private final ChatSocketService chatSocketService;
 
 	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
+	private final TurnTimerService turnTimerService;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
+
+		turnTimerService.cancelTurnSequence(roomCode);
+
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
