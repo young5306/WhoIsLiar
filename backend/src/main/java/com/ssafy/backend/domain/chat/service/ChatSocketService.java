@@ -96,12 +96,11 @@ public class ChatSocketService {
 		sendSystemMessage(roomCode, nickname + "님이 차례를 스킵하였습니다.", ChatType.TURN_SKIP);
 	}
 
-	public void guessSubmitted(String roomCode, String guessWord) {
-		sendAfterCommit(roomCode, "라이어가 " + guessWord + "(을)를 제출했습니다.", ChatType.GUESS_SUBMITTED);
+	public void guessSubmitted(String roomCode, String content) {
+		sendAfterCommit(roomCode, content, ChatType.GUESS_SUBMITTED);
 	}
 
 	public void voteCompleted(String roomCode) {
-		// sendAfterCommit(roomCode, "모든 플레이어가 투표를 완료했습니다.", ChatType.VOTE_SUBMITTED);
 		sendSystemMessage(roomCode, "모든 플레이어가 투표를 완료했습니다.", ChatType.VOTE_SUBMITTED);
 	}
 
