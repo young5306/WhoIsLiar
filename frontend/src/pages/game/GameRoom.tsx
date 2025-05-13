@@ -788,14 +788,14 @@ const GameRoom = () => {
     try {
       setShowScoreModal(false);
 
+      console.log('현재 라운드 끝', roundNumber);
+      if (myUserName === hostNickname) {
+        await endRound(roomCode!, roundNumber);
+        await setRound(roomCode!);
+      }
+
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
-        console.log('현재 라운드', roundNumber);
-        if (myUserName === hostNickname) {
-          await endRound(roomCode!, roundNumber);
-          await setRound(roomCode!);
-        }
-
         const playerInfoRes = await getPlayerInfo(roomCode!);
         const roomInfoRes = await getRoomData(roomCode!);
         console.log('✅playerInfoRes', playerInfoRes);
@@ -815,10 +815,6 @@ const GameRoom = () => {
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
-        if (myUserName === hostNickname) {
-          await endRound(roomCode!, roundNumber);
-          await endGame(roomCode!);
-        }
         navigation('/waiting-room');
       }
     } catch (error) {
