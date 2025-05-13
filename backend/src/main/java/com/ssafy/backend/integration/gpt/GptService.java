@@ -62,26 +62,29 @@ public class GptService {
 
 	public String getSummary(String speech) {
 		var messages = List.of(
-			Map.of("role", "system", "content", "당신은 주어진 텍스트에서 핵심적인 힌트를 뽑아내는 전문가입니다."),
 			Map.of("role", "user", "content",
-				"주어지는 텍스트는 라이어 게임 참가자들의 발언이며, 그 안에서 명확하게 드러나는 힌트 문장만 추출하세요.\n" +
-					"다음 조건을 반드시 지키세요:\n\n" +
-					"의역하지 말고, 원문에서 드러나는 표현만 힌트로 간주합니다.\n\n" +
-					"힌트는 순수 텍스트 한 문장으로 출력합니다.\n\n" +
-					"\"힌트 :\", 따옴표(\"\"), 번호, 괄호 등 어떠한 장식도 붙이지 말고, 힌트만 출력하세요.\n\n" +
-					"힌트는 15자 이하여야 하며, 초과할 경우 출력하지 마세요.\n\n" +
-					"힌트가 명확하지 않거나, 조건에 맞는 문장이 없으면 아무 것도 출력하지 마세요.\n\n" +
+				"당신은 주어진 텍스트에서 핵심적인 힌트를 뽑아내는 전문가입니다.\n" +
+					"주어지는 텍스트는 라이어 게임 참가자들의 발언이며, 그 안에서 명확하게 드러나는 힌트 문장을 하나 이상 추출하세요.\n\n" +
+					"다음 조건을 반드시 지키세요:\n" +
+					"- 의역하지 말고, 원문에서 드러나는 표현만 힌트로 간주합니다.\n" +
+					"- 힌트는 짧고 간결한 한 문장 단위로 작성하되, 의미가 분리되는 경우 여러 문장으로 출력해도 됩니다.\n" +
+					"- 각 문장은 줄바꿈하여 출력하고, \"힌트:\", 따옴표(\"\"), 번호, 괄호 등 어떠한 장식도 붙이지 마세요.\n" +
+					"- 힌트가 명확하지 않거나 조건에 맞는 문장이 없으면 아무 것도 출력하지 마세요.\n\n" +
 					"예시 출력:\n" +
-					"밝은 색이야.\n" +
-					"소리가 커.\n" +
-					"밤에 쓰는 물건이야.\n\n" +
-					"텍스트 : " + speech)
+					"맛있는 거야.\n" +
+					"주로 여름에 생각나지.\n" +
+					"차가운 음식이야.\n\n" +
+					"텍스트: " + speech)
 		);
 
 		var requestBody = Map.<String, Object>of(
 			"model", "gpt-4o",
 			"messages", messages,
-			"max_tokens", 100
+			"max_tokens", 100,
+			"temperature", 0.2,
+			"top_p", 1.0,
+			"frequency_penalty", 0.0,
+			"presence_penalty", 0.0
 		);
 
 		JsonNode resp = webClient.post()
@@ -92,9 +95,16 @@ public class GptService {
 			.bodyToMono(JsonNode.class)
 			.block();
 
-		return resp
+		String raw = resp
 			.path("choices").get(0)
 			.path("message").path("content")
 			.asText().trim();
+
+		String cleaned = raw
+			.replaceAll("[\\u0000-\\u001F\\u007F\\u2028\\u2029\\u200B]", "")
+			.replaceAll("[\\p{Cf}]", "")
+			.trim();
+
+		return cleaned;
 	}
 }
