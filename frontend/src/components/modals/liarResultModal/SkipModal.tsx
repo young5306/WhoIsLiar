@@ -19,7 +19,7 @@ const SkipModal = ({
     console.log('onNext: skip 모달 다음 로직 준비');
     const timer = setTimeout(onNext, 2000);
     return () => clearTimeout(timer);
-  }, [onNext]);
+  }, []);
 
   return (
     <div

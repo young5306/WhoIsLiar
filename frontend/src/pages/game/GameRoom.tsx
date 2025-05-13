@@ -814,7 +814,7 @@ const GameRoom = () => {
       // 마지막 라운드 종료 후 게임 종료
       else {
         if (myUserName === hostNickname) {
-          await endGame(roomCode!);
+          await endGame(roomCode!, roundNumber);
         }
         navigation('/waiting-room');
       }
