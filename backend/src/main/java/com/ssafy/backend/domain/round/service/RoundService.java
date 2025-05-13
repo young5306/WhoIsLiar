@@ -487,6 +487,8 @@ public class RoundService {
 
 		roundRepository.save(round);
 
+		lastNotifiedTurn.remove(round.getId());
+		
 		return new TurnUpdateResponse(round.getTurn());
 	}
 }
