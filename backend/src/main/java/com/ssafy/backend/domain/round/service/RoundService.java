@@ -436,9 +436,16 @@ public class RoundService {
 
 		round.setWinner(winnerEnum);
 
-		chatSocketService.guessSubmitted(roomCode, req.guessText());
+		String nickname = SecurityUtils.getCurrentNickname();
+		String socketMessage = formatGuessMessage(nickname, req.guessText(), isCorrect);
+		chatSocketService.guessSubmitted(roomCode, socketMessage);
 
 		return new GuessResponseDto(isCorrect, winnerEnum.name());
+	}
+
+	private String formatGuessMessage(String nickname, String guessText, boolean isCorrect) {
+		String resultText = isCorrect ? "정답" : "오답";
+		return String.format("%s! %s님이 %s(을)를 제출했습니다.", resultText, nickname, guessText);
 	}
 
 	/**
