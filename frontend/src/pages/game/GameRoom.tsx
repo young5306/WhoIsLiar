@@ -631,6 +631,7 @@ const GameRoom = () => {
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const scoreTimerRef = useRef<TimerRef>(null);
+  const [isCorrect, setIsCorrect] = useState(false);
 
   // 참가자 관련 (참가자 순서 지정)
   const [participants, setParticipants] = useState<
@@ -845,7 +846,8 @@ const GameRoom = () => {
 
     // 라이어 제시어 추측 제출 후 (LiarFoundModal 이후 로직)
     if (latest.chatType === 'GUESS_SUBMITTED') {
-      const match = latest.content.match(/라이어가 (.+)\(을\)를 제출했습니다/);
+      setIsCorrect(latest.content.startsWith('정답!') ? true : false);
+      const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
 
       if (word) {
@@ -992,6 +994,15 @@ const GameRoom = () => {
       scoreTimerRef.current?.startTimer(10);
     }
   }, [showScoreModal, scoreData]);
+
+  // 점수 모달 분기 처리
+  const getScoreModalType = (): 'liar-win' | 'civilian-win' | 'final-score' => {
+    if (roundNumber >= totalRoundNumber) return 'final-score';
+    if (voteResult?.detected) {
+      if (isCorrect) return 'liar-win';
+      else return 'civilian-win';
+    } else return 'liar-win';
+  };
 
   // 점수 모달 이후 로직 (마지막 라운드인지 구분)
   const handleScoreTimeEnd = async () => {
@@ -1443,13 +1454,7 @@ const GameRoom = () => {
       {showScoreModal && scoreData && (
         <>
           <ScoreModal
-            type={
-              roundNumber < totalRoundNumber
-                ? voteResult?.detected
-                  ? 'civilian-win'
-                  : 'liar-win'
-                : 'final-score'
-            }
+            type={getScoreModalType()}
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             scores={scoreData.scores}
