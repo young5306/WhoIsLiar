@@ -61,27 +61,37 @@ public class GptService {
 	}
 
 	public String getSummary(String speech) {
+		String prompt = String.format(
+			"당신은 라이어 게임 참가자의 발언에서 핵심적인 힌트를 추출하는 전문가입니다.\n\n" +
+				"입력으로 주어지는 텍스트는 참가자의 대화 내용이며, 그 중에서 사물의 속성, 용도, 특징, 감각 등을 설명하는 문장을 찾아 출력하세요.\n\n" +
+				"다음 조건을 반드시 지키세요:\n" +
+				"- 의역하지 말고, 원문에서 드러나는 표현만 간결한 문장으로 출력합니다.\n" +
+				"- 의미가 다르면 줄바꿈하여 여러 문장을 출력해도 됩니다.\n" +
+				"- 힌트는 반드시 사물의 속성, 용도, 색상, 촉감, 감각 등만 설명해야 합니다.\n" +
+				"- 전략, 감정, 심리, 인물 평가, 팀워크와 관련된 문장은 무시하세요.\n" +
+				"- 출력 시 따옴표, 번호, 괄호, \"힌트:\" 같은 장식 없이 순수한 문장만 출력하세요.\n" +
+				"- 조건에 맞는 힌트가 없다면 아무 것도 출력하지 마세요.\n\n" +
+				"예시 입력:\n" +
+				"이건 맛있어. 주로 여름에 생각나.\n\n" +
+				"예시 출력:\n" +
+				"맛있어.\n" +
+				"주로 여름에 생각나.\n\n" +
+				"다음 텍스트를 분석하세요:\n" +
+				"텍스트: %s", speech
+		);
+
 		var messages = List.of(
-			Map.of("role", "system", "content", "당신은 주어진 텍스트에서 핵심적인 힌트를 뽑아내는 전문가입니다."),
-			Map.of("role", "user", "content",
-				"주어지는 텍스트는 라이어 게임 참가자들의 발언이며, 그 안에서 명확하게 드러나는 힌트 문장만 추출하세요.\n" +
-					"다음 조건을 반드시 지키세요:\n\n" +
-					"의역하지 말고, 원문에서 드러나는 표현만 힌트로 간주합니다.\n\n" +
-					"힌트는 순수 텍스트 한 문장으로 출력합니다.\n\n" +
-					"\"힌트 :\", 따옴표(\"\"), 번호, 괄호 등 어떠한 장식도 붙이지 말고, 힌트만 출력하세요.\n\n" +
-					"힌트는 15자 이하여야 하며, 초과할 경우 출력하지 마세요.\n\n" +
-					"힌트가 명확하지 않거나, 조건에 맞는 문장이 없으면 아무 것도 출력하지 마세요.\n\n" +
-					"예시 출력:\n" +
-					"밝은 색이야.\n" +
-					"소리가 커.\n" +
-					"밤에 쓰는 물건이야.\n\n" +
-					"텍스트 : " + speech)
+			Map.of("role", "user", "content", prompt)
 		);
 
 		var requestBody = Map.<String, Object>of(
 			"model", "gpt-4o",
 			"messages", messages,
-			"max_tokens", 100
+			"max_tokens", 100,
+			"temperature", 0.2,
+			"top_p", 1.0,
+			"frequency_penalty", 0.0,
+			"presence_penalty", 0.0
 		);
 
 		JsonNode resp = webClient.post()
@@ -92,9 +102,16 @@ public class GptService {
 			.bodyToMono(JsonNode.class)
 			.block();
 
-		return resp
+		String raw = resp
 			.path("choices").get(0)
 			.path("message").path("content")
 			.asText().trim();
+
+		String cleaned = raw
+			.replaceAll("[\\u0000-\\u001F\\u007F\\u2028\\u2029\\u200B]", "")
+			.replaceAll("[\\p{Cf}]", "")
+			.trim();
+
+		return cleaned;
 	}
 }
