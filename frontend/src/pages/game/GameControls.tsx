@@ -35,7 +35,7 @@ const GameControls = ({
           <div className="flex space-x-4">
             <button
               onClick={onToggleAudio}
-              className={`p-2 rounded-full ${isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'}`}
+              className={`p-2 rounded-full ${isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'} cursor-pointer`}
             >
               {isAudioEnabled ? (
                 <Mic className="h-5 w-5" />
@@ -46,7 +46,7 @@ const GameControls = ({
 
             <button
               onClick={onToggleVideo}
-              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'}`}
+              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'} cursor-pointer`}
             >
               {isVideoEnabled ? (
                 <Video className="h-5 w-5" />
@@ -58,15 +58,15 @@ const GameControls = ({
         </div>
 
         <div className="flex flex-row gap-4">
-          <button
+          {/* <button
             onClick={handleSettings}
             className="p-2 rounded-full bg-transparent border border-gray-600"
           >
             <Settings className="h-5 w-5" />
-          </button>
+          </button> */}
 
           <button
-            className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6 py-2 flex items-center"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6 py-2 flex items-center cursor-pointer"
             onClick={onLeaveSession}
           >
             <PhoneOff className="h-5 w-5 mr-2" /> 방 나가기
