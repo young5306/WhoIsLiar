@@ -62,17 +62,25 @@ public class GptService {
 
 	public String getSummary(String speech) {
 		var messages = List.of(
-			// Map.of("role", "system", "content", "당신은 라이어게임의 음성 요약 도우미입니다."),
-			// Map.of("role", "user",   "content", "다음 음성 내용을 간결하게 요약해줘. 핵심 내용 문장만 짧고 간단하게. 누가말했는지는 필요없으니까 핵심 내용만. 마치 채팅 친거처럼 간단한 '입니다' 위주의 전달.: " + speech)
 			Map.of("role", "system", "content", "당신은 주어진 텍스트에서 핵심적인 힌트를 뽑아내는 전문가입니다."),
-			Map.of("role", "user",   "content", "주어지는 텍스트는 라이어 게임의 참가자들이 발언한 내용입니다.\n"
-				+ "텍스트 속에서 힌트를 추출하고, 힌트만 대답해주세요.\n"
-				+ "(예시: \"이건 밝은 색이야.\", \"주로 밤에 사용되는 물건이야.\")" + "텍스트 : "+speech)
+			Map.of("role", "user", "content",
+				"주어지는 텍스트는 라이어 게임 참가자들의 발언이며, 그 안에서 명확하게 드러나는 힌트 문장만 추출하세요.\n" +
+					"다음 조건을 반드시 지키세요:\n\n" +
+					"의역하지 말고, 원문에서 드러나는 표현만 힌트로 간주합니다.\n\n" +
+					"힌트는 순수 텍스트 한 문장으로 출력합니다.\n\n" +
+					"\"힌트 :\", 따옴표(\"\"), 번호, 괄호 등 어떠한 장식도 붙이지 말고, 힌트만 출력하세요.\n\n" +
+					"힌트는 15자 이하여야 하며, 초과할 경우 출력하지 마세요.\n\n" +
+					"힌트가 명확하지 않거나, 조건에 맞는 문장이 없으면 아무 것도 출력하지 마세요.\n\n" +
+					"예시 출력:\n" +
+					"밝은 색이야.\n" +
+					"소리가 커.\n" +
+					"밤에 쓰는 물건이야.\n\n" +
+					"텍스트 : " + speech)
 		);
 
 		var requestBody = Map.<String, Object>of(
-			"model",      "gpt-4o",
-			"messages",   messages,
+			"model", "gpt-4o",
+			"messages", messages,
 			"max_tokens", 100
 		);
 
