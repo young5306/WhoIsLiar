@@ -107,4 +107,9 @@ public class Room {
 		this.session = session;
 		this.updatedAt = LocalDateTime.now();
 	}
+
+	public void finishGame(RoomStatus roomStatus) {
+		this.roomStatus = roomStatus;
+		this.updatedAt = LocalDateTime.now();
+	}
 }

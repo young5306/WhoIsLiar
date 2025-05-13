@@ -20,7 +20,7 @@ import {
   submitVotes,
   VoteResultResponse,
   getVoteResult,
-  endTurn,
+  updateTurn,
   ScoreResponse,
   getScores,
   endRound,
@@ -961,6 +961,13 @@ const GameRoom = () => {
       setScoreData(result);
       setShowScoreModal(true);
       scoreTimerRef.current?.startTimer(10);
+
+      console.log('현재 라운드 끝', roundNumber);
+      setCurrentTurn(1); // 초기화
+      if (myUserName === hostNickname) {
+        await endRound(roomCode!, roundNumber);
+        await setRound(roomCode!);
+      }
     } catch (error) {
       console.error('점수 조회 실패:', error);
     }
@@ -979,21 +986,12 @@ const GameRoom = () => {
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
-        console.log('현재 라운드', roundNumber);
-        if (myUserName === hostNickname) {
-          await endRound(roomCode!, roundNumber);
-          await setRound(roomCode!);
-        }
-
         const playerInfoRes = await getPlayerInfo(roomCode!);
-        const roomInfoRes = await getRoomData(roomCode!);
         console.log('✅playerInfoRes', playerInfoRes);
-        console.log('✅roomInfoRes', roomInfoRes);
         console.log('✅세팅 끝');
 
         setRoundNumber(playerInfoRes.data.roundNumber);
         setMyWord(playerInfoRes.data.word);
-        setCategory(roomInfoRes.roomInfo.category);
         // setParticipants(playerInfo.data.participants);
 
         console.log('다음 라운드', playerInfoRes.data.roundNumber);
@@ -1005,8 +1003,7 @@ const GameRoom = () => {
       // 마지막 라운드 종료 후 게임 종료
       else {
         if (myUserName === hostNickname) {
-          await endRound(roomCode!, roundNumber);
-          await endGame(roomCode!);
+          await endGame(roomCode!, roundNumber);
         }
         navigation('/waiting-room');
       }
@@ -1351,7 +1348,7 @@ const GameRoom = () => {
 
             if (myUserName === hostNickname) {
               try {
-                await endTurn(roomCode!, roundNumber);
+                await updateTurn(roomCode!, roundNumber);
                 await startTurn(roomCode!, roundNumber);
                 console.log('SKIP 이후 다음 턴 시작');
               } catch (e) {
@@ -1428,6 +1425,10 @@ const GameRoom = () => {
       )}
 
       {/* 점수 모달 */}
+      {/* 
+        점수 모달 열 때(fetchAndShowScore) 라운드 종료(endRound), 다음 roundNumber 갱신(setRound)
+        점수 모달 타이머 끝날 때(handleScoreTimeEnd) 다음 라운드 개인정보 조회(getPlayerInfo)  
+      */}
       {showScoreModal && scoreData && (
         <>
           <ScoreModal

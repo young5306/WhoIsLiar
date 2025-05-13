@@ -120,7 +120,7 @@ export const startTurn = async (roomCode: string, roundNumber: number) => {
 };
 
 // 턴 종료(다음 턴으로)
-export const endTurn = async (roomCode: string, roundNumber: number) => {
+export const updateTurn = async (roomCode: string, roundNumber: number) => {
   const res = await api.post(`/rounds/turn/update`, { roomCode, roundNumber });
   return res.data;
 };
@@ -132,9 +132,11 @@ export const skipTurn = async (roomCode: string) => {
 };
 
 // 게임 종료(라운드 삭제)
-// [DELETE] /api/rounds/{roomCode}/end
-export const endGame = async (roomCode: string) => {
-  const res = await api.delete(`/rounds/${roomCode}/end`);
+// [DELETE] /api/rounds/end
+export const endGame = async (roomCode: string, roundNumber: number) => {
+  const res = await api.delete(`/rounds/end`, {
+    data: { roomCode, roundNumber },
+  });
   return res.data;
 };
 
@@ -157,6 +159,7 @@ export const submitVotes = async (
   return res.data;
 };
 
+// 투표 결과 조회
 export const getVoteResult = async (
   roomCode: string,
   roundNumber: number
@@ -165,6 +168,7 @@ export const getVoteResult = async (
   return res.data.data;
 };
 
+// 라이어 제시어 제출
 export const submitWordGuess = async (
   roomCode: string,
   roundNumber: number,
@@ -176,6 +180,7 @@ export const submitWordGuess = async (
   return res.data.data;
 };
 
+// 점수 조회(누적)
 export const getScores = async (roomCode: string): Promise<ScoreResponse> => {
   const res = await api.get(`/rounds/${roomCode}/score`);
   return res.data.data;
