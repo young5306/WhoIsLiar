@@ -2,11 +2,15 @@ package com.ssafy.backend.domain.round.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,6 +38,7 @@ import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
 import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
+import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
@@ -69,6 +74,8 @@ public class RoundService {
 	private final SessionRepository sessionRepository;
 	private final ChatSocketService chatSocketService;
 
+	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
+
 	@Transactional
 	public void deleteGame(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
@@ -98,10 +105,14 @@ public class RoundService {
 			.map(r -> r.getRoundNumber() + 1)
 			.orElse(1);
 
-		List<CategoryWord> candidates =
-			category  == Category.랜덤
-				? categoryWordRepository.findAll()
-				: categoryWordRepository.findByCategory(category );
+		Category actualCategory = category;
+		if (category == Category.랜덤) {
+			List<Category> selectable = Arrays.stream(Category.values())
+				.filter(c -> c != Category.랜덤)
+				.collect(Collectors.toList());
+			actualCategory = selectable.get(random.nextInt(selectable.size()));
+		}
+		List<CategoryWord> candidates = categoryWordRepository.findByCategory(actualCategory);
 		if (candidates.isEmpty()) {
 			throw new CustomException(ResponseCode.NOT_FOUND);
 		}
@@ -109,7 +120,7 @@ public class RoundService {
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = "";
 		if (gameMode  == GameMode.FOOL) {
-			w2 = gptService.getSimilarWord(w1, category.name());
+			w2 = gptService.getSimilarWord(w1, actualCategory.name());
 		}
 
 		Round round = Round.builder()
@@ -273,15 +284,24 @@ public class RoundService {
 		);
 	}
 
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void checkAndNotifyVoteCompleted(String roomCode, Long roundId) {
 		Round round = roundRepository.findById(roundId)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		int currentTurn = round.getTurn();
+
+		Integer lastTurn = lastNotifiedTurn.get(roundId);
+		if (lastTurn != null && lastTurn == currentTurn) {
+			return;
+		}
 
 		long total = participantRoundRepository.countByRound(round);
 		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
 
 		if (voted == total) {
 			chatSocketService.voteCompleted(roomCode);
+			lastNotifiedTurn.put(roundId, currentTurn);
 		}
 	}
 
@@ -460,7 +480,7 @@ public class RoundService {
 	}
 
 	@Transactional
-	public void updateTurn(TurnUpdateRequestDto req) {
+	public TurnUpdateResponse updateTurn(TurnUpdateRequestDto req) {
 		Room room = roomRepository.findByRoomCode(req.roomCode())
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
@@ -471,5 +491,9 @@ public class RoundService {
 		participantRoundRepository.resetHasVotedByRound(round);
 
 		roundRepository.save(round);
+
+		lastNotifiedTurn.remove(round.getId());
+		
+		return new TurnUpdateResponse(round.getTurn());
 	}
 }
