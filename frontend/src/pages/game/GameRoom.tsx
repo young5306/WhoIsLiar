@@ -11,6 +11,7 @@ import {
 } from 'openvidu-browser';
 import {
   getToken,
+  Subscriber,
   PlayerState,
   outRoom,
   getPlayerInfo,
@@ -25,9 +26,8 @@ import {
   getScores,
   endRound,
   setRound,
-  endGame,
+  // endGame,
   submitWordGuess,
-  Subscriber,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -192,6 +192,8 @@ const GameRoom = () => {
   };
 
   const [isLogReady, setIsLogReady] = useState(false);
+  // 새로고침 플래그
+  const [isInGame, setIsInGame] = useState(true);
 
   const navigation = useNavigate();
   const [myUserName, setMyUserName] = useState<string>('');
@@ -220,14 +222,6 @@ const GameRoom = () => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 
-  // const [gameState, _setGameState] = useState<GameState>({
-  //   round: 1,
-  //   turn: 1,
-  //   category: '',
-  //   topic: '',
-  //   message: [],
-  // });
-
   const [playerState, _setPlayerState] = useState<PlayerState>({
     currentPlayer: '',
     isLiar: false,
@@ -237,7 +231,7 @@ const GameRoom = () => {
 
   const { userInfo } = useAuthStore();
   const { roomCode, clearRoomCode } = useRoomStore();
-  const setRoomCode = useRoomStore((state) => state.setRoomCode);
+  // const setRoomCode = useRoomStore((state) => state.setRoomCode);
   const { stompClient } = useWebSocketContext();
   const {
     clearSubscription,
@@ -405,7 +399,6 @@ const GameRoom = () => {
     try {
       if (roomCode) {
         await outRoom(roomCode);
-        console.log('게임 종료');
       }
     } catch (error) {
       console.error('게임 종료 실패: ', error);
@@ -443,12 +436,14 @@ const GameRoom = () => {
     clearEmotionSubscription();
     clearChatMessages();
 
-    setRoomCode('');
+    clearRoomCode();
     outGameRoom();
-    navigation('/room-list');
+    // navigation('/room-list');
+    setIsInGame(false);
   }, [
     session,
     userInfo,
+    publisher,
     stompClient,
     clearSubscription,
     clearEmotionSubscription,
@@ -457,22 +452,39 @@ const GameRoom = () => {
     navigation,
   ]);
 
-  // 새로고침 시 처리
+  // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
+    const handleBeforeUnload = () => {
+      // 세션 연결 해제
       if (session) {
         session.disconnect();
       }
+
       clearRoomCode(); // roomCode 초기화
-      return (e.returnValue = '');
+      outGameRoom();
+      // 미디어 트랙 정리
+      OV.current = null;
+      setPublisher(undefined);
+      // 카메라, 마이크 연결 끊기
+      setCurrentVideoDevice(null);
+      setCurrentMicDevice(null);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      // 컴포넌트 언마운트 시 플래그 제거
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      setIsInGame(false);
     };
   }, [session, clearRoomCode]);
+
+  // 새로고침 후 감지 및 redirect
+  useEffect(() => {
+    if (!isInGame) {
+      navigation('/room-list');
+    }
+  }, []);
 
   const toggleAudio = () => {
     if (publisher) {
@@ -630,6 +642,7 @@ const GameRoom = () => {
   // const hasParticipants = participants.length > 0;
   // console.log('hasParticipants', hasParticipants, participants.length);
 
+  // '나'를 제외한 참가자 순서대로 재정렬
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
 
@@ -645,6 +658,7 @@ const GameRoom = () => {
     setSortedPraticipants(sorted);
   }, [participants]);
 
+  // 정렬된 순서에 따라 position 부여
   useEffect(() => {
     if (
       !sortedParticipants ||
@@ -992,7 +1006,7 @@ const GameRoom = () => {
 
         setRoundNumber(playerInfoRes.data.roundNumber);
         setMyWord(playerInfoRes.data.word);
-        // setParticipants(playerInfo.data.participants);
+        setParticipants(playerInfoRes.data.participants);
 
         console.log('다음 라운드', playerInfoRes.data.roundNumber);
         if (myUserName === hostNickname) {
@@ -1002,9 +1016,6 @@ const GameRoom = () => {
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
-        if (myUserName === hostNickname) {
-          await endGame(roomCode!, roundNumber);
-        }
         navigation('/waiting-room');
       }
     } catch (error) {
@@ -1147,7 +1158,7 @@ const GameRoom = () => {
                     ${isVoting ? 'cursor-pointer' : ''}
                     ${
                       sub.nickname === speakingPlayer
-                        ? 'ring-4 ring-point-neon'
+                        ? 'ring-4 ring-point-neon rounded'
                         : ''
                     }`}
                   >
