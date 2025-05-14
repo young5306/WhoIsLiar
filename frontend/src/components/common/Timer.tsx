@@ -31,14 +31,17 @@ const Timer = forwardRef<TimerRef, TimerProps>(
       small: {
         container: 'w-16 h-16',
         text: 'text-lg',
+        radius: 24,
       },
       medium: {
         container: 'w-24 h-24',
         text: 'text-2xl',
+        radius: 36,
       },
       large: {
         container: 'w-32 h-32',
         text: 'text-3xl',
+        radius: 48,
       },
     };
 
@@ -72,7 +75,7 @@ const Timer = forwardRef<TimerRef, TimerProps>(
     }));
 
     const progress = (timeLeft / initialTime.current) * 100;
-    const circumference = 2 * Math.PI * 40; // 반지름 40px 기준
+    const circumference = 2 * Math.PI * currentSize.radius;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     // 3초 이하일 때 빨간색, 그 외에는 초록색
@@ -96,7 +99,7 @@ const Timer = forwardRef<TimerRef, TimerProps>(
           <circle
             cx="50%"
             cy="50%"
-            r="40"
+            r={currentSize.radius}
             fill="none"
             stroke="rgba(255, 255, 255, 0.1)"
             strokeWidth="8"
@@ -104,7 +107,7 @@ const Timer = forwardRef<TimerRef, TimerProps>(
           <motion.circle
             cx="50%"
             cy="50%"
-            r="40"
+            r={currentSize.radius}
             fill="none"
             stroke="url(#gradient)"
             strokeWidth="8"
