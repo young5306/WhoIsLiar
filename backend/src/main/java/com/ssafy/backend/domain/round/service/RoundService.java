@@ -310,50 +310,6 @@ public class RoundService {
 		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
 
 		if (voted == total) {
-			List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
-
-			Map<Long, Integer> countMap = new HashMap<>();
-			int skipCount = 0;
-			for (ParticipantRound pr : prList) {
-				Participant target = pr.getTargetParticipant();
-				if (target == null) {
-					skipCount++;
-				} else {
-					long tid = target.getId();
-					countMap.put(tid, countMap.getOrDefault(tid, 0) + 1);
-				}
-			}
-
-			for (ParticipantRound pr : prList) {
-				long pid = pr.getParticipant().getId();
-				countMap.putIfAbsent(pid, 0);
-			}
-
-			ParticipantRound liarPR = prList.stream()
-				.filter(ParticipantRound::isLiar)
-				.findFirst()
-				.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
-			long liarId = liarPR.getParticipant().getId();
-			String liarNick = liarPR.getParticipant().getSession().getNickname();
-
-			List<Integer> nonSkipVotes = countMap.values().stream().toList();
-			int maxNonSkip = nonSkipVotes.isEmpty() ? 0 : Collections.max(nonSkipVotes);
-			boolean skipFlag = skipCount >= maxNonSkip || maxNonSkip == 0;
-			Long selectedId = null;
-			if (!skipFlag) {
-				selectedId = countMap.entrySet().stream()
-					.max(Map.Entry.comparingByValue())
-					.get().getKey();
-			}
-
-			boolean wrongPicked  = (selectedId != null && selectedId != liarId);
-			boolean lastTurnSkip = (selectedId == null && currentTurn == 3);
-
-			if (wrongPicked || lastTurnSkip) {
-				liarPR.addScore(100);
-				participantRoundRepository.save(liarPR);
-			}
-
 			chatSocketService.voteCompleted(roomCode);
 			lastNotifiedTurn.put(roundId, currentTurn);
 		}
@@ -424,6 +380,10 @@ public class RoundService {
 			.findFirst()
 			.map(ParticipantRound::getParticipant)
 			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+		ParticipantRound liarPR = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
 
 		String liarNickname = liar.getSession().getNickname();
 		Long liarId = liar.getId();
@@ -435,6 +395,14 @@ public class RoundService {
 				.max(Map.Entry.comparingByValue())
 				.get().getKey();
 			detected = selectedId.equals(liarId);
+		}
+
+		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
+		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
+
+		if (wrongPicked || lastTurnSkip) {
+			liarPR.addScore(100);
+			participantRoundRepository.save(liarPR);
 		}
 
 		return new VoteResultsResponseDto(
