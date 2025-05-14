@@ -1275,7 +1275,15 @@ const GameRoom = () => {
                           />
                           <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                             {sub.stream.videoActive ? (
-                              <UserVideoComponent streamManager={sub} />
+                              videoMode === 'BLIND' ? (
+                                <img
+                                  src="/assets/blindMode.png"
+                                  alt="blind mode"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <UserVideoComponent streamManager={sub} />
+                              )
                             ) : (
                               <div className="w-full h-full flex justify-center">
                                 <VideoOff size={50} />
