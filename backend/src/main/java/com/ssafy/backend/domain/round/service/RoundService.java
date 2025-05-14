@@ -310,8 +310,10 @@ public class RoundService {
 		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
 
 		if (voted == total) {
-			chatSocketService.voteCompleted(roomCode);
-			lastNotifiedTurn.put(roundId, currentTurn);
+			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
+			if(prev == null){
+				chatSocketService.voteCompleted(roomCode);
+			}
 		}
 	}
 
