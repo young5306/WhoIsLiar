@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Mic,
   MicOff,
@@ -5,8 +6,10 @@ import {
   VideoOff,
   // SwitchCamera,
   // Settings,
-  PhoneOff,
+  // PhoneOff,
 } from 'lucide-react';
+import GameButton from '../../components/common/GameButton';
+import ConfirmModal from '../../components/modals/ConfirmModal';
 
 interface GameControlsProps {
   isAudioEnabled: boolean;
@@ -30,6 +33,9 @@ const GameControls = ({
   // const handleSettings = () => {
   // console.log('Settings');
   // };
+
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
   return (
     <>
       {/* <div></div> */}
@@ -71,12 +77,28 @@ const GameControls = ({
             <Settings className="h-5 w-5" />
           </button> */}
 
-          <button
+          {/* <button
             className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6 py-2 flex items-center cursor-pointer"
             onClick={onLeaveSession}
           >
             <PhoneOff className="h-5 w-5 mr-2" /> 방 나가기
-          </button>
+          </button> */}
+
+          <GameButton
+            text="방 나가기"
+            variant="default"
+            size="small"
+            onClick={() => setIsConfirmModalOpen(true)}
+          />
+
+          {/* 확인 모달 */}
+          <ConfirmModal
+            isOpen={isConfirmModalOpen}
+            onClose={() => setIsConfirmModalOpen(false)}
+            onConfirm={onLeaveSession}
+            title="방 나가기"
+            message="정말로 방을 나가시겠습니까?"
+          />
         </div>
       </div>
     </>

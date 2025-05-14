@@ -9,19 +9,19 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
     },
     '/login': {
       imageUrl: '/bgImages/loginBg.svg',
-      backgroundColor: 'bg-[#090A11]',
+      backgroundColor: 'bg-[#090a11]',
     },
     '/waiting-room': {
       imageUrl: '/bgImages/waitingBg.svg',
-      backgroundColor: 'bg-[#090A11]',
+      backgroundColor: 'bg-[#211926]',
     },
     '/room-list': {
       imageUrl: '/bgImages/waitingBg.svg',
-      backgroundColor: 'bg-[#090A11]',
+      backgroundColor: 'bg-[#211926]',
     },
     '/game-room': {
       imageUrl: '/bgImages/waitingBg.svg',
-      backgroundColor: 'bg-[#090A11]',
+      backgroundColor: 'bg-[#211926]',
     },
   };
 

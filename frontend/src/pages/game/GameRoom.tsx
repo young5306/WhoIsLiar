@@ -53,6 +53,7 @@ import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
 import { notify } from '../../components/common/Toast';
+import { useMessageStore } from '../../stores/useMessageStore';
 import GameStartCountdownModal from '../../components/modals/GameStartCountdownModal';
 
 // STT 디버깅 모달 컴포넌트
@@ -203,6 +204,9 @@ const GameRoom = () => {
   const [myUserName, setMyUserName] = useState<string>('');
   const [_myToken, setMyToken] = useState<string>('');
   const [myRoomCode, setMyRoomCode] = useState('');
+
+  const leaveMessageReceive = useMessageStore((state) => state.leaveMessageOn);
+  const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
 
   // << OpenVidu >>
   // 현재 연결된 세션
@@ -447,41 +451,47 @@ const GameRoom = () => {
   }, [
     session,
     userInfo,
-    publisher,
     stompClient,
     clearSubscription,
     clearEmotionSubscription,
     clearChatMessages,
     roomCode,
-    navigation,
+  ]);
+
+  const disconnectOpenVidu = () => {
+    if (session) session.disconnect();
+    OV.current = null;
+  };
+
+  const handleBeforeUnload = useCallback(() => {
+    leaveSession();
+    // disconnectOpenVidu();
+    // clearRoomCode(); // roomCode 초기화
+    // outGameRoom();
+    // setPublisher(undefined);
+    // // 카메라, 마이크 연결 끊기
+    // setCurrentVideoDevice(null);
+    // setCurrentMicDevice(null);
+  }, [
+    leaveSession,
+    // disconnectOpenVidu,
+    // clearRoomCode,
+    // outGameRoom,
+    // setPublisher,
+    // setCurrentVideoDevice,
+    // setCurrentMicDevice,
   ]);
 
   // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      // 세션 연결 해제
-      if (session) {
-        session.disconnect();
-      }
-
-      clearRoomCode(); // roomCode 초기화
-      outGameRoom();
-      // 미디어 트랙 정리
-      OV.current = null;
-      setPublisher(undefined);
-      // 카메라, 마이크 연결 끊기
-      setCurrentVideoDevice(null);
-      setCurrentMicDevice(null);
-    };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       // 컴포넌트 언마운트 시 플래그 제거
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // setIsInGame(false);
+      setIsInGame(false);
     };
-  }, [session, clearRoomCode]);
+  }, [handleBeforeUnload]);
 
   // 새로고침 후 감지 및 redirect
   useEffect(() => {
@@ -525,6 +535,14 @@ const GameRoom = () => {
       setIsVideoEnabled(newVideoState);
     }
   };
+
+  // 플레이어가 중간에 퇴장하는 경우 감지
+  useEffect(() => {
+    if (leaveMessageReceive) {
+      console.log('플레이어가 퇴장했습니다. GameInfo 다시 받아오기');
+      leaveMessageState(false);
+    }
+  }, [leaveMessageReceive]);
 
   const getParticipantPosition = (
     index: number,
@@ -1068,6 +1086,7 @@ const GameRoom = () => {
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
+        disconnectOpenVidu();
         navigation('/waiting-room');
       }
     } catch (error) {
@@ -1265,7 +1284,15 @@ const GameRoom = () => {
                           />
                           <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                             {sub.stream.videoActive ? (
-                              <UserVideoComponent streamManager={sub} />
+                              videoMode === 'BLIND' ? (
+                                <img
+                                  src="/assets/blindMode.png"
+                                  alt="blind mode"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <UserVideoComponent streamManager={sub} />
+                              )
                             ) : (
                               <div className="w-full h-full flex justify-center">
                                 <VideoOff size={50} />

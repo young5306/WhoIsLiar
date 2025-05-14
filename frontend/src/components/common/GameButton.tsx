@@ -39,6 +39,7 @@ const GameButton = ({
           active:brightness-90
           transition
           cursor-pointer
+          text-nowrap
           ${sizeClasses[size]}
           ${variantClasses[variant]}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-140 active:brightness-90'}
