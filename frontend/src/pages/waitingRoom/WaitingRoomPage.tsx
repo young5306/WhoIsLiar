@@ -388,8 +388,6 @@ const WaitingRoomContent = () => {
     };
 
     fetchRoomData();
-
-    // cleanup 함수
     return () => {
       // 구독은 해제하지 않음 (게임방에서도 사용하기 위해)
     };
