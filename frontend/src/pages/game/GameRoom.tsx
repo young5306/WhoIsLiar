@@ -1160,7 +1160,7 @@ const GameRoom = () => {
                         size="small"
                         variant={
                           selectedTargetNickname === '__SKIP__'
-                            ? 'neon'
+                            ? 'default'
                             : 'gray'
                         }
                         onClick={handleVoteSkip}

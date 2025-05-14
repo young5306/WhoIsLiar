@@ -38,9 +38,15 @@ const SkipModal = ({
             <img src="assets/mask_smile.png" className="w-15 h-16 pt-1" />
             SKIP
           </div>
-          <div className="display-medium text-primary-600">
-            Skip Votes: {skipCount}
-          </div>
+          {skipCount > 0 ? (
+            <div className="headline-xlarge text-primary-600 mt-3">
+              Skip Votes: {skipCount}
+            </div>
+          ) : (
+            <div className="headline-xlarge text-primary-600 mt-3">
+              플레이어간 동률로 투표가 무효화되었습니다
+            </div>
+          )}
         </div>
       </div>
     </div>
