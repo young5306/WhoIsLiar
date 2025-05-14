@@ -35,10 +35,7 @@ const VoteResultModal = ({
 
   return (
     <div className="fixed inset-0 bg-gray-900/70 z-50 flex items-center justify-center">
-      <div
-        className="relative bg-gray-900 border-1 border-primary-600 rounded-xl p-10 pb-14 w-[600px] text-center text-gray-0"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative bg-gray-900 border-1 border-primary-600 rounded-xl p-10 pb-14 w-[600px] text-center text-gray-0">
         {modalTimerRef && (
           <div className="absolute top-6 right-6">
             <Timer ref={modalTimerRef} size="medium" onTimeEnd={onNext} />
@@ -59,7 +56,6 @@ const VoteResultModal = ({
         </div>
 
         <ul className="space-y-3 mt-5">
-          {/* {visibleItems.map((item, idx) => ( */}
           {sortedResults.map((item, idx) => (
             <li
               key={idx}

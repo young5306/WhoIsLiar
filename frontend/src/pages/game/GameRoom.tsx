@@ -1437,9 +1437,6 @@ const GameRoom = () => {
 
             setCurrentTurn((prev) => prev + 1);
           }}
-          onClose={() => {
-            setShowSkipModal(false);
-          }}
         />
       )}
 
@@ -1467,9 +1464,6 @@ const GameRoom = () => {
               }
             }
           }
-          onClose={() => {
-            setShowLiarFoundModal(false);
-          }}
         />
       )}
 
@@ -1483,9 +1477,6 @@ const GameRoom = () => {
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
             setShowLiarNotFoundModal(false);
             await fetchAndShowScore();
-          }}
-          onClose={() => {
-            setShowLiarNotFoundModal(false);
           }}
         />
       )}
@@ -1525,7 +1516,6 @@ const GameRoom = () => {
             totalRoundNumber={totalRoundNumber}
             scores={scoreData.scores}
             onNext={handleScoreTimeEnd}
-            onClose={() => setShowScoreModal(false)}
           />
         </>
       )}
