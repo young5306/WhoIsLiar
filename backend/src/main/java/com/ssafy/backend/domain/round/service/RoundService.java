@@ -306,8 +306,8 @@ public class RoundService {
 			return;
 		}
 
-		long totalActive = participantRoundRepository.countByRoundAndParticipantActiveTrue(round);
-		long votedActive = participantRoundRepository.countByRoundAndHasVotedTrueAndParticipantActiveTrue(round);
+		long totalActive = participantRoundRepository.countByRoundAndParticipantIsActiveTrue(round);
+		long votedActive = participantRoundRepository.countByRoundAndHasVotedTrueAndParticipantIsActiveTrue(round);
 
 		if (votedActive == totalActive) {
 			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
