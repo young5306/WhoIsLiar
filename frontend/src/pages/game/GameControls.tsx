@@ -4,7 +4,7 @@ import {
   Video,
   VideoOff,
   // SwitchCamera,
-  Settings,
+  // Settings,
   PhoneOff,
 } from 'lucide-react';
 
