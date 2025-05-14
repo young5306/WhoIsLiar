@@ -34,4 +34,8 @@ public interface ParticipantRoundRepository extends JpaRepository<ParticipantRou
 	long countByRound(Round round);
 
 	long countByRoundAndHasVotedTrue(Round round);
+
+	long countByRoundAndParticipantIsActiveTrue(Round round);
+
+	long countByRoundAndHasVotedTrueAndParticipantIsActiveTrue(Round round);
 }
