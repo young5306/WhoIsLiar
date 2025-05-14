@@ -315,7 +315,7 @@ public class RoundService {
 		}
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public VoteResultsResponseDto getVoteResults(String roomCode, int roundNumber) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -380,6 +380,10 @@ public class RoundService {
 			.findFirst()
 			.map(ParticipantRound::getParticipant)
 			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+		ParticipantRound liarPR = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
 
 		String liarNickname = liar.getSession().getNickname();
 		Long liarId = liar.getId();
@@ -393,12 +397,20 @@ public class RoundService {
 			detected = selectedId.equals(liarId);
 		}
 
+		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
+		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
+
+		if (wrongPicked || lastTurnSkip) {
+			liarPR.addScore(100);
+			participantRoundRepository.save(liarPR);
+		}
+
 		return new VoteResultsResponseDto(
 			results,
 			skipFlag,
 			selectedId,
 			detected,
-			skipFlag ? null : liarNickname,
+			skipFlag && round.getTurn()!=3 ? null : liarNickname,
 			skipFlag ? null : liarId
 		);
 	}
