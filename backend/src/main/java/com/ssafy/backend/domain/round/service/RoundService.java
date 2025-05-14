@@ -410,7 +410,7 @@ public class RoundService {
 			skipFlag,
 			selectedId,
 			detected,
-			skipFlag || round.getTurn()==3 ? null : liarNickname,
+			skipFlag && round.getTurn()!=3 ? null : liarNickname,
 			skipFlag ? null : liarId
 		);
 	}

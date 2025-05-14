@@ -12,13 +12,18 @@ const GameChat = () => {
   const { send: contextSend, isConnected } = useWebSocketContext();
   const { chatMessages } = useSocketStore();
 
+  // HINT 타입의 메시지를 필터링한 채팅 메시지 목록
+  const filteredMessages = chatMessages.filter(
+    (msg) => msg.chatType !== 'HINT'
+  );
+
   // 새 메시지가 올 때마다 스크롤을 맨 아래로 이동
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [chatMessages]);
+  }, [filteredMessages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +81,7 @@ const GameChat = () => {
             ref={chatContainerRef}
             className="absolute inset-0 space-y-1 overflow-y-auto pr-1 custom-scrollbar"
           >
-            {chatMessages.map((msg, index) => (
+            {filteredMessages.map((msg, index) => (
               <div key={index} className="flex flex-col">
                 {msg.sender === 'SYSTEM' ? (
                   <div className="flex justify-center my-2">

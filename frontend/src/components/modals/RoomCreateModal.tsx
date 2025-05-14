@@ -60,7 +60,6 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
       setIsLoading(true);
       const response = await createRoom(params);
       const roomCode = response.data.room.roomCode;
-      console.log('roomCode', roomCode);
       setRoomCode(roomCode);
       navigate(`/waiting-room?roomCode=${roomCode}`);
     } catch (err: any) {
