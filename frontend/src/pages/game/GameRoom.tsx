@@ -658,8 +658,6 @@ const GameRoom = () => {
   const [sortedParticipants, setSortedPraticipants] = useState<
     Array<{ participantNickname: string; order: number }>
   >([]);
-  // const hasParticipants = participants.length > 0;
-  // console.log('hasParticipants', hasParticipants, participants.length);
 
   // '나'를 제외한 참가자 순서대로 재정렬
   useEffect(() => {
@@ -1197,9 +1195,6 @@ const GameRoom = () => {
                       <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
-                            {/* <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                              {sub.nickname}
-                            </div> */}
                             <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                               {sub.nickname}
                             </div>
@@ -1265,9 +1260,6 @@ const GameRoom = () => {
                   <div className="w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                     <div className="w-full min-h-[150px] max-h-[170px] relative">
                       <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
-                        {/* <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
-                          나
-                        </div> */}
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                           나
                         </div>
@@ -1293,7 +1285,6 @@ const GameRoom = () => {
                       </div>
                     </div>
                   </div>
-                  {/* {publisher && isVideoEnabled ? ( */}
                   {publisher &&
                   publisher.stream.getMediaStream().getVideoTracks()[0]
                     ?.readyState === 'live' ? (
@@ -1448,6 +1439,7 @@ const GameRoom = () => {
         <LiarNotFoundModal
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
+          liarNickName={voteResult.liarNickname}
           onNext={async () => {
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
             setShowLiarNotFoundModal(false);
