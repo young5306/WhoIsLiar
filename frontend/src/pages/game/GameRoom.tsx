@@ -448,33 +448,37 @@ const GameRoom = () => {
   }, [
     session,
     userInfo,
-    publisher,
     stompClient,
     clearSubscription,
     clearEmotionSubscription,
     clearChatMessages,
     roomCode,
-    navigation,
+  ]);
+
+  const disconnectOpenVidu = () => {
+    if (session) session.disconnect();
+    OV.current = null;
+  };
+
+  const handleBeforeUnload = useCallback(() => {
+    disconnectOpenVidu();
+    clearRoomCode(); // roomCode 초기화
+    outGameRoom();
+    setPublisher(undefined);
+    // 카메라, 마이크 연결 끊기
+    setCurrentVideoDevice(null);
+    setCurrentMicDevice(null);
+  }, [
+    disconnectOpenVidu,
+    clearRoomCode,
+    outGameRoom,
+    setPublisher,
+    setCurrentVideoDevice,
+    setCurrentMicDevice,
   ]);
 
   // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      // 세션 연결 해제
-      if (session) {
-        session.disconnect();
-      }
-
-      clearRoomCode(); // roomCode 초기화
-      outGameRoom();
-      // 미디어 트랙 정리
-      OV.current = null;
-      setPublisher(undefined);
-      // 카메라, 마이크 연결 끊기
-      setCurrentVideoDevice(null);
-      setCurrentMicDevice(null);
-    };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
@@ -482,7 +486,7 @@ const GameRoom = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       setIsInGame(false);
     };
-  }, [session, clearRoomCode]);
+  }, [handleBeforeUnload]);
 
   // 새로고침 후 감지 및 redirect
   useEffect(() => {
@@ -1080,6 +1084,7 @@ const GameRoom = () => {
       }
       // 마지막 라운드 종료 후 게임 종료
       else {
+        disconnectOpenVidu();
         navigation('/waiting-room');
       }
     } catch (error) {
