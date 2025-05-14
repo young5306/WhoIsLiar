@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import GameButton2 from '../../common/GameButton2';
+import Timer, { TimerRef } from '../../common/Timer';
 
 interface Props {
   roundNumber: number;
@@ -22,15 +23,31 @@ const LiarFoundModal = ({
 
   const isLiar = userInfo?.nickname === liarNickname;
 
+  const modalTimerRef = useRef<TimerRef>(null);
+
+  useEffect(() => {
+    modalTimerRef?.current?.startTimer(20);
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70"
       onClick={onClose}
     >
       <div
-        className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
+        className="relative bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
         onClick={(e) => e.stopPropagation()}
       >
+        {modalTimerRef && (
+          <div className="absolute top-6 right-6">
+            <Timer
+              ref={modalTimerRef}
+              size="medium"
+              onTimeEnd={() => onNext(input.trim())}
+            />
+          </div>
+        )}
+
         <p className="headline-xlarge mb-2">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>

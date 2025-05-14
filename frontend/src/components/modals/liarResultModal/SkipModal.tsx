@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import Timer, { TimerRef } from '../../common/Timer';
 
 interface SkipModalProps {
   skipCount: number;
@@ -15,10 +16,10 @@ const SkipModal = ({
   onNext,
   onClose,
 }: SkipModalProps) => {
+  const modalTimerRef = useRef<TimerRef>(null);
+
   useEffect(() => {
-    console.log('onNext: skip 모달 다음 로직 준비');
-    const timer = setTimeout(onNext, 2000);
-    return () => clearTimeout(timer);
+    modalTimerRef?.current?.startTimer(3);
   }, []);
 
   return (
@@ -27,9 +28,15 @@ const SkipModal = ({
       onClick={onClose}
     >
       <div
-        className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
+        className="relative bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
         onClick={(e) => e.stopPropagation()}
       >
+        {modalTimerRef && (
+          <div className="absolute top-6 right-6">
+            <Timer ref={modalTimerRef} size="small" onTimeEnd={onNext} />
+          </div>
+        )}
+
         <p className="headline-xlarge mb-2">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>

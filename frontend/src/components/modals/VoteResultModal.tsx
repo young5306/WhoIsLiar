@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   VoteResultItem,
   VoteResultResponse,
 } from '../../services/api/GameService';
+import Timer, { TimerRef } from '../common/Timer';
 
 interface Props {
   roundNumber: number;
@@ -20,6 +21,7 @@ const VoteResultModal = ({
   // const [visibleItems, setVisibleItems] = useState<VoteResultItem[]>([]);
   // const [currentIndex, setCurrentIndex] = useState(0);
   const [sortedResults, setSortedResults] = useState<VoteResultItem[]>([]);
+  const modalTimerRef = useRef<TimerRef>(null);
 
   useEffect(() => {
     // 투표 수 오름차순 정렬
@@ -28,9 +30,7 @@ const VoteResultModal = ({
     );
     setSortedResults(sorted);
 
-    // 3초 뒤 모달 자동 닫기
-    const timeout = setTimeout(onNext, 3000);
-    return () => clearTimeout(timeout);
+    modalTimerRef?.current?.startTimer(3);
   }, [result]);
 
   return (
@@ -39,6 +39,12 @@ const VoteResultModal = ({
         className="relative bg-gray-900 border-1 border-primary-600 rounded-xl p-10 pb-14 w-[600px] text-center text-gray-0"
         onClick={(e) => e.stopPropagation()}
       >
+        {modalTimerRef && (
+          <div className="absolute top-6 right-6">
+            <Timer ref={modalTimerRef} size="medium" onTimeEnd={onNext} />
+          </div>
+        )}
+
         <p className="headline-xlarge text-gray-0 mb-10">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>

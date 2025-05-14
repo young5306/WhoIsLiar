@@ -1,11 +1,15 @@
+import { useEffect, useRef } from 'react';
 import { ScoreResponse } from '../../services/api/GameService';
+import Timer, { TimerRef } from '../common/Timer';
 
 interface ScoreModalProps {
   type: 'liar-win' | 'civilian-win' | 'final-score';
   roundNumber: number;
   totalRoundNumber: number;
   scores: ScoreResponse['scores'];
+  onNext: () => void;
   onClose?: () => void;
+  timerRef?: React.RefObject<TimerRef>;
 }
 
 const titleImageMap = {
@@ -21,11 +25,18 @@ const ScoreModal = ({
   roundNumber,
   totalRoundNumber,
   scores,
+  onNext,
   onClose,
 }: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
 
   const sortedScores = [...scores].sort((a, b) => b.totalScore - a.totalScore);
+
+  const modalTimerRef = useRef<TimerRef>(null);
+
+  useEffect(() => {
+    modalTimerRef?.current?.startTimer(10);
+  }, []);
 
   return (
     <div
@@ -36,6 +47,13 @@ const ScoreModal = ({
         className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* 타이머를 모달 내부 오른쪽 상단에 표시 */}
+        {modalTimerRef && (
+          <div className="absolute top-6 right-6">
+            <Timer ref={modalTimerRef} size="medium" onTimeEnd={onNext} />
+          </div>
+        )}
+
         <p className="headline-xlarge">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>
