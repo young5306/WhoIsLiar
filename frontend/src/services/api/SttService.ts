@@ -62,8 +62,6 @@ class SttService {
     if (this.debugInfo.length > 100) {
       this.debugInfo.shift();
     }
-
-    console.log(`🎤 디버깅: ${message}`);
   }
 
   // 현재 디버깅 상태 반환
@@ -235,10 +233,6 @@ class SttService {
 
       // 오류 처리
       this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        const errorMsg = `❌ 오류 발생: ${event.error}, 상세: ${event.message || '정보 없음'}`;
-        this.addDebugLog(errorMsg);
-        console.error(errorMsg, event);
-
         // 네트워크 오류가 아닌 aborted는 사용자의 명시적 중단이므로 무시
         if (event.error === 'aborted') {
           this.addDebugLog('🛑 의도적으로 중단된 인식, 재시작하지 않음');

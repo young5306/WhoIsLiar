@@ -12,11 +12,9 @@ export const useRoomStore = create<RoomStoreState>()(
     (set) => ({
       roomCode: null,
       setRoomCode: (roomCode: string) => {
-        console.log('Setting roomCode:', roomCode);
         set({ roomCode });
       },
       clearRoomCode: () => {
-        console.log('Clearing roomCode');
         set({ roomCode: null });
       },
     }),
