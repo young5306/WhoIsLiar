@@ -19,6 +19,7 @@ const LiarFoundModal = ({
 }: Props) => {
   const { userInfo } = useAuthStore();
   const [input, setInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isLiar = userInfo?.nickname === liarNickname;
 
@@ -27,6 +28,21 @@ const LiarFoundModal = ({
   useEffect(() => {
     modalTimerRef?.current?.startTimer(20);
   }, []);
+
+  const handleSubmit = () => {
+    if (isSubmitting) return; // 중복 방지
+
+    if (input.trim() === '') {
+      notify({
+        type: 'warning',
+        text: '제시어를 입력해주세요!',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    onNext(input.trim());
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
@@ -57,19 +73,17 @@ const LiarFoundModal = ({
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="한글로 입력해주세요."
                 className="px-3 py-3 mt-6 w-[98%] rounded border outline-none border-primary-600 bg-gray-900 text-gray-0 headline-medium placeholder-gray-0/60 focus:ring-2 focus:ring-primary-600/60"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
               />
               <GameButton2
                 text="제출"
-                onClick={() => {
-                  if (input.trim() === '') {
-                    notify({
-                      type: 'warning',
-                      text: '제시어를 입력해주세요!',
-                    });
-                  } else {
-                    onNext(input.trim());
-                  }
-                }}
+                onClick={handleSubmit}
+                disabled={isSubmitting}
               />
             </>
           )}
