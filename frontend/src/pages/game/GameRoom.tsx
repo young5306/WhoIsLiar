@@ -829,7 +829,7 @@ const GameRoom = () => {
 
     // 모든 플레이어 투표 종료 후 (VoteResultModal 열기)
     if (latest.chatType === 'VOTE_SUBMITTED') {
-      console.log('💡모든 플레이어 투표 완료');
+      console.log('🔥🔥🔥모든 플레이어 투표 완료');
       console.log(latest);
 
       (async () => {
@@ -1121,16 +1121,28 @@ const GameRoom = () => {
               </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
-                <div className="absolute top-6 right-6 z-50 flex gap-2 items-center">
+                <div className="absolute top-6 right-6 z-50 flex gap-4 items-center">
                   {currentTurn < 3 ? (
-                    <GameButton
-                      text="기권"
-                      size="small"
-                      variant={
-                        selectedTargetNickname === null ? 'neon' : 'gray'
-                      }
-                      onClick={handleVoteSkip}
-                    />
+                    <>
+                      <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
+                        <p>플레이어를 선택해 투표를 해주세요.</p>
+                        <p>
+                          ※ 시간 내에 투표하지 않으면{' '}
+                          <span className="text-primary-600 font-bold">
+                            기권
+                          </span>
+                          으로 투표됩니다.
+                        </p>
+                      </div>
+                      <GameButton
+                        text="기권"
+                        size="small"
+                        variant={
+                          selectedTargetNickname === null ? 'neon' : 'gray'
+                        }
+                        onClick={handleVoteSkip}
+                      />
+                    </>
                   ) : (
                     <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
                       ※ 시간 내에 투표하지 않으면{' '}
@@ -1140,11 +1152,13 @@ const GameRoom = () => {
                       에게 투표됩니다
                     </div>
                   )}
-                  <Timer
-                    ref={voteTimerRef}
-                    onTimeEnd={handleVotingEnd}
-                    size="medium"
-                  />
+                  <div className="relative">
+                    <Timer
+                      ref={voteTimerRef}
+                      onTimeEnd={handleVotingEnd}
+                      size="medium"
+                    />
+                  </div>
                 </div>
               )}
             </div>
