@@ -48,132 +48,136 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { VideoOff, Info } from 'lucide-react';
+import { VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
 import { notify } from '../../components/common/Toast';
+import GameStartCountdownModal from '../../components/modals/GameStartCountdownModal';
 
 // STT 디버깅 모달 컴포넌트
-const SttDebugModal = ({
-  isOpen,
-  onClose,
-  debugInfo,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  debugInfo: any;
-}) => {
-  if (!isOpen) return null;
+// const SttDebugModal = ({
+//   isOpen,
+//   onClose,
+//   debugInfo,
+// }: {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   debugInfo: any;
+// }) => {
+//   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-auto">
-      <div className="bg-gray-800 text-white p-6 rounded-lg max-w-3xl max-h-[80vh] overflow-auto">
-        <h2 className="text-xl font-bold mb-4">STT 디버깅 정보</h2>
+//   return (
+//     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-auto">
+//       <div className="bg-gray-800 text-white p-6 rounded-lg max-w-3xl max-h-[80vh] overflow-auto">
+//         <h2 className="text-xl font-bold mb-4">STT 디버깅 정보</h2>
 
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">상태 정보</h3>
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div className="bg-gray-700 p-2 rounded">
-              <span className="font-medium">마이크 듣기: </span>
-              <span
-                className={
-                  debugInfo.isListening ? 'text-green-400' : 'text-red-400'
-                }
-              >
-                {debugInfo.isListening ? '활성화' : '비활성화'}
-              </span>
-            </div>
-            <div className="bg-gray-700 p-2 rounded">
-              <span className="font-medium">현재 발언자: </span>
-              <span>{debugInfo.currentSpeakingPlayer || '없음'}</span>
-            </div>
-            <div className="bg-gray-700 p-2 rounded">
-              <span className="font-medium">내 이름: </span>
-              <span>{debugInfo.myUserName || '없음'}</span>
-            </div>
-            <div className="bg-gray-700 p-2 rounded">
-              <span className="font-medium">음성 인식됨: </span>
-              <span
-                className={
-                  debugInfo.hasRecognizedSpeech
-                    ? 'text-green-400'
-                    : 'text-yellow-400'
-                }
-              >
-                {debugInfo.hasRecognizedSpeech ? '있음 ✅' : '없음 ❌'}
-              </span>
-            </div>
-            <div className="bg-gray-700 p-2 rounded col-span-2">
-              <span className="font-medium">마지막 인식 시간: </span>
-              <span>
-                {debugInfo.timeSinceLastRecognition !== null
-                  ? `${Math.round(debugInfo.timeSinceLastRecognition / 1000)}초 전`
-                  : '아직 없음'}
-              </span>
-            </div>
-            <div className="bg-gray-700 p-2 rounded col-span-2">
-              <span className="font-medium">누적 텍스트: </span>
-              <span className="text-green-300">
-                {debugInfo.accumulatedText || '없음'}
-              </span>
-            </div>
-          </div>
-        </div>
+//         <div className="mb-4">
+//           <h3 className="text-lg font-semibold mb-2">상태 정보</h3>
+//           <div className="grid grid-cols-2 gap-2 mb-2">
+//             <div className="bg-gray-700 p-2 rounded">
+//               <span className="font-medium">마이크 듣기: </span>
+//               <span
+//                 className={
+//                   debugInfo.isListening ? 'text-green-400' : 'text-red-400'
+//                 }
+//               >
+//                 {debugInfo.isListening ? '활성화' : '비활성화'}
+//               </span>
+//             </div>
+//             <div className="bg-gray-700 p-2 rounded">
+//               <span className="font-medium">현재 발언자: </span>
+//               <span>{debugInfo.currentSpeakingPlayer || '없음'}</span>
+//             </div>
+//             <div className="bg-gray-700 p-2 rounded">
+//               <span className="font-medium">내 이름: </span>
+//               <span>{debugInfo.myUserName || '없음'}</span>
+//             </div>
+//             <div className="bg-gray-700 p-2 rounded">
+//               <span className="font-medium">음성 인식됨: </span>
+//               <span
+//                 className={
+//                   debugInfo.hasRecognizedSpeech
+//                     ? 'text-green-400'
+//                     : 'text-yellow-400'
+//                 }
+//               >
+//                 {debugInfo.hasRecognizedSpeech ? '있음 ✅' : '없음 ❌'}
+//               </span>
+//             </div>
+//             <div className="bg-gray-700 p-2 rounded col-span-2">
+//               <span className="font-medium">마지막 인식 시간: </span>
+//               <span>
+//                 {debugInfo.timeSinceLastRecognition !== null
+//                   ? `${Math.round(debugInfo.timeSinceLastRecognition / 1000)}초 전`
+//                   : '아직 없음'}
+//               </span>
+//             </div>
+//             <div className="bg-gray-700 p-2 rounded col-span-2">
+//               <span className="font-medium">누적 텍스트: </span>
+//               <span className="text-green-300">
+//                 {debugInfo.accumulatedText || '없음'}
+//               </span>
+//             </div>
+//           </div>
+//         </div>
 
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">로그 (최근 순)</h3>
-          <div className="bg-gray-900 p-3 rounded h-60 overflow-y-auto">
-            {debugInfo.debugLogs &&
-              debugInfo.debugLogs
-                .slice()
-                .reverse()
-                .map((log: string, index: number) => (
-                  <div key={index} className="text-xs mb-1 font-mono">
-                    {log}
-                  </div>
-                ))}
-          </div>
-        </div>
+//         <div className="mb-4">
+//           <h3 className="text-lg font-semibold mb-2">로그 (최근 순)</h3>
+//           <div className="bg-gray-900 p-3 rounded h-60 overflow-y-auto">
+//             {debugInfo.debugLogs &&
+//               debugInfo.debugLogs
+//                 .slice()
+//                 .reverse()
+//                 .map((log: string, index: number) => (
+//                   <div key={index} className="text-xs mb-1 font-mono">
+//                     {log}
+//                   </div>
+//                 ))}
+//           </div>
+//         </div>
 
-        <div className="flex justify-between mt-4">
-          <button
-            onClick={async () => {
-              try {
-                const hasAccess = await sttService.checkMicrophoneAccess();
-                notify({
-                  type: hasAccess ? 'success' : 'error',
-                  text: hasAccess
-                    ? '마이크 접근 권한이 있습니다.'
-                    : '마이크 접근 권한이 없습니다!',
-                });
-              } catch (error) {
-                notify({
-                  type: 'error',
-                  text: '마이크 권한 확인 중 오류가 발생했습니다.',
-                });
-              }
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            마이크 권한 확인
-          </button>
-          <button
-            onClick={onClose}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
-          >
-            닫기
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+//         <div className="flex justify-between mt-4">
+//           <button
+//             onClick={async () => {
+//               try {
+//                 const hasAccess = await sttService.checkMicrophoneAccess();
+//                 notify({
+//                   type: hasAccess ? 'success' : 'error',
+//                   text: hasAccess
+//                     ? '마이크 접근 권한이 있습니다.'
+//                     : '마이크 접근 권한이 없습니다!',
+//                 });
+//               } catch (error) {
+//                 notify({
+//                   type: 'error',
+//                   text: '마이크 권한 확인 중 오류가 발생했습니다.',
+//                 });
+//               }
+//             }}
+//             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+//           >
+//             마이크 권한 확인
+//           </button>
+//           <button
+//             onClick={onClose}
+//             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+//           >
+//             닫기
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const GameRoom = () => {
   const [emotionLogs, setEmotionLogs] = useState<
     Record<string, FaceApiResult | null>
   >({});
+
+  const [showGameStartModal, setShowGameStartModal] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
 
   const updateEmotionLog = (
     name: string | null,
@@ -607,6 +611,8 @@ const GameRoom = () => {
   const [category, setCategory] = useState<string>('');
   const [myWord, setMyWord] = useState<string>('');
   const [hostNickname, setHostNickname] = useState<string>('');
+  const [gameMode, setGameMode] = useState<string>('DEFAULT');
+  const [videoMode, setVideoMode] = useState<string>('VIDEO');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
@@ -694,6 +700,8 @@ const GameRoom = () => {
         setTotalRoundNumber(playerInfoRes.data.totalRoundNumber);
         setMyWord(playerInfoRes.data.word);
         setCategory(roomInfoRes.roomInfo.category);
+        setGameMode(roomInfoRes.roomInfo.gameMode);
+        setVideoMode(roomInfoRes.roomInfo.videoMode);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
 
         setParticipants(playerInfoRes.data.participants);
@@ -708,20 +716,7 @@ const GameRoom = () => {
         console.log('hostNickname', roomInfoRes.roomInfo.hostNickname);
         console.log('myUserName', myUserName);
 
-        // 라운드 시작 및 턴 시작 API 순차 호출
-        if (myUserName === roomInfoRes.roomInfo.hostNickname) {
-          try {
-            // startRound 먼저 실행
-            await startRound(roomCode, playerInfoRes.data.roundNumber);
-            console.log('✅startRound 호출 완료');
-
-            // startRound 성공 후 startTurn 실행
-            await startTurn(roomCode, playerInfoRes.data.roundNumber);
-            console.log('✅startTurn 호출 완료');
-          } catch (error) {
-            console.error('라운드/턴 시작 중 오류:', error);
-          }
-        }
+        // 라운드 시작 및 턴 시작 API 순차 호출은 모달이 닫힐 때 실행
       } catch (error) {
         console.error('게임 정보 세팅 중 오류:', error);
       }
@@ -733,6 +728,26 @@ const GameRoom = () => {
   useEffect(() => {
     clearChatMessages();
   }, [roomCode]);
+
+  // 발언자와 타이머 관련 로직
+  useEffect(() => {
+    console.log('발언자 타이머 useEffect 실행: ', {
+      speakingPlayer,
+      isTimerReady,
+      gameStarted,
+    });
+
+    if (speakingPlayer && isTimerReady && gameStarted) {
+      console.log('🎮 타이머 시작:', speakingPlayer);
+      speechTimerRef.current?.startTimer(20);
+    } else {
+      console.log('🎮 타이머 시작 조건 미충족:', {
+        speakingPlayer: Boolean(speakingPlayer),
+        isTimerReady,
+        gameStarted,
+      });
+    }
+  }, [speakingPlayer, isTimerReady, gameStarted]);
 
   // 채팅 감지
   useEffect(() => {
@@ -863,7 +878,7 @@ const GameRoom = () => {
         }, 2000);
       }
     }
-  }, [chatMessages, myUserName]);
+  }, [chatMessages, myUserName, publisher]);
 
   // 발언 skip 핸들러
   const handleSkipTurn = async (roomCode: string | null) => {
@@ -893,13 +908,6 @@ const GameRoom = () => {
     console.log('Timer mounted');
     setIsTimerReady(true);
   }, []);
-
-  useEffect(() => {
-    if (speakingPlayer && isTimerReady) {
-      console.log('타이머 시작:', speakingPlayer);
-      speechTimerRef.current?.startTimer(20);
-    }
-  }, [speakingPlayer, isTimerReady]);
 
   // 발언 타이머 종료 시 처리
   const handleSpeechTimerEnd = useCallback(() => {
@@ -1034,39 +1042,45 @@ const GameRoom = () => {
     }
   };
 
-  // 발언자 관련 추가 효과
-  const [showSttDebug, setShowSttDebug] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>({
-    isListening: false,
-    currentSpeakingPlayer: null,
-    myUserName: null,
-    accumulatedText: '',
-    hasRecognizedSpeech: false,
-    debugLogs: [],
-  });
+  // 게임 시작 모달 닫힐 때 게임 시작
+  const handleGameStart = useCallback(async () => {
+    console.log('🚀 handleGameStart 함수 시작!');
 
-  // 디버그 모달을 위한 정보 갱신 함수
-  const updateDebugInfo = useCallback(() => {
-    if (sttService) {
-      const currentDebugInfo = sttService.getDebugState();
-      setDebugInfo(currentDebugInfo);
-    }
-  }, []);
-
-  // 디버그 모달이 열렸을 때 디버깅 정보 갱신을 위한 인터벌 설정
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (showSttDebug) {
-      updateDebugInfo();
-      interval = setInterval(updateDebugInfo, 1000);
+    if (!roomCode) {
+      console.error('❌ 방 코드가 없습니다:', roomCode);
+      return;
     }
 
-    return () => {
-      if (interval) {
-        clearInterval(interval);
+    if (!myUserName) {
+      console.error('❌ 사용자 이름이 없습니다:', myUserName);
+      return;
+    }
+
+    // 게임 시작 상태 설정
+    console.log('⚙️ 게임 시작 상태 변경 전:', gameStarted);
+    setGameStarted(true);
+    console.log('✅ 게임 시작 상태 변경 후:', true);
+
+    // 게임 시작 로직 실행
+    console.log('👥 방장 여부 확인:', myUserName === hostNickname);
+
+    try {
+      if (myUserName === hostNickname) {
+        console.log('🎲 방장이 게임 시작 API 호출 시작');
+        // startRound 먼저 실행
+        const roundResult = await startRound(roomCode, roundNumber);
+        console.log('✅ startRound 호출 완료', roundResult);
+
+        // startRound 성공 후 startTurn 실행
+        const turnResult = await startTurn(roomCode, roundNumber);
+        console.log('✅ startTurn 호출 완료', turnResult);
+      } else {
+        console.log('👤 방장이 아닌 유저는 API 호출하지 않음');
       }
-    };
-  }, [showSttDebug, updateDebugInfo]);
+    } catch (error) {
+      console.error('❌ 라운드/턴 시작 중 오류:', error);
+    }
+  }, [roomCode, myUserName, hostNickname, roundNumber]);
 
   return (
     <>
@@ -1075,13 +1089,13 @@ const GameRoom = () => {
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
               {/* STT 디버깅 버튼 */}
-              <button
+              {/* <button
                 onClick={() => setShowSttDebug(true)}
                 className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center"
                 title="STT 디버깅"
               >
                 <Info size={16} />
-              </button>
+              </button> */}
 
               {/* --- 발언시간 --- */}
               <>
@@ -1471,10 +1485,24 @@ const GameRoom = () => {
       )}
 
       {/* STT 디버깅 모달 */}
-      <SttDebugModal
+      {/* <SttDebugModal
         isOpen={showSttDebug}
         onClose={() => setShowSttDebug(false)}
         debugInfo={debugInfo}
+      /> */}
+
+      {/* 게임 시작 카운트다운 모달 */}
+      <GameStartCountdownModal
+        isOpen={showGameStartModal}
+        onClose={() => {
+          console.log('모달 닫기 함수 실행');
+          setShowGameStartModal(false);
+          handleGameStart();
+        }}
+        gameMode={gameMode}
+        videoMode={videoMode}
+        category={category}
+        totalRounds={totalRoundNumber}
       />
     </>
   );
