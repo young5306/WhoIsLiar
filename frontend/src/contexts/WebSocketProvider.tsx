@@ -51,12 +51,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      console.log('WebSocket 연결 시도:', roomCode);
       currentRoomCodeRef.current = roomCode;
       const client = createStompClient(roomCode);
 
       client.onConnect = () => {
-        console.log('STOMP 연결 성공');
         setIsConnected(true);
         // 연결 성공 시 재연결 타이머 초기화
         if (reconnectTimeoutRef.current) {
@@ -65,8 +63,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       };
 
-      client.onStompError = (frame) => {
-        console.error('STOMP 에러:', frame);
+      client.onStompError = () => {
         setIsConnected(false);
         // 에러 발생 시 즉시 재연결 시도
         if (currentRoomCodeRef.current && !reconnectTimeoutRef.current) {
@@ -75,7 +72,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       client.onWebSocketClose = () => {
-        console.log('WebSocket 연결 종료');
         setIsConnected(false);
         // 연결 종료 시 즉시 재연결 시도
         if (currentRoomCodeRef.current && !reconnectTimeoutRef.current) {
@@ -86,7 +82,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       client.activate();
       clientRef.current = client;
     } catch (error) {
-      console.error('WebSocket 연결 실패:', error);
       setIsConnected(false);
       // 연결 실패 시 즉시 재연결 시도
       if (currentRoomCodeRef.current && !reconnectTimeoutRef.current) {
