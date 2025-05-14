@@ -22,9 +22,9 @@ const SkipModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
-      <div className="relative bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0">
+      <div className="relative bg-gray-900 border-1 border-primary-600 py-10 px-23 rounded-lg text-center text-gray-0">
         {modalTimerRef && (
-          <div className="absolute top-6 right-6">
+          <div className="absolute top-4 right-4">
             <Timer ref={modalTimerRef} size="small" onTimeEnd={onNext} />
           </div>
         )}

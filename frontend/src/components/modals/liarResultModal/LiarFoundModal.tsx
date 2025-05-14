@@ -51,7 +51,7 @@ const LiarFoundModal = ({
           <div className="absolute top-6 right-6">
             <Timer
               ref={modalTimerRef}
-              size="medium"
+              size="small"
               onTimeEnd={() => onNext(input.trim())}
             />
           </div>

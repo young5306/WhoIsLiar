@@ -38,7 +38,7 @@ const VoteResultModal = ({
       <div className="relative bg-gray-900 border-1 border-primary-600 rounded-xl p-10 pb-14 w-[600px] text-center text-gray-0">
         {modalTimerRef && (
           <div className="absolute top-6 right-6">
-            <Timer ref={modalTimerRef} size="medium" onTimeEnd={onNext} />
+            <Timer ref={modalTimerRef} size="small" onTimeEnd={onNext} />
           </div>
         )}
 

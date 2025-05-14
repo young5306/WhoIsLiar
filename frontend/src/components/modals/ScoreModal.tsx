@@ -41,7 +41,7 @@ const ScoreModal = ({
         {/* 타이머를 모달 내부 오른쪽 상단에 표시 */}
         {modalTimerRef && (
           <div className="absolute top-6 right-6">
-            <Timer ref={modalTimerRef} size="medium" onTimeEnd={onNext} />
+            <Timer ref={modalTimerRef} size="small" onTimeEnd={onNext} />
           </div>
         )}
 
