@@ -20,6 +20,7 @@ import { outRoom, startGame, setRound } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import useSocketStore from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
+import { useMessageStore } from '../../stores/useMessageStore';
 
 const WaitingRoomContent = () => {
   // const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
@@ -91,6 +92,9 @@ const WaitingRoomContent = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [userScrolled, setUserScrolled] = useState(false);
+  const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
+  const [newMessageCount, setNewMessageCount] = useState(0);
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -347,6 +351,10 @@ const WaitingRoomContent = () => {
               message.chatType === 'PLAYER_JOIN' ||
               message.chatType === 'PLAYER_LEAVE'
             ) {
+              if (message.chatType === 'PLAYER_LEAVE') {
+                leaveMessageState(true);
+                console.log('플레이어 상태 변화 start', Date.now());
+              }
               try {
                 const response = await getRoomData(contextRoomCode);
                 setRoomData(response);
@@ -439,13 +447,65 @@ const WaitingRoomContent = () => {
     }
   };
 
-  // 새 메시지가 올 때마다 스크롤을 맨 아래로 이동
+  // 새 메시지가 올 때마다 스크롤을 맨 아래로 이동하는 useEffect 수정
   useEffect(() => {
+    if (chatContainerRef.current) {
+      const container = chatContainerRef.current;
+
+      // 사용자가 스크롤을 위로 올린 상태인지 확인
+      const isScrolledUp =
+        container.scrollHeight - container.scrollTop - container.clientHeight >
+        30;
+
+      if (!userScrolled || !isScrolledUp) {
+        // 사용자가 스크롤을 올리지 않았거나, 이미 맨 아래에 있는 경우 스크롤 다운
+        container.scrollTop = container.scrollHeight;
+        setUserScrolled(false);
+        setShowNewMessageAlert(false);
+        setNewMessageCount(0);
+      } else {
+        // 사용자가 스크롤을 올린 상태이면 새 메시지 알림 표시
+        setShowNewMessageAlert(true);
+        setNewMessageCount((prev) => prev + 1);
+      }
+    }
+  }, [chatMessages]);
+
+  // 채팅 컨테이너에 스크롤 이벤트 리스너 추가 (chatContainerRef 생성 이후에 추가)
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight <
+        30;
+
+      if (isAtBottom) {
+        // 사용자가 맨 아래로 스크롤했으면 상태 초기화
+        setUserScrolled(false);
+        setShowNewMessageAlert(false);
+        setNewMessageCount(0);
+      } else {
+        // 사용자가 스크롤을 위로 올린 상태
+        setUserScrolled(true);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 새 메시지로 스크롤하는 함수 추가
+  const scrollToLatestMessage = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
+      setShowNewMessageAlert(false);
+      setNewMessageCount(0);
+      setUserScrolled(false);
     }
-  }, [chatMessages]);
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -613,6 +673,9 @@ const WaitingRoomContent = () => {
   // }
 
   // getAvailableDevices();
+
+  // 플레이어가 중간에 퇴장하는 경우
+  const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
 
   ///////////////////
 
@@ -1001,6 +1064,30 @@ const WaitingRoomContent = () => {
                 </div>
               ))}
             </div>
+
+            {showNewMessageAlert && (
+              <button
+                onClick={scrollToLatestMessage}
+                className="cursor-pointer absolute bottom-1 left-1/2 transform -translate-x-1/2 bg-primary-600 hover:bg-primary-500 text-white text-xs px-3 py-1.5 rounded-full shadow-lg transition-all duration-200 flex items-center gap-1 z-10 animate-pulse"
+              >
+                <span>
+                  새 메시지 {newMessageCount > 0 && `(${newMessageCount})`}
+                </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 19V5M5 12l7 7 7-7" />
+                </svg>
+              </button>
+            )}
           </div>
           <form onSubmit={handleSendMessage} className="mt-2">
             <div className="flex gap-1">
