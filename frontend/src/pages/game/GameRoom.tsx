@@ -895,8 +895,9 @@ const GameRoom = () => {
       await skipTurn(roomCode);
       console.log('턴이 스킵되었습니다.');
     } catch (error) {
-      setTimeout(() => setIsSkippingSpeech(false), 5000); // 5초 후 스킵 버튼 초기화
       console.error('턴 스킵 실패:', error);
+    } finally {
+      setTimeout(() => setIsSkippingSpeech(false), 5000); // 5초 후 스킵 버튼 초기화
     }
   };
 
@@ -959,7 +960,7 @@ const GameRoom = () => {
 
   // 기권 버튼 클릭
   const handleVoteSkip = () => {
-    setSelectedTargetNickname(null);
+    setSelectedTargetNickname('__SKIP__');
   };
 
   // selectedTargetNickname이 바뀔 때마다 ref에도 저장 (투표 제출 시 최신값 전달)
@@ -971,10 +972,14 @@ const GameRoom = () => {
   const handleVotingEnd = async () => {
     console.log('투표 제출', currentTurn, selectedTargetRef.current);
     try {
-      const target =
-        currentTurn >= 3 && !selectedTargetRef.current
-          ? myUserName // 3번째 턴에서 투표 안할 경우 본인 투표 (페널티)
-          : selectedTargetRef.current;
+      let target: string | null = selectedTargetRef.current;
+
+      // 3번째 턴, 미선택이면 본인에게 투표
+      if (currentTurn >= 3 && !target) {
+        target = myUserName;
+      }
+      if (target === '__SKIP__') target = null;
+
       await submitVotes(roomCode!, roundNumber, target);
       console.log('투표 완료:', target);
     } catch (err) {
@@ -1095,7 +1100,7 @@ const GameRoom = () => {
                 <Info size={16} />
               </button>
 
-              {/* --- 발언시간 --- */}
+              {/* --- 발언 시간 --- */}
               <>
                 {/* 발언자만 skip 버튼 표시 */}
                 {myUserName === speakingPlayer && (
@@ -1138,7 +1143,9 @@ const GameRoom = () => {
                         text="기권"
                         size="small"
                         variant={
-                          selectedTargetNickname === null ? 'neon' : 'gray'
+                          selectedTargetNickname === '__SKIP__'
+                            ? 'neon'
+                            : 'gray'
                         }
                         onClick={handleVoteSkip}
                       />
