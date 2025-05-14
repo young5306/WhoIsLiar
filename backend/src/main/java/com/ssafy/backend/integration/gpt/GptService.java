@@ -114,4 +114,44 @@ public class GptService {
 
 		return cleaned;
 	}
+
+	public boolean isSynonym(String mainWord, String guess, String category) {
+		String normMain  = mainWord.replaceAll("\\s+", "").toLowerCase();
+		String normGuess = guess   .replaceAll("\\s+", "").toLowerCase();
+
+		String systemPrompt = "당신은 라이어게임 단어 매칭 전문가입니다.";
+		String userPrompt = String.format(
+			"카테고리 '%s'의 단어 '%s'와 사용자가 제출한 '%s'가" +
+				" 의미상으로 같거나 동의어라면 'yes', 아니면 'no'만 출력하세요.",
+			category, normMain, normGuess
+		);
+
+		var messages = List.of(
+			Map.of("role", "system", "content", systemPrompt),
+			Map.of("role", "user",   "content", userPrompt)
+		);
+
+		var requestBody = Map.<String, Object>of(
+			"model", "gpt-4o",
+			"messages", messages,
+			"max_tokens", 5,
+			"temperature", 0.0,
+			"top_p", 1.0
+		);
+
+		JsonNode resp = webClient.post()
+			.uri("/chat/completions")
+			.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+			.bodyValue(requestBody)
+			.retrieve()
+			.bodyToMono(JsonNode.class)
+			.block();
+
+		String answer = resp
+			.path("choices").get(0)
+			.path("message").path("content")
+			.asText().trim();
+
+		return "yes".equalsIgnoreCase(answer);
+	}
 }
