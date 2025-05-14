@@ -48,7 +48,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { VideoOff } from 'lucide-react';
+import { MicOff, VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
