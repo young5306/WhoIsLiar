@@ -6,7 +6,7 @@ import {
   VideoOff,
   // SwitchCamera,
   // Settings,
-  PhoneOff,
+  // PhoneOff,
 } from 'lucide-react';
 import GameButton from '../../components/common/GameButton';
 import ConfirmModal from '../../components/modals/ConfirmModal';
