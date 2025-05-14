@@ -593,6 +593,24 @@ const GameRoom = () => {
     };
   }, [session, publisher]);
 
+  // 초기 세션 연결 후 마이크 상태 설정
+  useEffect(() => {
+    if (session && publisher) {
+      publisher.publishAudio(false);
+      setIsAudioEnabled(false);
+    }
+    // console.log('!!speakingPlayer!!', speakingPlayer, myUserName);
+
+    if (speakingPlayer && speakingPlayer === myUserName) {
+      publisher?.publishAudio(true);
+      setIsAudioEnabled(true);
+    }
+    // console.log(
+    //   '🎤 초기 마이크 상태 설정 완료:',
+    //   speakingPlayer === myUserName
+    // );
+  }, [session, publisher]);
+
   // 구독자들의 오디오 스트림 처리는 더 이상 필요 없음
   // 현재 발언자만 마이크를 활성화하고 그 오디오만 처리함
 
