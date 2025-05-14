@@ -3,6 +3,7 @@ interface GameButtonProps {
   size?: 'small' | 'medium' | 'large';
   variant?: 'default' | 'neon' | 'gray';
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 const sizeClasses = {
@@ -22,6 +23,7 @@ const GameButton = ({
   size = 'medium',
   variant = 'default',
   onClick,
+  disabled = false,
 }: GameButtonProps) => {
   return (
     <div className="inline-block p-1 bg-gray-900 rounded-full ">
@@ -39,6 +41,8 @@ const GameButton = ({
           cursor-pointer
           ${sizeClasses[size]}
           ${variantClasses[variant]}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-140 active:brightness-90'}
+          ${sizeClasses[size]}
         `}
       >
         {text}

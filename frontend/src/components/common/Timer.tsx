@@ -14,6 +14,7 @@ interface TimerProps {
 
 export interface TimerRef {
   startTimer: (seconds: number) => void;
+  pauseTimer: () => void;
 }
 
 const Timer = forwardRef<TimerRef, TimerProps>(
@@ -61,6 +62,12 @@ const Timer = forwardRef<TimerRef, TimerProps>(
             return prev - 1;
           });
         }, 1000);
+      },
+      pauseTimer: () => {
+        if (timerRef.current) {
+          window.clearInterval(timerRef.current);
+          timerRef.current = undefined;
+        }
       },
     }));
 

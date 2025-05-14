@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,8 +45,10 @@ import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
+import com.ssafy.backend.domain.round.entity.Synonym;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
+import com.ssafy.backend.domain.round.repository.SynonymRepository;
 import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
@@ -77,6 +80,7 @@ public class RoundService {
 
 	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
 	private final TurnTimerService turnTimerService;
+	private final SynonymRepository synonymRepository;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
@@ -413,7 +417,29 @@ public class RoundService {
 			case FOOL    -> round.getWord2();
 		};
 
-		boolean isCorrect = req.guessText().equalsIgnoreCase(targetWord);
+		String input  = req.guessText().replaceAll("\\s+", "").toLowerCase();
+		String answer = targetWord.replaceAll("\\s+", "").toLowerCase();
+
+		boolean isCorrect = input.equals(answer);
+
+		if (!isCorrect) {
+			if (room.getGameMode() == GameMode.DEFAULT) {
+				Optional<CategoryWord> cwOpt = categoryWordRepository.findByWordIgnoreCase(targetWord);
+				if (cwOpt.isPresent()) {
+					List<Synonym> syns = synonymRepository.findByMainWord(cwOpt.get());
+					for (Synonym s : syns) {
+						String normSyn = s.getSynonym().replaceAll("\\s+", "").toLowerCase();
+						if (input.equals(normSyn)) {
+							isCorrect = true;
+							break;
+						}
+					}
+				}
+			} else {
+				String categoryName = room.getCategory().name();
+				isCorrect = gptService.isSynonym(targetWord, req.guessText(), categoryName);
+			}
+		}
 
 		Winner winnerEnum;
 		if (room.getGameMode() == GameMode.DEFAULT) {

@@ -91,3 +91,10 @@ CREATE TABLE IF NOT EXISTS category_words (
     INDEX idx_category (category)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE synonym (
+   id BIGINT PRIMARY KEY AUTO_INCREMENT,
+   main_word_id BIGINT,
+   synonym VARCHAR(100) NOT NULL,
+   FOREIGN KEY (main_word_id) REFERENCES category_words(id)
+);
+

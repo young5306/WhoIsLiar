@@ -4,13 +4,15 @@ import {
   Video,
   VideoOff,
   // SwitchCamera,
-  Settings,
+  // Settings,
   PhoneOff,
 } from 'lucide-react';
 
 interface GameControlsProps {
   isAudioEnabled: boolean;
   isVideoEnabled: boolean;
+  myUserName: string;
+  speakingPlayer: string;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onLeaveSession: () => void;
@@ -19,13 +21,15 @@ interface GameControlsProps {
 const GameControls = ({
   isAudioEnabled,
   isVideoEnabled,
+  myUserName,
+  speakingPlayer,
   onToggleAudio,
   onToggleVideo,
   onLeaveSession,
 }: GameControlsProps) => {
-  const handleSettings = () => {
-    // console.log('Settings');
-  };
+  // const handleSettings = () => {
+  // console.log('Settings');
+  // };
   return (
     <>
       {/* <div></div> */}
@@ -34,19 +38,21 @@ const GameControls = ({
         <div>
           <div className="flex space-x-4">
             <button
-              onClick={onToggleAudio}
-              className={`p-2 rounded-full ${isAudioEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'}`}
+              onClick={
+                myUserName === speakingPlayer ? onToggleAudio : undefined
+              }
+              className={`p-2 rounded-full ${myUserName === speakingPlayer && isAudioEnabled ? 'bg-transparent border border-gray-600 hover:opacity-80 hover:bg-gray-800' : 'bg-red-600 border border-red-600 hover:bg-red-700'} ${myUserName === speakingPlayer ? 'cursor-pointer' : 'cursor-not-allowed'}`}
             >
-              {isAudioEnabled ? (
+              {myUserName === speakingPlayer && isAudioEnabled ? (
                 <Mic className="h-5 w-5" />
               ) : (
-                <MicOff className="h-5 w-5" />
+                <MicOff className="h-5 w-5 " />
               )}
             </button>
 
             <button
               onClick={onToggleVideo}
-              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600' : 'bg-red-600 border border-red-600'}`}
+              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600 hover:opacity-80 hover:bg-gray-800' : 'bg-red-600 border border-red-600 hover:bg-red-700'} cursor-pointer`}
             >
               {isVideoEnabled ? (
                 <Video className="h-5 w-5" />
@@ -58,15 +64,15 @@ const GameControls = ({
         </div>
 
         <div className="flex flex-row gap-4">
-          <button
+          {/* <button
             onClick={handleSettings}
             className="p-2 rounded-full bg-transparent border border-gray-600"
           >
             <Settings className="h-5 w-5" />
-          </button>
+          </button> */}
 
           <button
-            className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6 py-2 flex items-center"
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6 py-2 flex items-center cursor-pointer"
             onClick={onLeaveSession}
           >
             <PhoneOff className="h-5 w-5 mr-2" /> 방 나가기
