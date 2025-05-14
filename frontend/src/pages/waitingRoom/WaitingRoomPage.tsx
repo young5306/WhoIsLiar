@@ -20,6 +20,7 @@ import { outRoom, startGame, setRound } from '../../services/api/GameService';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import useSocketStore from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
+import { useMessageStore } from '../../stores/useMessageStore';
 
 const WaitingRoomContent = () => {
   // const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
@@ -350,6 +351,10 @@ const WaitingRoomContent = () => {
               message.chatType === 'PLAYER_JOIN' ||
               message.chatType === 'PLAYER_LEAVE'
             ) {
+              if (message.chatType === 'PLAYER_LEAVE') {
+                leaveMessageState(true);
+                console.log('플레이어 상태 변화 start', Date.now());
+              }
               try {
                 const response = await getRoomData(contextRoomCode);
                 setRoomData(response);
@@ -668,6 +673,9 @@ const WaitingRoomContent = () => {
   // }
 
   // getAvailableDevices();
+
+  // 플레이어가 중간에 퇴장하는 경우
+  const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
 
   ///////////////////
 
