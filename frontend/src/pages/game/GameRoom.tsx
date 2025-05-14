@@ -611,6 +611,7 @@ const GameRoom = () => {
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
   const speechTimerRef = useRef<TimerRef>(null);
+  const [isSkippingSpeech, setIsSkippingSpeech] = useState(false); // 스킵 중복 클릭 방지
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
   const [selectedTargetNickname, setSelectedTargetNickname] = useState<
@@ -782,6 +783,11 @@ const GameRoom = () => {
       }
     }
 
+    // 턴 스킵
+    if (latest.chatType === 'TURN_SKIP') {
+      speechTimerRef.current?.pauseTimer();
+    }
+
     // 모든 발언 종료 후 투표 시작
     if (latest.chatType === 'ROUND_END') {
       console.log('💡투표 시작');
@@ -871,6 +877,11 @@ const GameRoom = () => {
       console.warn('Room code가 없습니다.');
       return;
     }
+    if (isSkippingSpeech) {
+      notify({ type: 'warning', text: '이미 스킵을 눌렀습니다.' });
+      return;
+    }
+    setIsSkippingSpeech(true);
 
     try {
       // 발언 종료 및 요약 처리
@@ -884,6 +895,7 @@ const GameRoom = () => {
       await skipTurn(roomCode);
       console.log('턴이 스킵되었습니다.');
     } catch (error) {
+      setTimeout(() => setIsSkippingSpeech(false), 5000); // 5초 후 스킵 버튼 초기화
       console.error('턴 스킵 실패:', error);
     }
   };
@@ -1092,6 +1104,7 @@ const GameRoom = () => {
                     size="small"
                     variant="neon"
                     onClick={() => handleSkipTurn(roomCode)}
+                    disabled={isSkippingSpeech}
                   />
                 )}
                 {/* 발언 타이머는 모두에게 표시 */}
