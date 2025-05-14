@@ -48,7 +48,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { VideoOff, Info } from 'lucide-react';
+import { VideoOff, MicOff, Info } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
@@ -277,7 +277,7 @@ const GameRoom = () => {
     } else {
       setMyRoomCode('');
     }
-  }, []);
+  }, [userInfo, roomCode]);
 
   useEffect(() => {
     const modelLoad = async () => {
@@ -475,7 +475,7 @@ const GameRoom = () => {
     return () => {
       // 컴포넌트 언마운트 시 플래그 제거
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      setIsInGame(false);
+      // setIsInGame(false);
     };
   }, [session, clearRoomCode]);
 
@@ -527,17 +527,17 @@ const GameRoom = () => {
     _totalParticipants: number
   ): string => {
     const positions = {
-      1: 'col-span-2 col-start-1 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px] mt-[15px]',
-      2: 'col-span-2 col-start-6 row-span-2 row-start-2 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] mt-[15px]',
-      3: 'col-span-2 col-start-1 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
-      4: 'col-span-2 col-start-1 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
-      5: 'col-span-2 col-start-6 row-span-2 row-start-4 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]',
+      1: 'col-span-2 col-start-1 row-span-2 row-start-2 h-fit min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px] mt-[15px]',
+      2: 'col-span-2 col-start-6 row-span-2 row-start-2 h-fit min-h-[150px] min-w-[180px] max-w-[200px] mt-[15px]',
+      3: 'col-span-2 col-start-1 row-span-2 row-start-6 h-fit min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
+      4: 'col-span-2 col-start-1 row-span-2 row-start-4 h-fit min-h-[150px] min-w-[180px] max-w-[200px] ml-[18px]',
+      5: 'col-span-2 col-start-6 row-span-2 row-start-4 h-fit min-h-[150px] min-w-[180px] max-w-[200px]',
     };
     return positions[index as keyof typeof positions] || '';
   };
 
   const myPosition =
-    'col-span-2 col-start-6 row-span-2 row-start-6 max-h-[170px] min-h-[150px] min-w-[180px] max-w-[200px]';
+    'col-span-2 col-start-6 row-span-2 row-start-6 h-fit min-h-[150px] min-w-[180px] max-w-[200px]';
 
   // STT 결과 처리 함수
   const handleSttResult = (result: SttResult) => {
@@ -591,6 +591,24 @@ const GameRoom = () => {
         }
       }
     };
+  }, [session, publisher]);
+
+  // 초기 세션 연결 후 마이크 상태 설정
+  useEffect(() => {
+    if (session && publisher) {
+      publisher.publishAudio(false);
+      setIsAudioEnabled(false);
+    }
+    // console.log('!!speakingPlayer!!', speakingPlayer, myUserName);
+
+    if (speakingPlayer && speakingPlayer === myUserName) {
+      publisher?.publishAudio(true);
+      setIsAudioEnabled(true);
+    }
+    // console.log(
+    //   '🎤 초기 마이크 상태 설정 완료:',
+    //   speakingPlayer === myUserName
+    // );
   }, [session, publisher]);
 
   // 구독자들의 오디오 스트림 처리는 더 이상 필요 없음
@@ -751,6 +769,7 @@ const GameRoom = () => {
       if (nickname) {
         console.log('🎤 발언자:', nickname);
         setSpeakingPlayer(nickname);
+
         // STT 서비스에 현재 발언자 설정
         sttService.setSpeakingPlayer(nickname, myUserName);
 
@@ -760,7 +779,6 @@ const GameRoom = () => {
           // 강제로 마이크 켜기 (상태와 관계없이)
           publisher.publishAudio(true);
           setIsAudioEnabled(true);
-
           // 로그 추가로 마이크 상태 확인
           setTimeout(() => {
             const audioTrack = publisher.stream
@@ -1151,15 +1169,9 @@ const GameRoom = () => {
 
               {/* Video 영역 */}
               {subscribers.map((sub, index) => {
-                // console.log(
-                //   `Subscriber ${sub.nickname} audio active:`,
-                //   sub.stream.audioActive
-                // );
                 const position = sortedParticipants.find(
                   (p) => p.participantNickname === (sub as Subscriber).nickname
                 )?.order;
-
-                // console.log('위치', sub.nickname, position);
 
                 return (
                   <div
@@ -1185,9 +1197,18 @@ const GameRoom = () => {
                       <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
+                            {/* <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                              {sub.nickname}
+                            </div> */}
                             <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                               {sub.nickname}
                             </div>
+                            {!sub.stream.audioActive && (
+                              <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
+                                <MicOff size={19} color="red" opacity={50} />
+                              </div>
+                            )}
+                            {/* </div> */}
                           </div>
                           <SttText
                             sttResult={
@@ -1207,12 +1228,6 @@ const GameRoom = () => {
                                 <VideoOff size={50} />
                               </div>
                             )}
-
-                            {/* {sub.isVideoEnabled ? (
-                        <UserVideoComponent streamManager={sub} />
-                        ) : (
-                          <VideoOff />
-                        )} */}
                           </div>
                         </div>
                       </div>
@@ -1234,7 +1249,9 @@ const GameRoom = () => {
                 className={`relative ${myPosition} 
                 ${isVoting ? 'cursor-pointer' : ''}
                 ${
-                  myUserName === speakingPlayer ? 'ring-4 ring-point-neon' : ''
+                  myUserName === speakingPlayer
+                    ? 'ring-4 ring-point-neon rounded'
+                    : ''
                 }`}
               >
                 {selectedTargetNickname === myUserName && (
@@ -1248,16 +1265,24 @@ const GameRoom = () => {
                   <div className="w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
                     <div className="w-full min-h-[150px] max-h-[170px] relative">
                       <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
+                        {/* <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
+                          나
+                        </div> */}
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
                           나
                         </div>
+                        {isAudioEnabled ? null : (
+                          <div className="flex justify-center items-center bg-black p-1 rounded text-sm">
+                            <MicOff size={19} color="red" opacity={50} />
+                          </div>
+                        )}
                       </div>
                       <SttText
                         sttResult={sttResults['current'] || null}
                         speaker="나"
                         hintMessage={hintMessages[myUserName]}
                       />
-                      <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
+                      <div className="w-full min-h-[150px] max-h-[180px] flex items-center justify-center">
                         {publisher && isVideoEnabled ? (
                           <UserVideoComponent streamManager={publisher} />
                         ) : (
@@ -1309,6 +1334,8 @@ const GameRoom = () => {
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}
+                myUserName={myUserName}
+                speakingPlayer={speakingPlayer}
                 onToggleAudio={toggleAudio}
                 onToggleVideo={toggleVideo}
                 onLeaveSession={leaveSession}
