@@ -53,6 +53,7 @@ import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
 import { notify } from '../../components/common/Toast';
+import { useMessageStore } from '../../stores/useMessageStore';
 
 // STT 디버깅 모달 컴포넌트
 const SttDebugModal = ({
@@ -475,7 +476,7 @@ const GameRoom = () => {
     return () => {
       // 컴포넌트 언마운트 시 플래그 제거
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // setIsInGame(false);
+      setIsInGame(false);
     };
   }, [session, clearRoomCode]);
 
@@ -521,6 +522,17 @@ const GameRoom = () => {
       setIsVideoEnabled(newVideoState);
     }
   };
+
+  // 플레이어가 중간에 퇴장하는 경우
+  const leaveMessageReceive = useMessageStore((state) => state.leaveMessageOn);
+  const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
+
+  useEffect(() => {
+    if (leaveMessageReceive) {
+      console.log('플레이어가 퇴장했습니다. GameInfo 다시 받아오기');
+      leaveMessageState(false);
+    }
+  }, [leaveMessageReceive]);
 
   const getParticipantPosition = (
     index: number,
