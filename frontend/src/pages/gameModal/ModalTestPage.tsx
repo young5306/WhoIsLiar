@@ -101,6 +101,7 @@ const ModalTestPage = () => {
         <LiarNotFoundModal
           roundNumber={2}
           totalRoundNumber={3}
+          liarNickName="홍길동"
           onNext={() => setOpenModal(null)}
           onClose={() => setOpenModal(null)}
         />
