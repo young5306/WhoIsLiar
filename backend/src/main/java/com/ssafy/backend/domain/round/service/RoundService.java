@@ -315,7 +315,7 @@ public class RoundService {
 		}
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public VoteResultsResponseDto getVoteResults(String roomCode, int roundNumber) {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
