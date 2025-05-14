@@ -306,10 +306,10 @@ public class RoundService {
 			return;
 		}
 
-		long total = participantRoundRepository.countByRound(round);
-		long voted = participantRoundRepository.countByRoundAndHasVotedTrue(round);
+		long totalActive = participantRoundRepository.countByRoundAndParticipantActiveTrue(round);
+		long votedActive = participantRoundRepository.countByRoundAndHasVotedTrueAndParticipantActiveTrue(round);
 
-		if (voted == total) {
+		if (votedActive == totalActive) {
 			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
 			if(prev == null){
 				chatSocketService.voteCompleted(roomCode);
