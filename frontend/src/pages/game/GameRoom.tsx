@@ -205,6 +205,9 @@ const GameRoom = () => {
   const [_myToken, setMyToken] = useState<string>('');
   const [myRoomCode, setMyRoomCode] = useState('');
 
+  const leaveMessageReceive = useMessageStore((state) => state.leaveMessageOn);
+  const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
+
   // << OpenVidu >>
   // 현재 연결된 세션
   const [session, setSession] = useState<Session | undefined>(undefined);
@@ -461,20 +464,22 @@ const GameRoom = () => {
   };
 
   const handleBeforeUnload = useCallback(() => {
-    disconnectOpenVidu();
-    clearRoomCode(); // roomCode 초기화
-    outGameRoom();
-    setPublisher(undefined);
-    // 카메라, 마이크 연결 끊기
-    setCurrentVideoDevice(null);
-    setCurrentMicDevice(null);
+    leaveSession();
+    // disconnectOpenVidu();
+    // clearRoomCode(); // roomCode 초기화
+    // outGameRoom();
+    // setPublisher(undefined);
+    // // 카메라, 마이크 연결 끊기
+    // setCurrentVideoDevice(null);
+    // setCurrentMicDevice(null);
   }, [
-    disconnectOpenVidu,
-    clearRoomCode,
-    outGameRoom,
-    setPublisher,
-    setCurrentVideoDevice,
-    setCurrentMicDevice,
+    leaveSession,
+    // disconnectOpenVidu,
+    // clearRoomCode,
+    // outGameRoom,
+    // setPublisher,
+    // setCurrentVideoDevice,
+    // setCurrentMicDevice,
   ]);
 
   // 새로고침 이벤트 처리 (room-list 이동)
@@ -531,10 +536,7 @@ const GameRoom = () => {
     }
   };
 
-  // 플레이어가 중간에 퇴장하는 경우
-  const leaveMessageReceive = useMessageStore((state) => state.leaveMessageOn);
-  const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
-
+  // 플레이어가 중간에 퇴장하는 경우 감지
   useEffect(() => {
     if (leaveMessageReceive) {
       console.log('플레이어가 퇴장했습니다. GameInfo 다시 받아오기');
