@@ -369,6 +369,8 @@ public class RoundService {
 
 		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
 		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
+		log.info("마지막 턴 확인 로그: {}",round.getTurn());
+		log.info("선택된 id가 있는지 로그로 확인: {}",selectedId);
 
 		if (wrongPicked || lastTurnSkip) {
 			liarPR.addScore(100);
