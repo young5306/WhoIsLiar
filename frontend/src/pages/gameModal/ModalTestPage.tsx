@@ -93,7 +93,6 @@ const ModalTestPage = () => {
           totalRoundNumber={3}
           liarNickname="홍길동"
           onNext={() => setOpenModal(null)}
-          onClose={() => setOpenModal(null)}
         />
       )}
 
@@ -103,7 +102,6 @@ const ModalTestPage = () => {
           totalRoundNumber={3}
           liarNickName="홍길동"
           onNext={() => setOpenModal(null)}
-          onClose={() => setOpenModal(null)}
         />
       )}
 
@@ -113,7 +111,6 @@ const ModalTestPage = () => {
           totalRoundNumber={3}
           skipCount={3}
           onNext={() => setOpenModal(null)}
-          onClose={() => setOpenModal(null)}
         />
       )}
 
@@ -123,7 +120,7 @@ const ModalTestPage = () => {
           scores={dummyScores}
           roundNumber={2}
           totalRoundNumber={5}
-          onClose={() => setOpenModal(null)}
+          onNext={() => setOpenModal(null)}
         />
       )}
       {openModal === 'civilian-win' && (
@@ -132,7 +129,7 @@ const ModalTestPage = () => {
           scores={dummyScores}
           roundNumber={2}
           totalRoundNumber={5}
-          onClose={() => setOpenModal(null)}
+          onNext={() => setOpenModal(null)}
         />
       )}
       {openModal === 'final-score' && (
@@ -141,7 +138,7 @@ const ModalTestPage = () => {
           scores={dummyScores}
           roundNumber={5}
           totalRoundNumber={5}
-          onClose={() => setOpenModal(null)}
+          onNext={() => setOpenModal(null)}
         />
       )}
     </div>

@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import Timer, { TimerRef } from '../../common/Timer';
 
 interface Props {
   roundNumber: number;
   totalRoundNumber: number;
   liarNickName: string;
   onNext: () => void; // 다음 로직
-  onClose: () => void; // 모달 외부 클릭 시 모달 닫힘(테스트용)
 }
 
 const LiarNotFoundModal = ({
@@ -13,23 +13,22 @@ const LiarNotFoundModal = ({
   totalRoundNumber,
   liarNickName,
   onNext,
-  onClose,
 }: Props) => {
+  const modalTimerRef = useRef<TimerRef>(null);
+
   useEffect(() => {
-    console.log('onNext: liar not found 모달 다음 로직 준비');
-    const timer = setTimeout(onNext, 2000);
-    return () => clearTimeout(timer);
+    modalTimerRef?.current?.startTimer(3);
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70">
+      <div className="relative bg-gray-900 border-1 border-primary-600 p-13 rounded-lg text-center text-gray-0">
+        {modalTimerRef && (
+          <div className="absolute top-6 right-6">
+            <Timer ref={modalTimerRef} size="small" onTimeEnd={onNext} />
+          </div>
+        )}
+
         <p className="headline-xlarge mb-2">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>
