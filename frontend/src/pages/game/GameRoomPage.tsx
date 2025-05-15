@@ -468,22 +468,7 @@ const GameRoomPage = () => {
 
   const handleBeforeUnload = useCallback(() => {
     leaveSession();
-    // disconnectOpenVidu();
-    // clearRoomCode(); // roomCode 초기화
-    // outGameRoom();
-    // setPublisher(undefined);
-    // // 카메라, 마이크 연결 끊기
-    // setCurrentVideoDevice(null);
-    // setCurrentMicDevice(null);
-  }, [
-    leaveSession,
-    // disconnectOpenVidu,
-    // clearRoomCode,
-    // outGameRoom,
-    // setPublisher,
-    // setCurrentVideoDevice,
-    // setCurrentMicDevice,
-  ]);
+  }, [leaveSession]);
 
   // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
