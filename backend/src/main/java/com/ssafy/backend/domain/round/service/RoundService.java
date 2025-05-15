@@ -102,6 +102,11 @@ public class RoundService {
 		roundRepository.deleteAll(rounds);
 		room.finishGame(RoomStatus.waiting);
 
+		List<Participant> inactive = participantRepository.findByRoomAndIsActiveFalse(room);
+		if (!inactive.isEmpty()) {
+			participantRepository.deleteAll(inactive);
+		}
+
 		// 모든 참가자의 readyStatus를 false로.
 		List<Participant> participants = participantRepository.findByRoom(room);
 		for (Participant participant : participants) {
@@ -568,20 +573,20 @@ public class RoundService {
 
 		List<Round> rounds = roundRepository.findByRoom(room);
 
+		Map<String, Integer> scoreMap = new HashMap<>();
 		List<ParticipantRound> allPRs = new ArrayList<>();
 		for (Round r : rounds) {
-			allPRs.addAll(participantRoundRepository.findByRound(r));
-		}
-
-		Map<String, Integer> scoreMap = new HashMap<>();
-		for (ParticipantRound pr : allPRs) {
-			String nick = pr.getParticipant().getSession().getNickname();
-			scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+			participantRoundRepository.findByRound(r).stream()
+				.filter(pr -> pr.getParticipant().isActive())
+				.forEach(pr -> {
+					String nick = pr.getParticipant().getSession().getNickname();
+					scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+				});
 		}
 
 		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
 			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
-			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore))
+			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore).reversed())
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);
