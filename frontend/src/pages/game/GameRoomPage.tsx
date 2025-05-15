@@ -695,7 +695,6 @@ const GameRoomPage = () => {
   // 점수 관련
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
-  const scoreTimerRef = useRef<TimerRef>(null);
   const [isCorrect, setIsCorrect] = useState(false);
 
   // 참가자 관련 (참가자 순서 지정)
@@ -926,19 +925,18 @@ const GameRoomPage = () => {
       setIsCorrect(latest.content.startsWith('정답!') ? true : false);
       const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
+      console.log('guess submitted: ', word);
 
-      if (word) {
-        setShowLiarFoundModal(false);
+      setShowLiarFoundModal(false);
 
-        console.log('💡라이어가 추측한 제시어', word);
-        setGuessedWord(word);
-        setShowGuessedWord(true);
+      console.log('💡라이어가 추측한 제시어', word);
+      setGuessedWord(word);
+      setShowGuessedWord(true);
 
-        setTimeout(async () => {
-          setShowGuessedWord(false);
-          await fetchAndShowScore();
-        }, 2000);
-      }
+      setTimeout(async () => {
+        setShowGuessedWord(false);
+        await fetchAndShowScore();
+      }, 2000);
     }
   }, [chatMessages, myUserName, publisher]);
 
@@ -1057,7 +1055,6 @@ const GameRoomPage = () => {
       const result = await getScores(roomCode!);
       setScoreData(result);
       setShowScoreModal(true);
-      scoreTimerRef.current?.startTimer(10);
 
       console.log('현재 라운드 끝', roundNumber);
       setCurrentTurn(1); // 초기화
@@ -1069,12 +1066,6 @@ const GameRoomPage = () => {
       console.error('점수 조회 실패:', error);
     }
   };
-
-  useEffect(() => {
-    if (showScoreModal && scoreData) {
-      scoreTimerRef.current?.startTimer(10);
-    }
-  }, [showScoreModal, scoreData]);
 
   // 점수 모달 분기 처리
   const getScoreModalType = (): 'liar-win' | 'civilian-win' | 'final-score' => {
@@ -1161,7 +1152,7 @@ const GameRoomPage = () => {
       {session !== undefined && sortedParticipants.length > 0 ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
-            <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+            <div className="absolute top-6 right-6 flex items-center gap-3 z-50">
               {/* STT 디버깅 버튼 */}
               {/* <button
                 onClick={() => setShowSttDebug(true)}
@@ -1197,7 +1188,7 @@ const GameRoomPage = () => {
               </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
-                <div className="absolute top-6 right-6 z-50 flex gap-4 items-center">
+                <>
                   {currentTurn < 3 ? (
                     <>
                       <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
@@ -1215,7 +1206,7 @@ const GameRoomPage = () => {
                         size="small"
                         variant={
                           selectedTargetNickname === '__SKIP__'
-                            ? 'neon'
+                            ? 'default'
                             : 'gray'
                         }
                         onClick={handleVoteSkip}
@@ -1237,7 +1228,7 @@ const GameRoomPage = () => {
                       size="medium"
                     />
                   </div>
-                </div>
+                </>
               )}
             </div>
             <div className="text-white w-full h-full grid grid-cols-7">
@@ -1495,9 +1486,6 @@ const GameRoomPage = () => {
 
             setCurrentTurn((prev) => prev + 1);
           }}
-          onClose={() => {
-            setShowSkipModal(false);
-          }}
         />
       )}
 
@@ -1512,18 +1500,19 @@ const GameRoomPage = () => {
             // 1. submitWordGuess api 호출
             // 2. GUESS_SUBMITTED 이벤트 처리 (입력한 제시어 모달 띄우고, ScoreModal(CIVILIAN WIN) 열기)
             async (word: string) => {
-              try {
-                await submitWordGuess(roomCode!, roundNumber, word);
-              } catch (err: any) {
-                const msg =
-                  err?.response?.data?.message || '제시어 제출에 실패했습니다.';
-                notify({ type: 'error', text: msg });
+              if (myUserName === voteResult.liarNickname) {
+                try {
+                  console.log('라이어가 입력한 제시어: ', word);
+                  await submitWordGuess(roomCode!, roundNumber, word);
+                } catch (err: any) {
+                  const msg =
+                    err?.response?.data?.message ||
+                    '제시어 제출에 실패했습니다.';
+                  notify({ type: 'error', text: msg });
+                }
               }
             }
           }
-          onClose={() => {
-            setShowLiarFoundModal(false);
-          }}
         />
       )}
 
@@ -1538,22 +1527,27 @@ const GameRoomPage = () => {
             setShowLiarNotFoundModal(false);
             await fetchAndShowScore();
           }}
-          onClose={() => {
-            setShowLiarNotFoundModal(false);
-          }}
         />
       )}
 
       {/* 라이어가 추측한 제시어 표시 모달 */}
-      {showGuessedWord && guessedWord && (
+      {showGuessedWord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
-            <p className="text-2xl font-bold mb-2">
-              라이어가 제시어로 제출한 단어는
-            </p>
-            <p className="text-4xl font-extrabold text-red-600">
-              {guessedWord}
-            </p>
+            {guessedWord ? (
+              <>
+                <p className="text-2xl font-bold mb-2">
+                  라이어가 제시어로 제출한 단어는
+                </p>
+                <p className="text-4xl font-extrabold text-red-600">
+                  {guessedWord}
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-bold text-red-600">
+                라이어가 제시어를 제출하지 못했습니다!
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -1570,15 +1564,8 @@ const GameRoomPage = () => {
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             scores={scoreData.scores}
-            onClose={() => setShowScoreModal(false)}
+            onNext={handleScoreTimeEnd}
           />
-          <div className="absolute top-4 right-4 z-50">
-            <Timer
-              ref={scoreTimerRef}
-              onTimeEnd={handleScoreTimeEnd}
-              size="medium"
-            />
-          </div>
         </>
       )}
 

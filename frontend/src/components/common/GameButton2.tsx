@@ -1,14 +1,15 @@
 interface GameButton2Props {
   text: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
-const GameButton2 = ({ text, onClick }: GameButton2Props) => {
+const GameButton2 = ({ text, onClick, disabled = false }: GameButton2Props) => {
   return (
     <div className="inline-block p-1 bg-gray-900 rounded-lg w-full">
       <button
         onClick={onClick}
-        className="
+        className={`
           w-full 
           h-full 
           bg-point-button1 
@@ -20,7 +21,8 @@ const GameButton2 = ({ text, onClick }: GameButton2Props) => {
           transition
           px-6 py-2 display-small
           cursor-pointer
-        "
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-140 active:brightness-90'}
+        `}
       >
         {text}
       </button>
