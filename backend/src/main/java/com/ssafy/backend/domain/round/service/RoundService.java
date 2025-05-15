@@ -102,6 +102,11 @@ public class RoundService {
 		roundRepository.deleteAll(rounds);
 		room.finishGame(RoomStatus.waiting);
 
+		List<Participant> inactive = participantRepository.findByRoomAndIsActiveFalse(room);
+		if (!inactive.isEmpty()) {
+			participantRepository.deleteAll(inactive);
+		}
+
 		// 모든 참가자의 readyStatus를 false로.
 		List<Participant> participants = participantRepository.findByRoom(room);
 		for (Participant participant : participants) {
