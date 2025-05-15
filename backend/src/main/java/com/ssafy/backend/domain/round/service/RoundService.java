@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,7 @@ import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.entity.Synonym;
+import com.ssafy.backend.domain.round.event.AllVotesCompletedEvent;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
 import com.ssafy.backend.domain.round.repository.SynonymRepository;
@@ -81,6 +83,8 @@ public class RoundService {
 	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
 	private final TurnTimerService turnTimerService;
 	private final SynonymRepository synonymRepository;
+
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
@@ -283,7 +287,8 @@ public class RoundService {
 			@Override
 			public void afterCommit() {
 				log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
-				checkAndNotifyVoteCompleted(roomCode, round.getId());
+				// checkAndNotifyVoteCompleted(roomCode, round.getId());
+				eventPublisher.publishEvent(new AllVotesCompletedEvent(roomCode, round.getId()));
 			}
 		});
 		log.info("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
