@@ -109,6 +109,7 @@ const WaitingRoomContent = (): JSX.Element => {
   const [userScrolled, setUserScrolled] = useState(false);
   const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const beforeUnloadRef = useRef<(e: BeforeUnloadEvent) => void>();
 
   // 시스템 메시지에서 유저 이름 강조 처리하는 함수
   const highlightUsername = (content: string) => {
@@ -763,33 +764,34 @@ const WaitingRoomContent = (): JSX.Element => {
       return (e.returnValue = '');
     };
 
+    // 뒤로가기 버튼 클릭시 경고창 방지를 위함
+    beforeUnloadRef.current = handleBeforeUnload;
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [clearRoomCode]);
 
-  ////////// 디바이스 장치 확인///////
-  // async function getAvailableDevices() {
-  //   try {
-  //     const devices = await navigator.mediaDevices.enumerateDevices();
-  //     if (devices.length === 0) {
-  //       console.log('No devices found.');
-  //       alert('장치를 찾을 수 없습니다. 브라우저를 재시작해보세요.');
-  //       return;
-  //     }
+  // 플레이어가 뒤로가기 버튼 누른 경우
+  useEffect(() => {
+    history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      const shouldLeave = window.confirm('대기방에서 나가시겠습니까?');
+      if (shouldLeave) {
+        if (beforeUnloadRef.current) {
+          window.removeEventListener('beforeunload', beforeUnloadRef.current);
+        }
+        clearRoomCode();
+        window.location.href = '/room-list';
+      }
+    };
 
-  //     devices.forEach((device) => {
-  //       console.log(`${device.kind}: ${device.label} (ID: ${device.deviceId})`);
-  //     });
-  //     // alert('장치 목록을 콘솔에서 확인하세요.');
-  //   } catch (err) {
-  //     console.error('Device enumeration failed:', err);
-  //     alert('장치 목록 확인 중 오류가 발생했습니다.');
-  //   }
-  // }
-
-  // getAvailableDevices();
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [clearRoomCode]);
 
   // 플레이어가 중간에 퇴장하는 경우
   const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
