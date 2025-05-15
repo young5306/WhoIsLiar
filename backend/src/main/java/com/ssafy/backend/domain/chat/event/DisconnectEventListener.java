@@ -2,6 +2,8 @@ package com.ssafy.backend.domain.chat.event;
 
 import java.util.List;
 
+import com.ssafy.backend.domain.chat.service.ChatSocketService;
+import com.ssafy.backend.domain.round.service.RoundService;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -41,6 +43,8 @@ public class DisconnectEventListener {
 	private final ChatSessionRegistry sessionRegistry;
 	private final TurnTimerService turnTimerService;
 	private final RoundRepository roundRepository;
+	private final RoundService roundService;
+	private final ChatSocketService chatSocketService;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
@@ -94,6 +98,10 @@ public class DisconnectEventListener {
 				if (round != null) {
 					participantRoundRepository.findByRoundAndParticipant(round, participant)
 						.ifPresent(pr -> {
+							// **라이어 퇴장**: 별도 WS 알림
+							if (pr.isLiar()) {
+								chatSocketService.sendLiarDisconnect(roomCode, nickname);
+							}
 							if (pr.getId().equals(state.getCurrentParticipantRoundId())) {
 								log.info("[WS TURN] 발언 중 참가자 퇴장 -> 즉시 endTurn 호출");
 								turnTimerService.endTurnSilently(roomCode);
@@ -112,6 +120,7 @@ public class DisconnectEventListener {
 				} else {
 					SessionEntity newHost = remain.get(0).getSession();
 					room.changeHost(newHost);
+					roundService.initReadyStatus(room);
 					roomRepository.save(room);
 				}
 			} else {

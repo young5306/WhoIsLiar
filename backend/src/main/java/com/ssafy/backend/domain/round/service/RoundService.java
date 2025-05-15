@@ -61,6 +61,8 @@ import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,6 +87,9 @@ public class RoundService {
 
 	private final ApplicationEventPublisher eventPublisher;
 
+	@PersistenceContext
+	private EntityManager em;
+
 	@Transactional
 	public void deleteGame(String roomCode) {
 
@@ -101,14 +106,22 @@ public class RoundService {
 		}
 		roundRepository.deleteAll(rounds);
 		room.finishGame(RoomStatus.waiting);
+		initReadyStatus(room);
 
+		List<Participant> inactive = participantRepository.findByRoomAndIsActiveFalse(room);
+		if (!inactive.isEmpty()) {
+			participantRepository.deleteAll(inactive);
+		}
+
+		chatSocketService.gameEnded(roomCode);
+	}
+
+	public void initReadyStatus(Room room) {
 		// 모든 참가자의 readyStatus를 false로.
 		List<Participant> participants = participantRepository.findByRoom(room);
 		for (Participant participant : participants) {
 			participant.setReadyStatus(false);
 		}
-
-		chatSocketService.gameEnded(roomCode);
 	}
 
 	@Transactional
@@ -568,20 +581,20 @@ public class RoundService {
 
 		List<Round> rounds = roundRepository.findByRoom(room);
 
+		Map<String, Integer> scoreMap = new HashMap<>();
 		List<ParticipantRound> allPRs = new ArrayList<>();
 		for (Round r : rounds) {
-			allPRs.addAll(participantRoundRepository.findByRound(r));
-		}
-
-		Map<String, Integer> scoreMap = new HashMap<>();
-		for (ParticipantRound pr : allPRs) {
-			String nick = pr.getParticipant().getSession().getNickname();
-			scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+			participantRoundRepository.findByRound(r).stream()
+				.filter(pr -> pr.getParticipant().isActive())
+				.forEach(pr -> {
+					String nick = pr.getParticipant().getSession().getNickname();
+					scoreMap.put(nick, scoreMap.getOrDefault(nick, 0) + pr.getScore());
+				});
 		}
 
 		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
 			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
-			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore))
+			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore).reversed())
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);

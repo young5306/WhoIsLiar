@@ -55,6 +55,11 @@ const WaitingRoomContent = (): JSX.Element => {
   const [isRoomReady, setIsRoomReady] = useState<boolean>(false);
   const [isUserReady, setIsUserReady] = useState<boolean>(false);
 
+  // isUserReady 상태 변화 추적
+  useEffect(() => {
+    console.log('isUserReady 상태 변경됨:', isUserReady);
+  }, [isUserReady]);
+
   const categories = [
     { label: '랜덤', id: '랜덤' },
     { label: '물건', id: '물건' },
@@ -383,16 +388,64 @@ const WaitingRoomContent = (): JSX.Element => {
             }
 
             if (message.chatType === 'ROOM_READY_STATUS') {
-              console.log('방 준비 상태', message.content);
-              setIsRoomReady(message.content === 'TRUE');
+              console.log('방 준비 상태 메시지 수신:', message.content);
+
+              // 이전 상태와 새 상태 비교
+              const newReadyStatus = message.content === 'TRUE';
+
+              // 방장에게만 상태 변화 알림 표시
+              if (isHost) {
+                if (newReadyStatus) {
+                  console.log('🟢 방이 게임 시작 가능 상태로 변경됨');
+                  if (!isRoomReady) {
+                    // 상태가 변경될 때만 알림
+                    notify({
+                      type: 'success',
+                      text: '모든 플레이어가 준비되었습니다. 게임을 시작할 수 있습니다.',
+                    });
+                  }
+                } else {
+                  console.log('🔴 방이 게임 시작 불가능 상태로 변경됨');
+                  if (isRoomReady) {
+                    // 상태가 변경될 때만 알림
+                    notify({
+                      type: 'warning',
+                      text: '준비되지 않은 플레이어가 있습니다. 게임을 시작할 수 없습니다.',
+                    });
+                  }
+                }
+              }
+
+              // 상태 업데이트
+              setIsRoomReady(newReadyStatus);
             }
 
             // 사용자 준비 상태 메시지 처리
             if (message.chatType === 'READY_STATUS') {
-              // 메시지 내용이 "준비 완료" 또는 "준비 취소"로 전달됨
-              setIsUserReady(message.content === '준비 완료');
+              // 메시지 로그 추가
+              console.log('READY_STATUS 메시지 원본:', message);
+              console.log('sender:', message.sender);
+              console.log('content:', message.content);
 
-              // 방 정보 최신화하여 다른 참가자의 준비 상태도 업데이트
+              const nickname = message.sender;
+              const status = message.content;
+
+              // 현재 사용자의 준비 상태일 경우만 UI 업데이트
+              if (nickname === userInfo?.nickname) {
+                console.log(`내 준비 상태 변경 전: ${isUserReady}`);
+
+                // 서버에서 온 메시지로 준비 상태 설정 - "준비 완료" 또는 "준비 취소"
+                const newReadyStatus = status === '준비 완료';
+                setIsUserReady(newReadyStatus);
+
+                console.log(`내 준비 상태 변경 후, 상태값: ${status}`);
+              } else {
+                console.log(
+                  `다른 사용자 준비 상태 변경: ${nickname}, ${status}`
+                );
+              }
+
+              // 다른 사용자 포함한 모든 참가자 정보 업데이트
               try {
                 const response = await getRoomData(contextRoomCode);
                 setRoomData(response);
@@ -406,26 +459,36 @@ const WaitingRoomContent = (): JSX.Element => {
               message.chatType === 'PLAYER_JOIN' ||
               message.chatType === 'PLAYER_LEAVE'
             ) {
+              console.log(`${message.chatType} 메시지 수신:`, message);
+
               if (message.chatType === 'PLAYER_LEAVE') {
                 leaveMessageState(true);
-                console.log('플레이어 상태 변화 start', Date.now());
+                console.log('플레이어 퇴장 감지:', Date.now());
               }
-              try {
-                const response = await getRoomData(contextRoomCode);
-                setRoomData(response);
-                // 채팅 메시지가 스크롤되도록 약간의 지연 후 스크롤
-                setTimeout(() => {
-                  if (chatContainerRef.current) {
-                    chatContainerRef.current.scrollTop =
-                      chatContainerRef.current.scrollHeight;
-                  }
-                }, 100);
-              } catch (error) {
-                notify({
-                  type: 'error',
-                  text: '방 정보를 가져오는데 실패했습니다.',
-                });
-              }
+
+              // 약간의 지연 후 방 정보 갱신 (서버 데이터 업데이트 대기)
+              setTimeout(async () => {
+                try {
+                  console.log('방 정보 갱신 시작');
+                  const response = await getRoomData(contextRoomCode);
+                  console.log('방 정보 갱신 결과:', response);
+                  setRoomData(response);
+
+                  // 채팅 메시지가 스크롤되도록 약간의 지연 후 스크롤
+                  setTimeout(() => {
+                    if (chatContainerRef.current) {
+                      chatContainerRef.current.scrollTop =
+                        chatContainerRef.current.scrollHeight;
+                    }
+                  }, 100);
+                } catch (error) {
+                  console.error('방 정보 갱신 실패:', error);
+                  notify({
+                    type: 'error',
+                    text: '방 정보를 가져오는데 실패했습니다.',
+                  });
+                }
+              }, 300); // 서버 데이터가 업데이트될 시간을 주기 위해 지연
             }
           }
         );
@@ -1067,8 +1130,20 @@ const WaitingRoomContent = (): JSX.Element => {
                   text="게임시작"
                   size="small"
                   onClick={handleStartGame}
-                  disabled={!isRoomReady}
-                  variant={isRoomReady ? 'default' : 'gray'}
+                  disabled={
+                    !isRoomReady ||
+                    !roomData ||
+                    !roomData.participants ||
+                    roomData.participants.length < 2
+                  }
+                  variant={
+                    isRoomReady &&
+                    roomData &&
+                    roomData.participants &&
+                    roomData.participants.length >= 2
+                      ? 'default'
+                      : 'gray'
+                  }
                 />
               ) : (
                 <GameButton

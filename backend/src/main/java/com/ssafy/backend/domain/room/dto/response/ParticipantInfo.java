@@ -13,5 +13,9 @@ public record ParticipantInfo(
 	boolean isActive,
 
 	@Schema(description = "유저의 준비 상태", example = "false")
-	boolean readyStatus
+	boolean readyStatus,
+
+	@Schema(description = "호스트 여부", example = "false")
+	boolean isHost
+
 ) {}
