@@ -55,21 +55,32 @@ public class Participant {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
+	@Column(name = "ready_status", nullable = false)
+	private Boolean readyStatus;
+
 	@OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ParticipantRound> participantRounds = new ArrayList<>();
 
 	@Builder
-	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt,
-		LocalDateTime updatedAt) {
+	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, Boolean readyStatus) {
 		this.session = session;
 		this.room = room;
 		this.isActive = isActive;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.readyStatus = false;
 	}
 
 	public void setActive(boolean b) {
 		this.isActive = b;
 		this.updatedAt = LocalDateTime.now();
+	}
+
+	public Boolean getReadyStatus() {
+		return this.readyStatus;
+	}
+
+	public void setReadyStatus(Boolean readyStatus) {
+		this.readyStatus = readyStatus;
 	}
 }

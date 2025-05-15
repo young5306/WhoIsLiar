@@ -10,6 +10,8 @@ public record ParticipantInfo(
 	String nickName,
 
 	@Schema(description = "현재 활성 상태", example = "true")
-	boolean isActive
-) {
-}
+	boolean isActive,
+
+	@Schema(description = "유저의 준비 상태", example = "false")
+	boolean readyStatus
+) {}

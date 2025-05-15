@@ -1,7 +1,7 @@
 interface GameButtonProps {
   text: string;
   size?: 'small' | 'medium' | 'large';
-  variant?: 'default' | 'neon' | 'gray';
+  variant?: 'default' | 'neon' | 'gray' | 'success' | 'primary';
   onClick?: () => void;
   disabled?: boolean;
 }
@@ -14,8 +14,10 @@ const sizeClasses = {
 
 const variantClasses = {
   default: 'text-primary-600 border-primary-600',
+  primary: 'text-primary-600 border-primary-600',
   neon: 'text-point-neon border-point-neon',
   gray: 'text-gray-500 border-gray-500',
+  success: 'text-green-500 border-green-500',
 };
 
 const GameButton = ({
@@ -29,6 +31,7 @@ const GameButton = ({
     <div className="inline-block p-1 bg-gray-900 rounded-full ">
       <button
         onClick={onClick}
+        disabled={disabled}
         className={`
           w-full 
           h-full 

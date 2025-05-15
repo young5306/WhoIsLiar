@@ -195,4 +195,10 @@ public class RoomController {
 		roomService.selectCategory(request);
 		return ok(null);
 	}
+
+	@PostMapping("/{roomCode}/ready")
+	public ResponseEntity<CommonResponse<Void>> readyComplete(@PathVariable String roomCode) {
+		roomService.gameReady(roomCode);
+		return ok(null);
+	}
 }
