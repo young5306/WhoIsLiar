@@ -25,7 +25,8 @@ export interface RoomParticipant {
   participantId: number;
   nickName: string;
   isActive: boolean;
-  // isHost: string;
+  readyStatus: boolean;
+  isHost: boolean;
 }
 
 export interface RoomParticipantsWrapper {
@@ -64,6 +65,7 @@ export const getRoomData = async (roomCode: string) => {
 
 export const getRoomParticipants = async (roomCode: string) => {
   const res = await api.get(`/rooms/${roomCode}/participants`);
+  console.log('getRoomParticipants', res);
   return res.data.data;
 };
 

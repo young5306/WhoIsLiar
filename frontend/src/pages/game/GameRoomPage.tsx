@@ -543,7 +543,11 @@ const GameRoomPage = () => {
     console.log('비활성화 플레이어', inactiveUser);
     updateParticipants(inactiveUser);
 
-    // const hostUserName = roomParticipants.participants.filter((p) => p.isHost).map((p) => p.nickName)
+    const hostUserName = roomParticipants.participants
+      .filter((p) => p.isHost)
+      .map((p) => p.nickName);
+    console.log('방장 플레이어', hostUserName);
+    setHostNickname(hostUserName[0] ?? '');
   };
 
   useEffect(() => {
@@ -698,6 +702,11 @@ const GameRoomPage = () => {
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+
+  // 방장 플레이어 변경 확인
+  useEffect(() => {
+    console.log('방장 플레이어 이름 출력', hostNickname);
+  }, [hostNickname]);
 
   // 참가자 관련 (참가자 순서 지정)
   const [participants, setParticipants] = useState<
