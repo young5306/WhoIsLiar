@@ -8,4 +8,5 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record RoomsListResponse(
 	@Schema(description = "방 목록", example = "[]")
 	List<RoomInfo> rooms
-) {}
+) {
+}

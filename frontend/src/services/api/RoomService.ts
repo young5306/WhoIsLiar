@@ -67,3 +67,8 @@ export const setRoomCategory = async (roomCode: string, category: string) => {
   const res = await api.post('/rooms/category', { roomCode, category });
   return res.data;
 };
+
+export const roomReady = async (roomCode: string) => {
+  const res = await api.post(`/rooms/${roomCode}/ready`);
+  return res.data;
+};

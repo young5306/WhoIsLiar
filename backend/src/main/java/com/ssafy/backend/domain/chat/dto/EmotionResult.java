@@ -5,5 +5,6 @@ import java.util.Map;
 public record EmotionResult(
 	Map<String, Double> expressions,
 	TopEmotion topEmotion
-) {}
+) {
+}
 

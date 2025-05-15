@@ -33,8 +33,6 @@ public class AuthService {
 	private final Counter loginSuccess;
 	private final Counter loginFailure;
 	private final Counter tokenFail;
-	private final RoomRepository roomRepository;
-	private final ParticipantRepository participantRepository;
 
 	public AuthService(SessionRepository repo,
 		@Value("${session.timeout.minutes:30}") long timeoutMin,
@@ -47,8 +45,6 @@ public class AuthService {
 		this.loginSuccess = authSuccessCounter;
 		this.loginFailure = authFailureCounter;
 		this.tokenFail    = tokenValidationFailureCounter;
-		this.roomRepository = roomRepository;
-		this.participantRepository = participantRepository;
 	}
 
 	@Transactional(readOnly = true)

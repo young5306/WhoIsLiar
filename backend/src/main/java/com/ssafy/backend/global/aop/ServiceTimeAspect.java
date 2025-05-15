@@ -19,17 +19,19 @@ public class ServiceTimeAspect {
 
 	// com.ssafy.backend.domain 패키지 하위의 *Service 클래스 전부
 	@Pointcut("within(com.ssafy.backend.domain..*Service)")
-	public void serviceLayer() {}
+	public void serviceLayer() {
+	}
 
 	@Pointcut("execution(* com.ssafy.backend.domain.auth.service.AuthService.validateAndRefresh(..))")
-	public void excludeValidate() {}
+	public void excludeValidate() {
+	}
 
 	// @Around("serviceLayer()")
 	@Around("serviceLayer() && !excludeValidate()")
 	public Object logService(ProceedingJoinPoint joinPoint) throws Throwable {
-		String className  = joinPoint.getSignature().getDeclaringType().getSimpleName();
+		String className = joinPoint.getSignature().getDeclaringType().getSimpleName();
 		String methodName = joinPoint.getSignature().getName();
-		Object[] args     = joinPoint.getArgs();
+		Object[] args = joinPoint.getArgs();
 
 		logger.debug("[SERVICE START]");
 		logger.debug("▶ 메서드 이름 : {}.{}", className, methodName);

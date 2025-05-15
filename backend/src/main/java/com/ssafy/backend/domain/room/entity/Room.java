@@ -1,8 +1,5 @@
 package com.ssafy.backend.domain.room.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +13,27 @@ import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
-import com.ssafy.backend.global.enums.VideoMode;
 import com.ssafy.backend.global.enums.RoomStatus;
+import com.ssafy.backend.global.enums.VideoMode;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -79,7 +95,8 @@ public class Room {
 	private List<Chat> chats = new ArrayList<>();
 
 	@Builder
-	public Room(SessionEntity session, String roomCode, String roomName, String password, int roundCount, GameMode gameMode, VideoMode videoMode, RoomStatus roomStatus,
+	public Room(SessionEntity session, String roomCode, String roomName, String password, int roundCount,
+		GameMode gameMode, VideoMode videoMode, RoomStatus roomStatus,
 		LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.session = session;
 		this.roomCode = roomCode;

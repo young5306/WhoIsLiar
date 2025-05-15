@@ -12,8 +12,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.AbstractMessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.support.MessageHeaderAccessor;
 
 @Configuration
 public class BrokerChannelLoggingConfig {
@@ -22,7 +20,7 @@ public class BrokerChannelLoggingConfig {
 
 	@Autowired
 	public void configureBrokerChannel(@Qualifier("brokerChannel") SubscribableChannel brokerChannel) {
-		((AbstractMessageChannel) brokerChannel).addInterceptor(new ChannelInterceptor() {
+		((AbstractMessageChannel)brokerChannel).addInterceptor(new ChannelInterceptor() {
 			@Override
 			public Message<?> preSend(Message<?> message, MessageChannel channel) {
 				StompHeaderAccessor sha = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);

@@ -1,7 +1,5 @@
 package com.ssafy.backend.global.aop;
 
-import java.util.Arrays;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -27,7 +25,8 @@ public class WebSocketLoggingAspect {
 
 	/** @MessageMapping 이 붙은 WS 핸들러 전용 포인트컷 */
 	@Pointcut("@annotation(org.springframework.messaging.handler.annotation.MessageMapping)")
-	public void messageMappingMethods() {}
+	public void messageMappingMethods() {
+	}
 
 	@Around("messageMappingMethods()")
 	public Object logWebSocket(ProceedingJoinPoint joinPoint) throws Throwable {

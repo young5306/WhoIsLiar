@@ -9,4 +9,5 @@ public record RoomJoinByCodeRequest(
 	@NotBlank(message = "방 코드는 필수입니다.")
 	@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
 	String roomCode
-) {}
+) {
+}

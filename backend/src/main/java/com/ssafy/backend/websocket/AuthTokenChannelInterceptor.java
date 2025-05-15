@@ -24,7 +24,7 @@ public class AuthTokenChannelInterceptor implements ChannelInterceptor {
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		if (accessor != null && accessor.getSessionAttributes() != null) {
-			String token = (String) accessor.getSessionAttributes().get("token");
+			String token = (String)accessor.getSessionAttributes().get("token");
 			if (token != null) {
 				authService.validateAndRefresh(token);
 			}

@@ -1,5 +1,14 @@
 package com.ssafy.backend.domain.room.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.chat.service.ChatSocketService;
@@ -27,28 +36,18 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class RoomService {
 
+	private static final int ROOM_CODE_LENGTH = 6;
+	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	private final RoomRepository roomRepository;
 	private final SessionRepository sessionRepository;
 	private final ParticipantRepository participantRepository;
 	private final ChatSocketService chatSocketService;
-
-	private static final int ROOM_CODE_LENGTH = 6;
-	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 	// 방을 생성하고 호스트를 참가자로 등록
 	@Transactional
@@ -230,7 +229,8 @@ public class RoomService {
 			.map(p -> new ParticipantInfo(
 				p.getId(),
 				p.getSession().getNickname(),
-				p.isActive()
+				p.isActive(),
+				p.getReadyStatus()
 			))
 			.collect(Collectors.toList());
 
@@ -284,7 +284,8 @@ public class RoomService {
 			.map(p -> new ParticipantInfo(
 				p.getId(),
 				p.getSession().getNickname(),
-				p.isActive()
+				p.isActive(),
+			    p.getReadyStatus()
 			))
 			.collect(Collectors.toList());
 
@@ -310,27 +311,27 @@ public class RoomService {
 
 		boolean wasHost = room.getSession().equals(session);
 
-		if(room.getRoomStatus()==RoomStatus.playing){
+		if (room.getRoomStatus() == RoomStatus.playing) {
 			participant.setActive(false);
-		}else{
+		} else {
 			participantRepository.deleteById(participant.getId());
 		}
 
-		if(wasHost){
+		if (wasHost) {
 			List<Participant> remain = participantRepository
 				.findByRoomAndIsActiveTrueOrderByCreatedAtAsc(room);
 
-			if(remain.isEmpty()){
+			if (remain.isEmpty()) {
 				roomRepository.deleteById(room.getId());
-			}else{
+			} else {
 				SessionEntity newHost = remain.get(0).getSession();
 				room.setSession(newHost);
 				room.setUpdatedAt(LocalDateTime.now());
 				roomRepository.save(room);
 			}
-		}else{
+		} else {
 			int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-			if(activeCount == 0){
+			if (activeCount == 0) {
 				roomRepository.deleteById(room.getId());
 			}
 		}
@@ -358,5 +359,38 @@ public class RoomService {
 		room.selectCategory(request.category());
 
 		chatSocketService.categorySelected(request.roomCode(), request.category());
+	}
+
+	// 참가자 준비 상태
+	// 룸 코드를 req로 전달받음.
+	// 룸 코드와 닉네임을 이용해서 participate 테이블에서 레디를 요청한 유저의 ready_status를 변경. (false일때는 true, true일때는 false)
+	// 그리고 이때 마다 웹소켓 chatType == "READY_STATUS"로 ready_status 보내줌.
+	// 그리고 room의 참가인원 -1 만큼 ready_status의 true 개수가 된다면, 참가자 전원 준비완료
+	// 이때 host에게 chatType == "ROOM_READY_STATUS"를 true로 반환.
+
+	public void gameReady(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String nickName = SecurityUtils.getCurrentNickname();
+
+		Participant participant = participantRepository
+				.findByRoomCodeAndNickname(roomCode, nickName)
+				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		participant.setReadyStatus(!participant.getReadyStatus()); // 누른애의 레디 상태
+
+		chatSocketService.sendReadyStatus(roomCode, nickName, participant.getReadyStatus()); // 레디하면 누른애들한테 소켓
+
+		long readyCount = participantRepository.countByRoom_RoomCodeAndReadyStatusTrue(roomCode); // 몇 명이 준비함
+
+		int totalParticipants = participantRepository.countByRoom(room); // 현재 입장한 사람 수
+
+		// host에게만 알림
+		if (readyCount == totalParticipants - 1) {
+			chatSocketService.sendRoomReadyStatus(roomCode, true);
+		}else {
+			chatSocketService.sendRoomReadyStatus(roomCode, false);
+		}
 	}
 }
