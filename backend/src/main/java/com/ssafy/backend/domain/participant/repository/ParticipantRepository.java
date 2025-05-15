@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -42,4 +43,8 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	long countByRoom_RoomCodeAndReadyStatusTrue(String roomCode);
 
 	List<Participant> findByRoomAndIsActiveFalse(Room room);
+
+	@Modifying
+	@Query("DELETE FROM Participant p WHERE p.room = :room")
+	void deleteByRoom(@Param("room") Room room);
 }

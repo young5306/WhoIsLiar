@@ -16,15 +16,15 @@ public class RedissonConfig {
 	@Value("${redis.port}")
 	private String redisPort;
 
-	@Value("${redis.password}")
-	private String redisPassword;
+	// @Value("${redis.password}")
+	// private String redisPassword;
 
 	@Bean(destroyMethod = "shutdown")
 	public RedissonClient redissonClient() {
 		Config config = new Config();
 		config.useSingleServer()
-			.setAddress("redis://" + redisHost + ":" + redisPort)
-			.setPassword(redisPassword);
+			.setAddress("redis://" + redisHost + ":" + redisPort);
+			// .setPassword(redisPassword);
 
 		return Redisson.create(config);
 	}

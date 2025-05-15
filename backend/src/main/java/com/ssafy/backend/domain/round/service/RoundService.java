@@ -61,6 +61,8 @@ import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,6 +86,9 @@ public class RoundService {
 	private final SynonymRepository synonymRepository;
 
 	private final ApplicationEventPublisher eventPublisher;
+
+	@PersistenceContext
+	private EntityManager em;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
