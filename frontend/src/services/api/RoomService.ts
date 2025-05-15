@@ -21,6 +21,16 @@ export interface RoomSummary {
   status: 'waiting' | 'playing';
 }
 
+export interface RoomParticipant {
+  participantId: number;
+  nickName: string;
+  isActive: boolean;
+}
+
+export interface RoomParticipantsWrapper {
+  participants: RoomParticipant[];
+}
+
 export const createRoom = async (param: createRoomRequest) => {
   const res = await api.post('/rooms', param);
   return res.data;
