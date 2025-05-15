@@ -40,14 +40,6 @@ public class TurnTimerService {
 	private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 	private final Map<String, TurnState> turnMap = new ConcurrentHashMap<>();
 
-	public static void updateStateAndProceed(String roomCode, int currentIndex, TurnState state,
-		TurnTimerService service) {
-		if (state != null && state.getIndex() == currentIndex) {
-			state.setIndex(currentIndex + 1);
-			service.proceedToNextTurn(roomCode);
-		}
-	}
-
 	@PostConstruct
 	public void init() {
 		scheduler.setPoolSize(10);
