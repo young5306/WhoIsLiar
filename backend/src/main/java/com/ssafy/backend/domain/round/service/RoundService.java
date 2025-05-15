@@ -424,11 +424,10 @@ public class RoundService {
 				pr -> pr.getParticipant().getSession().getNickname()
 			));
 
+
 		List<Result> results = countMap.entrySet().stream()
-			.map(e -> new Result(
-				nicknameMap.get(e.getKey()),
-				e.getValue()
-			))
+			.map(e -> new Result(nicknameMap.get(e.getKey()), e.getValue()))
+			.sorted((r1, r2) -> Integer.compare(r2.voteCount(), r1.voteCount()))
 			.collect(Collectors.toList());
 
 		results.add(new Result(null, skipCount));
