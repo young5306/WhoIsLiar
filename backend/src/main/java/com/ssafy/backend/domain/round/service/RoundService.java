@@ -103,9 +103,7 @@ public class RoundService {
 
 		participantRoundRepository.deleteByRoom(room);
 		roundRepository.deleteByRoom(room);
-		participantRepository.deleteByRoom(room);
 
-		room.getParticipants().clear();
 		room.getRounds().clear();
 
 		room.finishGame(RoomStatus.waiting);
