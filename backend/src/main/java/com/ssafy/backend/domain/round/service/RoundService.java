@@ -96,10 +96,18 @@ public class RoundService {
 		List<Round> rounds = roundRepository.findByRoom(room);
 
 		// ParticipantRound -> Round -> Participant -> Room 순서로 삭제
-		for (Round round : rounds) {
-			participantRoundRepository.deleteByRound(round);
-		}
-		roundRepository.deleteAll(rounds);
+		// for (Round round : rounds) {
+		// 	participantRoundRepository.deleteByRound(round);
+		// }
+		// roundRepository.deleteAll(rounds);
+
+		participantRoundRepository.deleteByRoom(room);
+		roundRepository.deleteByRoom(room);
+		participantRepository.deleteByRoom(room);
+
+		room.getParticipants().clear();
+		room.getRounds().clear();
+
 		room.finishGame(RoomStatus.waiting);
 		initReadyStatus(room);
 
