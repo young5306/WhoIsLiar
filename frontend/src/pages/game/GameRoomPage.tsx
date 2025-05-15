@@ -949,6 +949,14 @@ const GameRoomPage = () => {
         await fetchAndShowScore();
       }, 2000);
     }
+
+    if (latest.chatType === 'LIAR_DISCONNECT') {
+      if (latest) {
+        console.log(`${latest.chatType} 메시지 수신:`, latest);
+        // 라이어 퇴장 시, 해당 라운드 종료 연결하기
+        // 모달? -> 점수판 연결
+      }
+    }
   }, [chatMessages, myUserName, publisher]);
 
   // 발언 skip 핸들러
