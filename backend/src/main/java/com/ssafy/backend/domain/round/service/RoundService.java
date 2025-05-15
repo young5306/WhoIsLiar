@@ -372,7 +372,7 @@ public class RoundService {
 		log.info("마지막 턴 확인 로그: {}",round.getTurn());
 		log.info("선택된 id가 있는지 로그로 확인: {}",selectedId);
 		log.info("그렇다면 마지막 스킵이 된 것이므로 : {}",lastTurnSkip);
-		log.info("라이어 id : {}",selectedId);
+		log.info("라이어 id : {}, {}",liarId,liarPR.getParticipant().getSession().getNickname());
 
 		if (wrongPicked || lastTurnSkip) {
 			liarPR.addScore(100);

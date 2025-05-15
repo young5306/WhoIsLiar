@@ -18,20 +18,11 @@ const VoteResultModal = ({
   result,
   onNext,
 }: Props) => {
-  // const [visibleItems, setVisibleItems] = useState<VoteResultItem[]>([]);
-  // const [currentIndex, setCurrentIndex] = useState(0);
-  const [sortedResults, setSortedResults] = useState<VoteResultItem[]>([]);
   const modalTimerRef = useRef<TimerRef>(null);
 
   useEffect(() => {
-    // 투표 수 오름차순 정렬
-    const sorted = [...result.results].sort(
-      (a, b) => a.voteCount - b.voteCount
-    );
-    setSortedResults(sorted);
-
     modalTimerRef?.current?.startTimer(3);
-  }, [result]);
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-gray-900/70 z-50 flex items-center justify-center">
@@ -56,15 +47,23 @@ const VoteResultModal = ({
         </div>
 
         <ul className="space-y-3 mt-5">
-          {sortedResults.map((item, idx) => (
-            <li
-              key={idx}
-              className="flex items-center justify-between bg-gray-800 rounded px-6 py-3 headline-medium"
-            >
-              <span>{item.targetNickname || 'SKIP'}</span>
-              <span>{item.voteCount}표</span>
-            </li>
-          ))}
+          {result.results.map((item, idx) => {
+            const isLast = idx === result.results.length - 1;
+
+            return (
+              <li
+                key={idx}
+                className={`flex items-center justify-between rounded px-6 py-3 headline-medium ${
+                  isLast
+                    ? 'bg-gray-900 text-gray-500'
+                    : 'bg-gray-800 text-gray-0'
+                }`}
+              >
+                <span>{item.targetNickname || 'SKIP'}</span>
+                <span>{item.voteCount}표</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>
