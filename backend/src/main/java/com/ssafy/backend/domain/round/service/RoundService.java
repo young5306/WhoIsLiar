@@ -396,7 +396,10 @@ public class RoundService {
 		String nickname = SecurityUtils.getCurrentNickname();
 		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
 
-		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+		List<ParticipantRound> allPrList = participantRoundRepository.findByRound(round);
+		List<ParticipantRound> prList = allPrList.stream()
+			.filter(pr -> pr.getParticipant().isActive())
+			.collect(Collectors.toList());
 
 		Map<Long, Integer> countMap = new HashMap<>();
 		int skipCount = 0;
@@ -449,10 +452,6 @@ public class RoundService {
 			.filter(ParticipantRound::isLiar)
 			.findFirst()
 			.map(ParticipantRound::getParticipant)
-			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
-		ParticipantRound liarPR = prList.stream()
-			.filter(ParticipantRound::isLiar)
-			.findFirst()
 			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
 
 		String liarNickname = liar.getSession().getNickname();
