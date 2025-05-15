@@ -30,8 +30,7 @@ public class SecurityConfig {
 
 	private final CorsProperties corsProps;
 
-	public SecurityConfig(AuthService authService, CorsProperties corsProps)
-	{
+	public SecurityConfig(AuthService authService, CorsProperties corsProps) {
 		this.authService = authService;
 		this.corsProps = corsProps;
 	}
@@ -85,7 +84,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration cfg = new CorsConfiguration();
 		cfg.setAllowedOrigins(corsProps.getAllowedOrigins());
-		cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+		cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		cfg.setAllowCredentials(true);
 		cfg.setAllowedHeaders(List.of("*"));
 

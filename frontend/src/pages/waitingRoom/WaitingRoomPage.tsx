@@ -12,7 +12,11 @@ import {
   Check,
   Timer,
 } from 'lucide-react';
-import { getRoomData, setRoomCategory } from '../../services/api/RoomService';
+import {
+  getRoomData,
+  roomReady,
+  setRoomCategory,
+} from '../../services/api/RoomService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { notify } from '../../components/common/Toast';
@@ -22,7 +26,7 @@ import useSocketStore from '../../stores/useSocketStore';
 // import Timer, { TimerRef } from '../../components/common/Timer';
 import { useMessageStore } from '../../stores/useMessageStore';
 
-const WaitingRoomContent = () => {
+const WaitingRoomContent = (): JSX.Element => {
   // const [selectedCategory, setSelectedCategory] = useState<string>('랜덤');
 
   const [displayCategory, setDisplayCategory] = useState<string>('랜덤');
@@ -43,8 +47,13 @@ const WaitingRoomContent = () => {
       participantId: number;
       nickName: string;
       isActive: boolean;
+      readyStatus?: boolean;
     }>;
   } | null>(null);
+
+  // 게임 시작 활성화 상태와 참가자 준비 상태 관리
+  const [isRoomReady, setIsRoomReady] = useState<boolean>(false);
+  const [isUserReady, setIsUserReady] = useState<boolean>(false);
 
   const categories = [
     { label: '랜덤', id: '랜덤' },
@@ -96,6 +105,28 @@ const WaitingRoomContent = () => {
   const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const beforeUnloadRef = useRef<(e: BeforeUnloadEvent) => void>();
+
+  // 시스템 메시지에서 유저 이름 강조 처리하는 함수
+  const highlightUsername = (content: string) => {
+    // "xx님이" 패턴을 찾아서 강조 처리
+    const usernameRegex = /(\S+)님이/;
+    const match = content.match(usernameRegex);
+
+    if (match && match[1]) {
+      const username = match[1];
+      const parts = content.split(username);
+
+      return (
+        <>
+          {parts[0]}
+          <span className="text-white font-bold">{username}</span>
+          {parts[1]}
+        </>
+      );
+    }
+
+    return content;
+  };
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -328,8 +359,12 @@ const WaitingRoomContent = () => {
             addChatMessage(message);
             // 중복 메시지 체크
             setChatMessages((prev) => {
-              // CATEGORY_SELECTED 메시지는 채팅창에 표시하지 않음
-              if (message.chatType === 'CATEGORY_SELECTED') {
+              // CATEGORY_SELECTED, READY_STATUS, ROOM_READY_STATUS 메시지는 채팅창에 표시하지 않음
+              if (
+                message.chatType === 'CATEGORY_SELECTED' ||
+                message.chatType === 'READY_STATUS' ||
+                message.chatType === 'ROOM_READY_STATUS'
+              ) {
                 return prev;
               }
               return [...prev, message];
@@ -344,6 +379,25 @@ const WaitingRoomContent = () => {
             if (message.chatType === 'GAME_START') {
               if (contextRoomCode && !isHost) {
                 navigate('/game-room');
+              }
+            }
+
+            if (message.chatType === 'ROOM_READY_STATUS') {
+              console.log('방 준비 상태', message.content);
+              setIsRoomReady(message.content === 'TRUE');
+            }
+
+            // 사용자 준비 상태 메시지 처리
+            if (message.chatType === 'READY_STATUS') {
+              // 메시지 내용이 "준비 완료" 또는 "준비 취소"로 전달됨
+              setIsUserReady(message.content === '준비 완료');
+
+              // 방 정보 최신화하여 다른 참가자의 준비 상태도 업데이트
+              try {
+                const response = await getRoomData(contextRoomCode);
+                setRoomData(response);
+              } catch (error) {
+                console.error('방 정보 최신화 실패:', error);
               }
             }
 
@@ -679,6 +733,18 @@ const WaitingRoomContent = () => {
   // 플레이어가 중간에 퇴장하는 경우
   const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
 
+  const handleReady = async () => {
+    if (contextRoomCode) {
+      try {
+        await roomReady(contextRoomCode);
+        // 서버로부터 READY_STATUS 웹소켓 메시지를 통해 상태 업데이트 받음
+      } catch (error) {
+        console.error('준비 상태 변경 실패:', error);
+        notify({ type: 'error', text: '준비 상태 변경에 실패했습니다.' });
+      }
+    }
+  };
+
   return (
     <div className="w-screen h-screen flex overflow-hidden px-[4%]">
       {/* Left section */}
@@ -925,32 +991,50 @@ const WaitingRoomContent = () => {
 
           {/* Player list */}
           <div className="ml-[1vw] bg-gray-800/50 backdrop-blur-sm rounded-xl p-2 w-[20vh] h-[20vh] xl:w-[25vh] xl:h-[25vh] 2xl:w-[30vh] 2xl:h-[30vh]">
+            {' '}
             <div className="text-white text-sm mb-1 border-b border-gray-700 pb-1">
-              참여자 ({roomData?.participants.length || 0}/6)
-            </div>
+              {' '}
+              참여자 ({roomData?.participants.length || 0}/6){' '}
+            </div>{' '}
             <div className="grid grid-cols-2 grid-rows-3 gap-1 h-[calc(100%-24px)]">
-              {roomData?.participants.map((participant) => (
-                <div
-                  key={participant.participantId}
-                  className="flex items-center justify-center gap-1 hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200"
-                >
-                  {participant.nickName === roomData.roomInfo.hostNickname ? (
-                    <Crown className="w-4 h-4 text-yellow-500" />
-                  ) : (
-                    <img
-                      src="/assets/people-fill.svg"
-                      alt="participant"
-                      width={14}
-                      height={14}
-                      className="text-rose-600"
-                    />
-                  )}
-                  <div className="text-white text-xs truncate">
-                    {participant.nickName}
+              {roomData?.participants.map(
+                (participant: {
+                  participantId: number;
+                  nickName: string;
+                  isActive: boolean;
+                  readyStatus?: boolean;
+                }) => (
+                  <div
+                    key={participant.participantId}
+                    className={`flex items-center justify-center gap-1 hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200 relative ${
+                      participant.readyStatus
+                        ? 'bg-gradient-to-r from-green-600/20 to-green-500/30 border border-green-500/30'
+                        : ''
+                    }`}
+                  >
+                    {participant.nickName === roomData.roomInfo.hostNickname ? (
+                      <Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                    ) : (
+                      <img
+                        src="/assets/people-fill.svg"
+                        alt="participant"
+                        width={14}
+                        height={14}
+                        className="text-rose-600 flex-shrink-0"
+                      />
+                    )}
+                    <div className="text-white text-xs truncate">
+                      {participant.nickName}
+                    </div>
+                    {participant.readyStatus && (
+                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5 shadow-lg animate-pulse">
+                        <Check className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
+                )
+              )}
+            </div>{' '}
           </div>
         </div>
 
@@ -971,17 +1055,27 @@ const WaitingRoomContent = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              {' '}
               <GameButton
                 text="방 나가기"
                 variant="gray"
                 size="small"
                 onClick={() => setIsConfirmModalOpen(true)}
-              />
-              {isHost && (
+              />{' '}
+              {isHost ? (
                 <GameButton
                   text="게임시작"
                   size="small"
                   onClick={handleStartGame}
+                  disabled={!isRoomReady}
+                  variant={isRoomReady ? 'default' : 'gray'}
+                />
+              ) : (
+                <GameButton
+                  text={isUserReady ? '준비완료' : '게임준비'}
+                  size="small"
+                  onClick={handleReady}
+                  variant={isUserReady ? 'success' : 'primary'}
                 />
               )}
             </div>
@@ -1030,7 +1124,7 @@ const WaitingRoomContent = () => {
                   {msg.sender === 'SYSTEM' ? (
                     <div className="flex justify-center my-2">
                       <span className="text-purple-400 text-xs font-medium bg-purple-500/10 border border-purple-500/20 px-4 py-1.5 rounded-full shadow-lg">
-                        {msg.content}
+                        {highlightUsername(msg.content)}
                       </span>
                     </div>
                   ) : (

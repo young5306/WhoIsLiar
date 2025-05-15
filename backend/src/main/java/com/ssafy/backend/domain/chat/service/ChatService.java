@@ -5,12 +5,12 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.chat.dto.ChatSummaryRequestDto;
 import com.ssafy.backend.domain.chat.entity.Chat;
 import com.ssafy.backend.domain.chat.repository.ChatRepository;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
-import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.global.enums.ChatType;
 import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.exception.CustomException;

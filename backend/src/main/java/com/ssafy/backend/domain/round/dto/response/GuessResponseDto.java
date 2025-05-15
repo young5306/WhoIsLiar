@@ -11,4 +11,5 @@ public record GuessResponseDto(
 	@Schema(description = "라운드 승자 ('LIAR' 또는 'CIVIL')", example = "LIAR")
 	String winner
 
-) {}
+) {
+}

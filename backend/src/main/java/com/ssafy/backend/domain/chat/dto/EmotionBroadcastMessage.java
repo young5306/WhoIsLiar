@@ -5,4 +5,5 @@ public record EmotionBroadcastMessage(
 	int order,
 	String userName,
 	EmotionResult emotionResult
-) {}
+) {
+}

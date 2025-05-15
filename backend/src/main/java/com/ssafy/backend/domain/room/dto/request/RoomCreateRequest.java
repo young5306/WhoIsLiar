@@ -44,4 +44,5 @@ public record RoomCreateRequest(
 	@Schema(description = "라운드 수", example = "5")
 	@Min(value = 1, message = "라운드 수는 최소 1 이상이어야 합니다.")
 	int roundCount
-) {}
+) {
+}

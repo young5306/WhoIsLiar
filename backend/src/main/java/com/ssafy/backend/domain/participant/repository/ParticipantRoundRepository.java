@@ -14,17 +14,19 @@ import com.ssafy.backend.domain.round.entity.Round;
 
 public interface ParticipantRoundRepository extends JpaRepository<ParticipantRound, Long> {
 	void deleteByRound(Round round);
+
 	List<ParticipantRound> findByRound(Round round);
+
 	Optional<ParticipantRound> findByRoundAndParticipant(Round round, Participant participant);
 
 	@Query("""
-	SELECT pr
-	FROM ParticipantRound pr
-	JOIN FETCH pr.participant p
-	JOIN FETCH p.session s
-	WHERE pr.round = :round
-	ORDER BY pr.order ASC
-""")
+			SELECT pr
+			FROM ParticipantRound pr
+			JOIN FETCH pr.participant p
+			JOIN FETCH p.session s
+			WHERE pr.round = :round
+			ORDER BY pr.order ASC
+		""")
 	List<ParticipantRound> findByRoundWithParticipantSession(@Param("round") Round round);
 
 	@Modifying

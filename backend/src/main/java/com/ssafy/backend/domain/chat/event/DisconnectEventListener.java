@@ -1,16 +1,12 @@
 package com.ssafy.backend.domain.chat.event;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
@@ -18,8 +14,12 @@ import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.chat.dto.ChatMessage;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.entity.Round;
+import com.ssafy.backend.domain.round.repository.RoundRepository;
+import com.ssafy.backend.domain.round.service.TurnTimerService;
 import com.ssafy.backend.global.enums.ChatType;
 import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.RoomStatus;
@@ -36,8 +36,11 @@ public class DisconnectEventListener {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
+	private final ParticipantRoundRepository participantRoundRepository;
 	private final SessionRepository sessionRepository;
 	private final ChatSessionRegistry sessionRegistry;
+	private final TurnTimerService turnTimerService;
+	private final RoundRepository roundRepository;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
@@ -53,16 +56,19 @@ public class DisconnectEventListener {
 			return;
 		}
 
-		String nickname = (String) accessor.getSessionAttributes().get("nickname");
-		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
+		String nickname = (String)accessor.getSessionAttributes().get("nickname");
+		String roomCode = (String)accessor.getSessionAttributes().get("roomCode");
 
-		if (nickname == null || roomCode == null) return;
+		if (nickname == null || roomCode == null)
+			return;
 
 		log.info("************************************************");
-		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId() ,nickname, roomCode);
+		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId(), nickname,
+			roomCode);
 
 		Room room = roomRepository.findByRoomCodeFetchSession(roomCode).orElse(null);
-		if (room == null) return;
+		if (room == null)
+			return;
 
 		SessionEntity session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -81,6 +87,21 @@ public class DisconnectEventListener {
 				participantRepository.save(participant);
 			}
 
+			TurnTimerService.TurnState state = turnTimerService.getTurnState(roomCode);
+			if (state != null) {
+				Round round = roundRepository.findByRoomAndRoundNumber(room, state.getRoundNumber())
+					.orElse(null);
+				if (round != null) {
+					participantRoundRepository.findByRoundAndParticipant(round, participant)
+						.ifPresent(pr -> {
+							if (pr.getId().equals(state.getCurrentParticipantRoundId())) {
+								log.info("[WS TURN] 발언 중 참가자 퇴장 -> 즉시 endTurn 호출");
+								turnTimerService.endTurnSilently(roomCode);
+							}
+						});
+				}
+			}
+
 			// 호스트가 강제 이탈 시 위임
 			if (wasHost) {
 				List<Participant> remain = participantRepository
@@ -93,9 +114,9 @@ public class DisconnectEventListener {
 					room.changeHost(newHost);
 					roomRepository.save(room);
 				}
-			}else{
+			} else {
 				int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-				if(activeCount == 0){
+				if (activeCount == 0) {
 					roomRepository.deleteById(room.getId());
 				}
 			}
