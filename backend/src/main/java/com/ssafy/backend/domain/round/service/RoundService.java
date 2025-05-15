@@ -312,8 +312,67 @@ public class RoundService {
 		if (votedActive == totalActive) {
 			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
 			if(prev == null){
+				applyVoteScoring(round);
+
 				chatSocketService.voteCompleted(roomCode);
 			}
+		}
+	}
+
+	private void applyVoteScoring(Round round){
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		Map<Long, Integer> countMap = new HashMap<>();
+		int skipCount = 0;
+		for (ParticipantRound pr : prList) {
+			Participant target = pr.getTargetParticipant();
+			if (target == null) {
+				skipCount++;
+			} else {
+				long tid = target.getId();
+				countMap.put(tid, countMap.getOrDefault(tid, 0) + 1);
+			}
+		}
+
+		for (ParticipantRound pr : prList) {
+			long pid = pr.getParticipant().getId();
+			countMap.putIfAbsent(pid, 0);
+		}
+
+		ParticipantRound liarPR = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+		long liarId = liarPR.getParticipant().getId();
+
+		List<Integer> nonSkipCounts = countMap.values().stream().toList();
+		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
+		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
+
+		boolean skipFlag;
+		if (nonSkipCounts.isEmpty()) {
+			skipFlag = true;
+		} else if (skipCount >= maxCount) {
+			skipFlag = true;
+		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else {
+			skipFlag = false;
+		}
+
+		Long selectedId = null;
+		if (!skipFlag) {
+			selectedId = countMap.entrySet().stream()
+				.max(Map.Entry.comparingByValue())
+				.get().getKey();
+		}
+
+		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
+		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
+
+		if (wrongPicked || lastTurnSkip) {
+			liarPR.addScore(100);
+			participantRoundRepository.save(liarPR);
 		}
 	}
 
@@ -397,14 +456,6 @@ public class RoundService {
 				.max(Map.Entry.comparingByValue())
 				.get().getKey();
 			detected = selectedId.equals(liarId);
-		}
-
-		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
-		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
-
-		if (wrongPicked || lastTurnSkip) {
-			liarPR.addScore(100);
-			participantRoundRepository.save(liarPR);
 		}
 
 		return new VoteResultsResponseDto(
