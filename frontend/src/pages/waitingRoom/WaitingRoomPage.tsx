@@ -652,6 +652,21 @@ const WaitingRoomContent = () => {
     };
   }, [clearRoomCode]);
 
+  // 플레이어가 뒤로가기 버튼 누른 경우
+  useEffect(() => {
+    history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      clearRoomCode();
+      window.location.href = window.location.href;
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [clearRoomCode]);
+
   // 플레이어가 중간에 퇴장하는 경우
   const leaveMessageState = useMessageStore((state) => state.setLeaveMessageOn);
 
