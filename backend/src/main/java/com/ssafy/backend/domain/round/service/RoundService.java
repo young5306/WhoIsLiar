@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,7 @@ import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.entity.Synonym;
+import com.ssafy.backend.domain.round.event.AllVotesCompletedEvent;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
 import com.ssafy.backend.domain.round.repository.SynonymRepository;
@@ -81,6 +84,8 @@ public class RoundService {
 	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
 	private final TurnTimerService turnTimerService;
 	private final SynonymRepository synonymRepository;
+
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public void deleteGame(String roomCode) {
@@ -289,7 +294,8 @@ public class RoundService {
 			@Override
 			public void afterCommit() {
 				log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
-				checkAndNotifyVoteCompleted(roomCode, round.getId());
+				// checkAndNotifyVoteCompleted(roomCode, round.getId());
+				eventPublisher.publishEvent(new AllVotesCompletedEvent(roomCode, round.getId()));
 			}
 		});
 		log.info("[vote] afterCommit 콜백 등록 완료 – roomCode={} roundId={}", roomCode, round.getId());
@@ -318,8 +324,71 @@ public class RoundService {
 		if (votedActive == totalActive) {
 			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
 			if(prev == null){
+				applyVoteScoring(round);
+
 				chatSocketService.voteCompleted(roomCode);
 			}
+		}
+	}
+
+	private void applyVoteScoring(Round round){
+		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+
+		Map<Long, Integer> countMap = new HashMap<>();
+		int skipCount = 0;
+		for (ParticipantRound pr : prList) {
+			Participant target = pr.getTargetParticipant();
+			if (target == null) {
+				skipCount++;
+			} else {
+				long tid = target.getId();
+				countMap.put(tid, countMap.getOrDefault(tid, 0) + 1);
+			}
+		}
+
+		for (ParticipantRound pr : prList) {
+			long pid = pr.getParticipant().getId();
+			countMap.putIfAbsent(pid, 0);
+		}
+
+		ParticipantRound liarPR = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+		long liarId = liarPR.getParticipant().getId();
+
+		List<Integer> nonSkipCounts = countMap.values().stream().toList();
+		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
+		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
+
+		boolean skipFlag;
+		if (nonSkipCounts.isEmpty()) {
+			skipFlag = true;
+		} else if (skipCount >= maxCount) {
+			skipFlag = true;
+		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else {
+			skipFlag = false;
+		}
+
+		Long selectedId = null;
+		if (!skipFlag) {
+			selectedId = countMap.entrySet().stream()
+				.max(Map.Entry.comparingByValue())
+				.get().getKey();
+		}
+
+		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
+		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
+		log.info("마지막 턴 확인 로그: {}",round.getTurn());
+		log.info("선택된 id가 있는지 로그로 확인: {}",selectedId);
+		log.info("그렇다면 마지막 스킵이 된 것이므로 : {}",lastTurnSkip);
+		log.info("라이어 id : {}, {}",liarId,liarPR.getParticipant().getSession().getNickname());
+
+		if (wrongPicked || lastTurnSkip) {
+			liarPR.addScore(100);
+			participantRoundRepository.save(liarPR);
 		}
 	}
 
@@ -334,7 +403,10 @@ public class RoundService {
 		String nickname = SecurityUtils.getCurrentNickname();
 		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
 
-		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+		List<ParticipantRound> allPrList = participantRoundRepository.findByRound(round);
+		List<ParticipantRound> prList = allPrList.stream()
+			.filter(pr -> pr.getParticipant().isActive())
+			.collect(Collectors.toList());
 
 		Map<Long, Integer> countMap = new HashMap<>();
 		int skipCount = 0;
@@ -359,11 +431,10 @@ public class RoundService {
 				pr -> pr.getParticipant().getSession().getNickname()
 			));
 
+
 		List<Result> results = countMap.entrySet().stream()
-			.map(e -> new Result(
-				nicknameMap.get(e.getKey()),
-				e.getValue()
-			))
+			.map(e -> new Result(nicknameMap.get(e.getKey()), e.getValue()))
+			.sorted((r1, r2) -> Integer.compare(r2.voteCount(), r1.voteCount()))
 			.collect(Collectors.toList());
 
 		results.add(new Result(null, skipCount));
@@ -372,12 +443,18 @@ public class RoundService {
 		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
 		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
 
+		long topTieCount = countMap.values().stream()
+			.filter(v -> v == maxCount)
+			.count();
+
 		boolean skipFlag;
 		if (nonSkipCounts.isEmpty()) {
 			skipFlag = true;
 		} else if (skipCount >= maxCount) {
 			skipFlag = true;
 		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else if (topTieCount > 1) {
 			skipFlag = true;
 		} else {
 			skipFlag = false;
@@ -387,10 +464,6 @@ public class RoundService {
 			.filter(ParticipantRound::isLiar)
 			.findFirst()
 			.map(ParticipantRound::getParticipant)
-			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
-		ParticipantRound liarPR = prList.stream()
-			.filter(ParticipantRound::isLiar)
-			.findFirst()
 			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
 
 		String liarNickname = liar.getSession().getNickname();
@@ -403,14 +476,6 @@ public class RoundService {
 				.max(Map.Entry.comparingByValue())
 				.get().getKey();
 			detected = selectedId.equals(liarId);
-		}
-
-		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
-		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
-
-		if (wrongPicked || lastTurnSkip) {
-			liarPR.addScore(100);
-			participantRoundRepository.save(liarPR);
 		}
 
 		return new VoteResultsResponseDto(
@@ -517,6 +582,7 @@ public class RoundService {
 
 		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
 			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
+			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore))
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);
