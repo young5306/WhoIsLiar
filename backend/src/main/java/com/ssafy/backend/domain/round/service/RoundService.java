@@ -437,12 +437,18 @@ public class RoundService {
 		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
 		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
 
+		long topTieCount = countMap.values().stream()
+			.filter(v -> v == maxCount)
+			.count();
+
 		boolean skipFlag;
 		if (nonSkipCounts.isEmpty()) {
 			skipFlag = true;
 		} else if (skipCount >= maxCount) {
 			skipFlag = true;
 		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else if (topTieCount > 1) {
 			skipFlag = true;
 		} else {
 			skipFlag = false;
