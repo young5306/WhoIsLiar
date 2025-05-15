@@ -41,4 +41,5 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
 	long countByRoom_RoomCodeAndReadyStatusTrue(String roomCode);
 
+	List<Participant> findByRoomAndIsActiveFalse(Room room);
 }
