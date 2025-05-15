@@ -26,7 +26,6 @@ import {
   getScores,
   endRound,
   setRound,
-  // endGame,
   submitWordGuess,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -41,7 +40,11 @@ import { useWebSocketContext } from '../../contexts/WebSocketProvider';
 import useSocketStore from '../../stores/useSocketStore';
 import { sttService, SttResult } from '../../services/api/SttService';
 import SttText from '../../components/SttText';
-import { getRoomData } from '../../services/api/RoomService';
+import {
+  getRoomData,
+  getRoomParticipants,
+  RoomParticipantsWrapper,
+} from '../../services/api/RoomService';
 import Timer, { TimerRef } from '../../components/common/Timer';
 import GameButton from '../../components/common/GameButton';
 import VoteResultModal from '../../components/modals/VoteResultModal';
@@ -172,7 +175,7 @@ import GameStartCountdownModal from '../../components/modals/GameStartCountdownM
 //   );
 // };
 
-const GameRoom = () => {
+const GameRoomPage = () => {
   const [emotionLogs, setEmotionLogs] = useState<
     Record<string, FaceApiResult | null>
   >({});
@@ -465,22 +468,7 @@ const GameRoom = () => {
 
   const handleBeforeUnload = useCallback(() => {
     leaveSession();
-    // disconnectOpenVidu();
-    // clearRoomCode(); // roomCode 초기화
-    // outGameRoom();
-    // setPublisher(undefined);
-    // // 카메라, 마이크 연결 끊기
-    // setCurrentVideoDevice(null);
-    // setCurrentMicDevice(null);
-  }, [
-    leaveSession,
-    // disconnectOpenVidu,
-    // clearRoomCode,
-    // outGameRoom,
-    // setPublisher,
-    // setCurrentVideoDevice,
-    // setCurrentMicDevice,
-  ]);
+  }, [leaveSession]);
 
   // 새로고침 이벤트 처리 (room-list 이동)
   useEffect(() => {
@@ -537,10 +525,44 @@ const GameRoom = () => {
   };
 
   // 플레이어가 중간에 퇴장하는 경우 감지
+  const updateParticipants = (inactivaUser: string[]) => {
+    console.log('현재 참가자 리스트', participants);
+    const updateParticipants = participants.filter(
+      (p) => !inactivaUser.includes(p.participantNickname)
+    );
+
+    console.log('업데이트 플레이어 정보', updateParticipants);
+    setParticipants(updateParticipants);
+  };
+
+  const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
+    const inactiveUser = roomParticipants.participants
+      .filter((p) => !p.isActive)
+      .map((p) => p.nickName);
+
+    console.log('비활성화 플레이어', inactiveUser);
+    updateParticipants(inactiveUser);
+  };
+
   useEffect(() => {
     if (leaveMessageReceive) {
       console.log('플레이어가 퇴장했습니다. GameInfo 다시 받아오기');
-      leaveMessageState(false);
+      const newPlayerInfo = async () => {
+        try {
+          const roomParticipants = await getRoomParticipants(roomCode!);
+          console.log('✅newRoomParticipants', roomParticipants);
+          if (roomParticipants && roomParticipants.participants) {
+            inactiveNickNames(roomParticipants);
+          } else {
+            console.error('참가자 정보가 유효하지 않습니다.');
+          }
+        } catch (err) {
+          console.error('플레이어 정보갱신 오류', err);
+        } finally {
+          leaveMessageState(false);
+        }
+      };
+      newPlayerInfo();
     }
   }, [leaveMessageReceive]);
 
@@ -1571,4 +1593,4 @@ const GameRoom = () => {
   );
 };
 
-export default GameRoom;
+export default GameRoomPage;
