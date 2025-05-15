@@ -31,4 +31,10 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
 	@Query("SELECT p FROM Participant p WHERE p.session = :session AND p.isActive = true")
 	Optional<Participant> findBySessionAndActive(SessionEntity session);
+
+	@Query("SELECT p FROM Participant p WHERE p.room.roomCode = :roomCode AND p.session.nickname = :nickname")
+	Optional<Participant> findByRoomCodeAndNickname(@Param("roomCode") String roomCode, @Param("nickname") String nickname);
+
+	long countByRoom_RoomCodeAndReadyStatusTrue(String roomCode);
+
 }

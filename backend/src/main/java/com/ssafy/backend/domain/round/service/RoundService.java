@@ -99,6 +99,12 @@ public class RoundService {
 		roundRepository.deleteAll(rounds);
 		room.finishGame(RoomStatus.waiting);
 
+		// 모든 참가자의 readyStatus를 false로.
+		List<Participant> participants = participantRepository.findByRoom(room);
+		for (Participant participant : participants) {
+			participant.setReadyStatus(false);
+		}
+
 		chatSocketService.gameEnded(roomCode);
 	}
 

@@ -2,11 +2,7 @@ package com.ssafy.backend.domain.room.controller;
 
 import static com.ssafy.backend.global.common.ResponseUtil.*;
 
-import com.ssafy.backend.domain.room.dto.request.GameStartRequest;
-import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
-import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
-import com.ssafy.backend.domain.room.dto.request.RoomJoinByPasswordRequest;
-import com.ssafy.backend.domain.room.dto.request.SelectCategoryRequest;
+import com.ssafy.backend.domain.room.dto.request.*;
 import com.ssafy.backend.domain.room.dto.response.ParticipantsListResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomCreateResponse;
 import com.ssafy.backend.domain.room.dto.response.RoomDetailResponse;
@@ -186,6 +182,12 @@ public class RoomController {
 	@PostMapping("/category")
 	public ResponseEntity<CommonResponse<Void>> selectCategory(@RequestBody SelectCategoryRequest request) {
 		roomService.selectCategory(request);
+		return ok(null);
+	}
+
+	@PostMapping("/{roomCode}/ready")
+	public ResponseEntity<CommonResponse<Void>> readyComplete(@PathVariable String roomCode) {
+		roomService.gameReady(roomCode);
 		return ok(null);
 	}
 }

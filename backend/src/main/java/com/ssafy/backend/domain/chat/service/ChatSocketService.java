@@ -108,5 +108,25 @@ public class ChatSocketService {
 		ChatMessage message = new ChatMessage(senderNickname, summary, ChatType.HINT);
 		sendAfterCommit(roomCode, message);
 	}
+
+	// 유저가 준비 완료/취소할 때 전달
+	public void sendReadyStatus(String roomCode, String senderNickName, boolean sendReadyStatus) {
+		if (sendReadyStatus) {
+			ChatMessage message = new ChatMessage(senderNickName,"준비 완료" , ChatType.READY_STATUS);
+			sendAfterCommit(roomCode, message);
+		}else {
+			ChatMessage message = new ChatMessage(senderNickName,"준비 취소" , ChatType.READY_STATUS);
+			sendAfterCommit(roomCode, message);
+		}
+	}
+
+	// 대기방의 준비완료 상태를 호스트에 전달
+	public void sendRoomReadyStatus(String roomCode, boolean status) {
+		if(status) {
+			sendAfterCommit(roomCode, "TRUE", ChatType.ROOM_READY_STATUS);
+		}else {
+			sendAfterCommit(roomCode, "FALSE", ChatType.ROOM_READY_STATUS);
+		}
+	}
 }
 
