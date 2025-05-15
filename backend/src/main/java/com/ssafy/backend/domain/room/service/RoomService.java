@@ -396,4 +396,39 @@ public class RoomService {
 			chatSocketService.sendRoomReadyStatus(roomCode, false);
 		}
 	}
+
+//	@Transactional(propagation = Propagation.REQUIRES_NEW)
+//	public void gameReady(String roomCode) {
+//		Room room = roomRepository.findByRoomCode(roomCode)
+//				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+//
+//		String nickName = SecurityUtils.getCurrentNickname();
+//
+//		Participant participant = participantRepository
+//				.findByRoomCodeAndNickname(roomCode, nickName)
+//				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+//
+//		// 상태 토글
+//		participant.setReadyStatus(!participant.getReadyStatus());
+//
+//		// 변경된 상태 저장
+//		participantRepository.save(participant);
+//
+//		// afterCommit 콜백으로 지연 실행
+//		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+//			@Override
+//			public void afterCommit() {
+//				// 1. 레디를 누른 유저의 본인 레디 상태 웹소켓 전송
+//				chatSocketService.sendReadyStatus(roomCode, nickName, participant.getReadyStatus());
+//
+//				// 2. 레디 인원 수 계산 및 방장에게 전체 준비 여부 전송
+//				long readyCount = participantRepository.countByRoom_RoomCodeAndReadyStatusTrue(roomCode);
+//				int totalParticipants = participantRepository.countByRoom(room);
+//
+//				boolean allReadyExceptHost = (readyCount == totalParticipants - 1);
+//				chatSocketService.sendRoomReadyStatus(roomCode, allReadyExceptHost);
+//			}
+//		});
+//	}
+
 }
