@@ -1,11 +1,13 @@
+import { useEffect, useRef } from 'react';
 import { ScoreResponse } from '../../services/api/GameService';
+import Timer, { TimerRef } from '../common/Timer';
 
 interface ScoreModalProps {
   type: 'liar-win' | 'civilian-win' | 'final-score';
   roundNumber: number;
   totalRoundNumber: number;
   scores: ScoreResponse['scores'];
-  onClose?: () => void;
+  onNext: () => void;
 }
 
 const titleImageMap = {
@@ -21,21 +23,28 @@ const ScoreModal = ({
   roundNumber,
   totalRoundNumber,
   scores,
-  onClose,
+  onNext,
 }: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
 
   const sortedScores = [...scores].sort((a, b) => b.totalScore - a.totalScore);
 
+  const modalTimerRef = useRef<TimerRef>(null);
+
+  useEffect(() => {
+    modalTimerRef?.current?.startTimer(10);
+  }, []);
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
+      <div className="relative bg-gray-900 rounded-xl p-10 pb-18 w-[900px] text-center text-gray-0 border-1 border-primary-600">
+        {/* 타이머를 모달 내부 오른쪽 상단에 표시 */}
+        {modalTimerRef && (
+          <div className="absolute top-6 right-6">
+            <Timer ref={modalTimerRef} size="small" onTimeEnd={onNext} />
+          </div>
+        )}
+
         <p className="headline-xlarge">
           ROUND {roundNumber}/{totalRoundNumber}
         </p>
