@@ -128,5 +128,10 @@ public class ChatSocketService {
 			sendAfterCommit(roomCode, "FALSE", ChatType.ROOM_READY_STATUS);
 		}
 	}
+
+	public void sendLiarDisconnect(String roomCode, String nickname) {
+		sendAfterCommit(roomCode, nickname + "님(라이어)이 퇴장했습니다.", ChatType.LIAR_DISCONNECT);
+	}
+
 }
 
