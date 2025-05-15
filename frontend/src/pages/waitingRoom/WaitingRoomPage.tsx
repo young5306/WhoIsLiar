@@ -95,6 +95,7 @@ const WaitingRoomContent = () => {
   const [userScrolled, setUserScrolled] = useState(false);
   const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const beforeUnloadRef = useRef<(e: BeforeUnloadEvent) => void>();
 
   const updateVitalData = useCallback(() => {
     animationFrameRef.current = requestAnimationFrame(updateVitalData);
@@ -646,6 +647,9 @@ const WaitingRoomContent = () => {
       return (e.returnValue = '');
     };
 
+    // 뒤로가기 버튼 클릭시 경고창 방지를 위함
+    beforeUnloadRef.current = handleBeforeUnload;
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -656,12 +660,17 @@ const WaitingRoomContent = () => {
   useEffect(() => {
     history.pushState(null, '', window.location.href);
     const handlePopState = () => {
-      clearRoomCode();
-      window.location.href = window.location.href;
+      const shouldLeave = window.confirm('대기방에서 나가시겠습니까?');
+      if (shouldLeave) {
+        if (beforeUnloadRef.current) {
+          window.removeEventListener('beforeunload', beforeUnloadRef.current);
+        }
+        clearRoomCode();
+        window.location.href = '/room-list';
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
-
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
