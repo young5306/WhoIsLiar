@@ -18,7 +18,7 @@ public interface RoundRepository extends JpaRepository<Round, Long> {
 
 	Optional<Round> findTopByRoomOrderByRoundNumberDesc(Room room);
 
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Query("DELETE FROM Round r WHERE r.room = :room")
 	void deleteByRoom(@Param("room") Room room);
 

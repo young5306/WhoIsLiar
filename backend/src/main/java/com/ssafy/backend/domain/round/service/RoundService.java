@@ -61,6 +61,8 @@ import com.ssafy.backend.global.exception.CustomException;
 import com.ssafy.backend.global.util.SecurityUtils;
 import com.ssafy.backend.integration.gpt.GptService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,35 +87,51 @@ public class RoundService {
 
 	private final ApplicationEventPublisher eventPublisher;
 
+	@PersistenceContext
+	private EntityManager em;
+
 	@Transactional
 	public void deleteGame(String roomCode) {
-
+		// 1) 타이머 취소
 		turnTimerService.cancelTurnSequence(roomCode);
 
+		// 2) Room 가져오기
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		List<Round> rounds = roundRepository.findByRoom(room);
+		// --- 삭제 전 로깅 ---
+		List<Integer> before = roundRepository.findByRoom(room).stream()
+			.map(r -> r.getRoundNumber()).collect(Collectors.toList());
+		log.info("[deleteGame] before rounds = {}", before);
 
-		// ParticipantRound -> Round -> Participant -> Room 순서로 삭제
-		// for (Round round : rounds) {
-		// 	participantRoundRepository.deleteByRound(round);
-		// }
-		// roundRepository.deleteAll(rounds);
-
+		// 3) participant_round → round 삭제
 		participantRoundRepository.deleteByRoom(room);
 		roundRepository.deleteByRoom(room);
 
-		room.getRounds().clear();
+		// 4) 즉시 반영을 위해 flush + 모든 엔티티 detach
+		em.flush();
+		em.clear();
 
-		room.finishGame(RoomStatus.waiting);
-		initReadyStatus(room);
+		// --- 삭제 후 로깅 ---
+		// 다시 Room 조회 (새 영속 컨텍스트)
+		Room room2 = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+		List<Integer> after = roundRepository.findByRoom(room2).stream()
+			.map(r -> r.getRoundNumber()).collect(Collectors.toList());
+		log.info("[deleteGame] after rounds = {}", after);
 
-		List<Participant> inactive = participantRepository.findByRoomAndIsActiveFalse(room);
+		// 5) 비활성 참가자(isActive=false)만 삭제
+		List<Participant> inactive = participantRepository.findByRoomAndIsActiveFalse(room2);
 		if (!inactive.isEmpty()) {
 			participantRepository.deleteAll(inactive);
 		}
 
+		// 6) 룸 상태·readyStatus 초기화
+		room2.finishGame(RoomStatus.waiting);
+		room2.getParticipants().forEach(p -> p.setReadyStatus(false));
+		roomRepository.save(room2);
+
+		// 7) 소켓으로 종료 알림
 		chatSocketService.gameEnded(roomCode);
 	}
 

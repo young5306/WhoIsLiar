@@ -42,7 +42,7 @@ public interface ParticipantRoundRepository extends JpaRepository<ParticipantRou
 
 	long countByRoundAndHasVotedTrueAndParticipantIsActiveTrue(Round round);
 
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Query("DELETE FROM ParticipantRound pr WHERE pr.round.room = :room")
 	void deleteByRoom(@Param("room") Room room);
 }
