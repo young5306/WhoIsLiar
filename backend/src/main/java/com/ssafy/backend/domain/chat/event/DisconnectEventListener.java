@@ -14,8 +14,12 @@ import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.chat.dto.ChatMessage;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
+import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
 import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
+import com.ssafy.backend.domain.round.entity.Round;
+import com.ssafy.backend.domain.round.repository.RoundRepository;
+import com.ssafy.backend.domain.round.service.TurnTimerService;
 import com.ssafy.backend.global.enums.ChatType;
 import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.RoomStatus;
@@ -32,8 +36,11 @@ public class DisconnectEventListener {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
+	private final ParticipantRoundRepository participantRoundRepository;
 	private final SessionRepository sessionRepository;
 	private final ChatSessionRegistry sessionRegistry;
+	private final TurnTimerService turnTimerService;
+	private final RoundRepository roundRepository;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
@@ -78,6 +85,21 @@ public class DisconnectEventListener {
 			} else {
 				participant.setActive(false);
 				participantRepository.save(participant);
+			}
+
+			TurnTimerService.TurnState state = turnTimerService.getTurnState(roomCode);
+			if (state != null) {
+				Round round = roundRepository.findByRoomAndRoundNumber(room, state.getRoundNumber())
+					.orElse(null);
+				if (round != null) {
+					participantRoundRepository.findByRoundAndParticipant(round, participant)
+						.ifPresent(pr -> {
+							if (pr.getId().equals(state.getCurrentParticipantRoundId())) {
+								log.info("[WS TURN] 발언 중 참가자 퇴장 -> 즉시 endTurn 호출");
+								turnTimerService.endTurnSilently(roomCode);
+							}
+						});
+				}
 			}
 
 			// 호스트가 강제 이탈 시 위임

@@ -6,7 +6,7 @@ import LoginPage from '../pages/main/LoginPage';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useRoomStore } from '../stores/useRoomStore';
 
-import GameRoom from '../pages/game/GameRoom';
+import GameRoomPage from '../pages/game/GameRoomPage';
 
 import WaitingRoomPage from '../pages/waitingRoom/WaitingRoomPage';
 import RoomListPage from '../pages/roomList/RoomListPage';
@@ -72,7 +72,7 @@ const Router = () => {
           path="/game-room"
           element={
             <GameRoomProtectedRoute>
-              <GameRoom />
+              <GameRoomPage />
             </GameRoomProtectedRoute>
           }
         />
