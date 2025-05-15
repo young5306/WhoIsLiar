@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -424,11 +425,10 @@ public class RoundService {
 				pr -> pr.getParticipant().getSession().getNickname()
 			));
 
+
 		List<Result> results = countMap.entrySet().stream()
-			.map(e -> new Result(
-				nicknameMap.get(e.getKey()),
-				e.getValue()
-			))
+			.map(e -> new Result(nicknameMap.get(e.getKey()), e.getValue()))
+			.sorted((r1, r2) -> Integer.compare(r2.voteCount(), r1.voteCount()))
 			.collect(Collectors.toList());
 
 		results.add(new Result(null, skipCount));
@@ -576,6 +576,7 @@ public class RoundService {
 
 		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
 			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
+			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore))
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);
