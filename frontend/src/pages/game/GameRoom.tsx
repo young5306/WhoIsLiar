@@ -1130,7 +1130,7 @@ const GameRoom = () => {
       {session !== undefined && sortedParticipants.length > 0 ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
-            <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+            <div className="absolute top-6 right-6 flex items-center gap-3 z-50">
               {/* STT 디버깅 버튼 */}
               {/* <button
                 onClick={() => setShowSttDebug(true)}
@@ -1166,7 +1166,7 @@ const GameRoom = () => {
               </>
               {/* --- 투표 시간 --- */}
               {isVoting && (
-                <div className="absolute top-6 right-6 z-50 flex gap-4 items-center">
+                <>
                   {currentTurn < 3 ? (
                     <>
                       <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
@@ -1206,7 +1206,7 @@ const GameRoom = () => {
                       size="medium"
                     />
                   </div>
-                </div>
+                </>
               )}
             </div>
             <div className="text-white w-full h-full grid grid-cols-7">
