@@ -581,7 +581,7 @@ public class RoundService {
 
 		List<ScoresResponseDto.ScoreEntry> entries = scoreMap.entrySet().stream()
 			.map(e -> new ScoresResponseDto.ScoreEntry(e.getKey(), e.getValue()))
-			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore))
+			.sorted(Comparator.comparingInt(ScoresResponseDto.ScoreEntry::totalScore).reversed())
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);
