@@ -9,4 +9,5 @@ public record PlayerPositionDto(
 
 	@Schema(description = "라운드 내 순서 번호", example = "1")
 	int order
-) {}
+) {
+}

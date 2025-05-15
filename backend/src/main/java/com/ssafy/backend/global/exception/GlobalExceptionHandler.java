@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
 				FieldError::getDefaultMessage,
 				(existing, replacement) -> existing
 			));
-		return CommonResponse.success(ResponseCode.VALIDATION_ERROR,errors);
+		return CommonResponse.success(ResponseCode.VALIDATION_ERROR, errors);
 	}
 
 	@ExceptionHandler(NoSuchElementException.class)

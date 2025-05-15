@@ -9,4 +9,5 @@ public record VoteResponseDto(
 
 	@Schema(description = "투표 대상 참가자 닉네임; 스킵 시 null", example = "user_05", nullable = true)
 	String targetParticipantNickname
-) {}
+) {
+}

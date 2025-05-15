@@ -1,5 +1,14 @@
 package com.ssafy.backend.domain.round.service;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.stereotype.Service;
+
 import com.ssafy.backend.domain.chat.service.ChatSocketService;
 import com.ssafy.backend.domain.participant.entity.ParticipantRound;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
@@ -15,30 +24,29 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TurnTimerService {
 
+	private static final int TURN_DURATION_SECONDS = 20;
+	private static final int TURN_DELAY_SECONDS = 3;
 	private final RoomRepository roomRepository;
 	private final RoundRepository roundRepository;
 	private final ParticipantRoundRepository participantRoundRepository;
 	private final ChatSocketService chatSocketService;
 	private final TurnExecutionService turnExecutionService;
-
 	private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 	private final Map<String, TurnState> turnMap = new ConcurrentHashMap<>();
-	private static final int TURN_DURATION_SECONDS = 20;
-	private static final int TURN_DELAY_SECONDS = 3;
+
+	public static void updateStateAndProceed(String roomCode, int currentIndex, TurnState state,
+		TurnTimerService service) {
+		if (state != null && state.getIndex() == currentIndex) {
+			state.setIndex(currentIndex + 1);
+			service.proceedToNextTurn(roomCode);
+		}
+	}
 
 	@PostConstruct
 	public void init() {
@@ -86,7 +94,8 @@ public class TurnTimerService {
 
 	public void proceedToNextTurn(String roomCode) {
 		TurnState state = turnMap.get(roomCode);
-		if (state == null) return;
+		if (state == null)
+			return;
 		//
 		// if (state.getIndex() >= state.getTurns().size()) {
 		// 	chatSocketService.roundFullyEnded(roomCode);

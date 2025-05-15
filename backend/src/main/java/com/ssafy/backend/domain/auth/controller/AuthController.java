@@ -2,6 +2,8 @@ package com.ssafy.backend.domain.auth.controller;
 
 import static com.ssafy.backend.global.common.ResponseUtil.*;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -30,8 +32,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
-import java.util.Map;
-
 @Tag(name = "Auth", description = "인증 관련 API")
 @RestController
 @RequestMapping("/auth")
@@ -40,7 +40,6 @@ public class AuthController {
 
 	private final AuthService auth;
 
-	//주석
 	@Value("${cookie.secure}")
 	private boolean cookieSecure;
 
@@ -51,7 +50,6 @@ public class AuthController {
 		this.auth = auth;
 	}
 
-	/** 로그인 (닉네임만) */
 	@Operation(summary = "로그인 및 닉네임 중복 검사",
 		description = "닉네임이 사용 중이면 409")
 	@ApiResponses({
@@ -84,7 +82,6 @@ public class AuthController {
 		return ok(body);
 	}
 
-	/** 로그아웃 */
 	@Operation(summary = "로그아웃", description = "현재 세션을 종료하고 토큰을 무효화합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "로그아웃 성공",
@@ -110,6 +107,7 @@ public class AuthController {
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 		return ok(null);
 	}
+
 	@Operation(summary = "내 정보 조회", description = "인증된 사용자의 닉네임 정보를 반환합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "조회 성공",
@@ -123,7 +121,7 @@ public class AuthController {
 			content = @Content)
 	})
 	@GetMapping("/me")
-	public ResponseEntity<CommonResponse<Map<String,String>>> me(
+	public ResponseEntity<CommonResponse<Map<String, String>>> me(
 		@Parameter(hidden = true) @AuthenticationPrincipal String nickname) {
 		return ok(Map.of("nickname", nickname));
 	}

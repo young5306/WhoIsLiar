@@ -25,6 +25,28 @@ const GameChat = () => {
     (msg) => msg.chatType !== 'HINT'
   );
 
+  // 시스템 메시지에서 유저 이름 강조 처리하는 함수
+  const highlightUsername = (content: string) => {
+    // "xx님이" 패턴을 찾아서 강조 처리
+    const usernameRegex = /(\S+)님이/;
+    const match = content.match(usernameRegex);
+
+    if (match && match[1]) {
+      const username = match[1];
+      const parts = content.split(username);
+
+      return (
+        <>
+          {parts[0]}
+          <span className="text-white font-bold">{username}</span>
+          {parts[1]}
+        </>
+      );
+    }
+
+    return content;
+  };
+
   // 새 메시지가 올 때마다 스크롤을 맨 아래로 이동 (사용자 스크롤 상태에 따라)
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -164,7 +186,7 @@ const GameChat = () => {
                 {msg.sender === 'SYSTEM' ? (
                   <div className="flex justify-center my-2">
                     <span className="text-purple-400 text-xs font-medium bg-purple-500/10 border border-purple-500/20 px-4 py-1.5 rounded-full shadow-lg">
-                      {msg.content}
+                      {highlightUsername(msg.content)}
                     </span>
                   </div>
                 ) : (

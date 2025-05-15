@@ -6,4 +6,5 @@ public record ChatMessage(
 	String sender,
 	String content,
 	ChatType chatType
-) {}
+) {
+}

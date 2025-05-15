@@ -15,4 +15,5 @@ public record RoundStartRequest(
 	@Schema(description = "라운드 번호", example = "3")
 	@Min(value = 1, message = "라운드 번호는 1 이상이어야 합니다.")
 	int roundNumber
-) {}
+) {
+}

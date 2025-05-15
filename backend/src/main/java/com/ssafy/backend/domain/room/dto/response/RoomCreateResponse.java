@@ -10,4 +10,5 @@ public record RoomCreateResponse(
 	@Schema(description = "방 정보")
 	RoomInfo room
 
-) {}
+) {
+}

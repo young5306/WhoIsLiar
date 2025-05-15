@@ -1,17 +1,30 @@
 package com.ssafy.backend.domain.participant.entity;
 
-import com.ssafy.backend.domain.auth.entity.SessionEntity;
-import com.ssafy.backend.domain.room.entity.Room;
-
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import com.ssafy.backend.domain.auth.entity.SessionEntity;
+import com.ssafy.backend.domain.room.entity.Room;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
@@ -42,20 +55,32 @@ public class Participant {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
+	@Column(name = "ready_status", nullable = false)
+	private Boolean readyStatus;
+
 	@OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ParticipantRound> participantRounds = new ArrayList<>();
 
 	@Builder
-	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt) {
+	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, Boolean readyStatus) {
 		this.session = session;
 		this.room = room;
 		this.isActive = isActive;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.readyStatus = false;
 	}
 
 	public void setActive(boolean b) {
 		this.isActive = b;
 		this.updatedAt = LocalDateTime.now();
+	}
+
+	public Boolean getReadyStatus() {
+		return this.readyStatus;
+	}
+
+	public void setReadyStatus(Boolean readyStatus) {
+		this.readyStatus = readyStatus;
 	}
 }

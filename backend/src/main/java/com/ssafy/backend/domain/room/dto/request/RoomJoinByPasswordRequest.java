@@ -3,7 +3,6 @@ package com.ssafy.backend.domain.room.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 public record RoomJoinByPasswordRequest(
 	@Schema(description = "방 코드", example = "asdf12")
@@ -17,4 +16,5 @@ public record RoomJoinByPasswordRequest(
 		message = "비밀번호는 비워두거나 숫자 4자리여야 합니다."
 	)
 	String password
-) {}
+) {
+}

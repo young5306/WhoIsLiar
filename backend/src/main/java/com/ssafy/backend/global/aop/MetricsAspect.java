@@ -19,7 +19,8 @@ public class MetricsAspect {
 	}
 
 	@Pointcut("execution(* com.ssafy.backend.domain..*(..))")
-	public void domainServiceMethods() {}
+	public void domainServiceMethods() {
+	}
 
 	@Around("domainServiceMethods()")
 	public Object measureExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
