@@ -2,6 +2,7 @@ package com.ssafy.backend.domain.chat.event;
 
 import java.util.List;
 
+import com.ssafy.backend.domain.round.service.RoundService;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -34,6 +35,7 @@ public class DisconnectEventListener {
 	private final ParticipantRepository participantRepository;
 	private final SessionRepository sessionRepository;
 	private final ChatSessionRegistry sessionRegistry;
+	private final RoundService roundService;
 
 	@EventListener
 	public void handleDisconnect(SessionDisconnectEvent event) {
@@ -90,6 +92,7 @@ public class DisconnectEventListener {
 				} else {
 					SessionEntity newHost = remain.get(0).getSession();
 					room.changeHost(newHost);
+					roundService.initReadyStatus(room);
 					roomRepository.save(room);
 				}
 			} else {

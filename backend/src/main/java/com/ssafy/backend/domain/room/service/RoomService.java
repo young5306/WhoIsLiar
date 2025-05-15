@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import com.ssafy.backend.domain.round.service.RoundService;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ public class RoomService {
 	private final SessionRepository sessionRepository;
 	private final ParticipantRepository participantRepository;
 	private final ChatSocketService chatSocketService;
+	private final RoundService roundService;
 
 	// 방을 생성하고 호스트를 참가자로 등록
 	@Transactional
@@ -326,6 +328,7 @@ public class RoomService {
 			} else {
 				SessionEntity newHost = remain.get(0).getSession();
 				room.setSession(newHost);
+				roundService.initReadyStatus(room);
 				room.setUpdatedAt(LocalDateTime.now());
 				roomRepository.save(room);
 			}

@@ -101,14 +101,17 @@ public class RoundService {
 		}
 		roundRepository.deleteAll(rounds);
 		room.finishGame(RoomStatus.waiting);
+		initReadyStatus(room);
 
+		chatSocketService.gameEnded(roomCode);
+	}
+
+	public void initReadyStatus(Room room) {
 		// 모든 참가자의 readyStatus를 false로.
 		List<Participant> participants = participantRepository.findByRoom(room);
 		for (Participant participant : participants) {
 			participant.setReadyStatus(false);
 		}
-
-		chatSocketService.gameEnded(roomCode);
 	}
 
 	@Transactional
