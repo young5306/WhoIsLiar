@@ -227,13 +227,19 @@ public class RoomService {
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		SessionEntity hostSession = room.getSession();
+
 		var participants = participantRepository.findByRoom(room).stream()
-			.map(p -> new ParticipantInfo(
-				p.getId(),
-				p.getSession().getNickname(),
-				p.isActive(),
-				p.getReadyStatus()
-			))
+			.map(p -> {
+				boolean isHost = p.getSession().equals(hostSession);
+				return new ParticipantInfo(
+					p.getId(),
+					p.getSession().getNickname(),
+					p.isActive(),
+					p.getReadyStatus(),
+					isHost
+				);
+			})
 			.collect(Collectors.toList());
 
 		return new ParticipantsListResponse(participants);
@@ -282,13 +288,18 @@ public class RoomService {
 			.build();
 
 		// 2) ParticipantResponse 리스트 생성
+		SessionEntity hostSession = room.getSession();
 		List<ParticipantInfo> parts = participantRepository.findByRoom(room).stream()
-			.map(p -> new ParticipantInfo(
-				p.getId(),
-				p.getSession().getNickname(),
-				p.isActive(),
-			    p.getReadyStatus()
-			))
+			.map(p -> {
+				boolean isHost = p.getSession().equals(hostSession);
+				return new ParticipantInfo(
+					p.getId(),
+					p.getSession().getNickname(),
+					p.isActive(),
+					p.getReadyStatus(),
+					isHost
+				);
+			})
 			.collect(Collectors.toList());
 
 		return new RoomDetailResponse(info, parts);
