@@ -1079,7 +1079,7 @@ const GameRoomPage = () => {
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
-        await setRound(roomCode!);
+        // await setRound(roomCode!);
       }
     } catch (error) {
       console.error('점수 조회 실패:', error);
@@ -1102,6 +1102,10 @@ const GameRoomPage = () => {
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
+        if (myUserName === hostNickname) {
+          await setRound(roomCode!);
+        }
+
         const playerInfoRes = await getPlayerInfo(roomCode!);
         console.log('✅playerInfoRes', playerInfoRes);
         console.log('✅세팅 끝');
@@ -1171,7 +1175,7 @@ const GameRoomPage = () => {
       {session !== undefined && sortedParticipants.length > 0 ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
-            <div className="absolute top-6 right-6 flex items-center gap-3 z-50">
+            <div className="absolute top-6 right-6 flex items-center gap-3 z-100">
               {/* STT 디버깅 버튼 */}
               {/* <button
                 onClick={() => setShowSttDebug(true)}
