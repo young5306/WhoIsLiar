@@ -1,8 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  VoteResultItem,
-  VoteResultResponse,
-} from '../../services/api/GameService';
+import { useEffect, useRef } from 'react';
+import { VoteResultResponse } from '../../services/api/GameService';
 import Timer, { TimerRef } from '../common/Timer';
 
 interface Props {
