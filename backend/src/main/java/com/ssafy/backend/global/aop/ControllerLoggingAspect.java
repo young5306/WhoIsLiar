@@ -27,7 +27,8 @@ public class ControllerLoggingAspect {
 	}
 
 	@Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
-	public void restControllerMethods() {}
+	public void restControllerMethods() {
+	}
 
 	@Around("restControllerMethods()")
 	public Object logController(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -47,7 +48,7 @@ public class ControllerLoggingAspect {
 		logger.info("▷ Controller Method: {}", methodName);
 
 		if (result instanceof ResponseEntity) {
-			ResponseEntity<?> resp = (ResponseEntity<?>) result;
+			ResponseEntity<?> resp = (ResponseEntity<?>)result;
 
 			// 1) 상태 코드
 			logger.info("▷ Response Status: {}", resp.getStatusCode());

@@ -116,8 +116,8 @@ public class GptService {
 	}
 
 	public boolean isSynonym(String mainWord, String guess, String category) {
-		String normMain  = mainWord.replaceAll("\\s+", "").toLowerCase();
-		String normGuess = guess   .replaceAll("\\s+", "").toLowerCase();
+		String normMain = mainWord.replaceAll("\\s+", "").toLowerCase();
+		String normGuess = guess.replaceAll("\\s+", "").toLowerCase();
 
 		String systemPrompt = "당신은 라이어게임 단어 매칭 전문가입니다.";
 		String userPrompt = String.format(
@@ -128,7 +128,7 @@ public class GptService {
 
 		var messages = List.of(
 			Map.of("role", "system", "content", systemPrompt),
-			Map.of("role", "user",   "content", userPrompt)
+			Map.of("role", "user", "content", userPrompt)
 		);
 
 		var requestBody = Map.<String, Object>of(

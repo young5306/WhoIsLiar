@@ -1,7 +1,8 @@
 package com.ssafy.backend.domain.round.dto.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "투표 결과 응답 DTO")
 public record VoteResultsResponseDto(
@@ -32,5 +33,6 @@ public record VoteResultsResponseDto(
 
 		@Schema(description = "투표 수", example = "3")
 		int voteCount
-	) {}
+	) {
+	}
 }

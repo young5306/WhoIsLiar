@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -34,12 +33,12 @@ import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.domain.round.dto.request.EndRoundRequestDto;
 import com.ssafy.backend.domain.round.dto.request.GuessRequestDto;
+import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.request.RoundStartRequest;
 import com.ssafy.backend.domain.round.dto.request.TurnUpdateRequestDto;
 import com.ssafy.backend.domain.round.dto.request.VoteRequestDto;
 import com.ssafy.backend.domain.round.dto.response.GuessResponseDto;
 import com.ssafy.backend.domain.round.dto.response.PlayerRoundInfoResponse;
-import com.ssafy.backend.domain.round.dto.request.RoundSettingRequest;
 import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
@@ -52,9 +51,9 @@ import com.ssafy.backend.domain.round.event.AllVotesCompletedEvent;
 import com.ssafy.backend.domain.round.repository.CategoryWordRepository;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
 import com.ssafy.backend.domain.round.repository.SynonymRepository;
-import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.Category;
 import com.ssafy.backend.global.enums.GameMode;
+import com.ssafy.backend.global.enums.ResponseCode;
 import com.ssafy.backend.global.enums.RoomStatus;
 import com.ssafy.backend.global.enums.RoundStatus;
 import com.ssafy.backend.global.enums.Winner;
@@ -71,6 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RoundService {
 
+	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
 	private final RoomRepository roomRepository;
 	private final ParticipantRepository participantRepository;
 	private final ParticipantRoundRepository participantRoundRepository;
@@ -80,8 +80,6 @@ public class RoundService {
 	private final GptService gptService;
 	private final SessionRepository sessionRepository;
 	private final ChatSocketService chatSocketService;
-
-	private static final ConcurrentMap<Long, Integer> lastNotifiedTurn = new ConcurrentHashMap<>();
 	private final TurnTimerService turnTimerService;
 	private final SynonymRepository synonymRepository;
 
@@ -134,7 +132,7 @@ public class RoundService {
 
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = "";
-		if (gameMode  == GameMode.FOOL) {
+		if (gameMode == GameMode.FOOL) {
 			w2 = gptService.getSimilarWord(w1, actualCategory.name());
 		}
 
@@ -255,7 +253,8 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String myNickname = SecurityUtils.getCurrentNickname();
-		if (myNickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
+		if (myNickname == null)
+			throw new CustomException(ResponseCode.UNAUTHORIZED);
 
 		SessionEntity session = sessionRepository.findByNickname(myNickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
@@ -317,7 +316,7 @@ public class RoundService {
 
 		if (votedActive == totalActive) {
 			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
-			if(prev == null){
+			if (prev == null) {
 				applyVoteScoring(round);
 
 				chatSocketService.voteCompleted(roomCode);
@@ -325,7 +324,7 @@ public class RoundService {
 		}
 	}
 
-	private void applyVoteScoring(Round round){
+	private void applyVoteScoring(Round round) {
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
 
 		Map<Long, Integer> countMap = new HashMap<>();
@@ -373,12 +372,12 @@ public class RoundService {
 				.get().getKey();
 		}
 
-		boolean wrongPicked  = (selectedId != null && selectedId != liarId);
+		boolean wrongPicked = (selectedId != null && selectedId != liarId);
 		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
-		log.info("마지막 턴 확인 로그: {}",round.getTurn());
-		log.info("선택된 id가 있는지 로그로 확인: {}",selectedId);
-		log.info("그렇다면 마지막 스킵이 된 것이므로 : {}",lastTurnSkip);
-		log.info("라이어 id : {}, {}",liarId,liarPR.getParticipant().getSession().getNickname());
+		log.info("마지막 턴 확인 로그: {}", round.getTurn());
+		log.info("선택된 id가 있는지 로그로 확인: {}", selectedId);
+		log.info("그렇다면 마지막 스킵이 된 것이므로 : {}", lastTurnSkip);
+		log.info("라이어 id : {}, {}", liarId, liarPR.getParticipant().getSession().getNickname());
 
 		if (wrongPicked || lastTurnSkip) {
 			liarPR.addScore(100);
@@ -395,7 +394,8 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		String nickname = SecurityUtils.getCurrentNickname();
-		if (nickname == null) throw new CustomException(ResponseCode.UNAUTHORIZED);
+		if (nickname == null)
+			throw new CustomException(ResponseCode.UNAUTHORIZED);
 
 		List<ParticipantRound> allPrList = participantRoundRepository.findByRound(round);
 		List<ParticipantRound> prList = allPrList.stream()
@@ -424,7 +424,6 @@ public class RoundService {
 				pr -> pr.getParticipant().getId(),
 				pr -> pr.getParticipant().getSession().getNickname()
 			));
-
 
 		List<Result> results = countMap.entrySet().stream()
 			.map(e -> new Result(nicknameMap.get(e.getKey()), e.getValue()))
@@ -477,7 +476,7 @@ public class RoundService {
 			skipFlag,
 			selectedId,
 			detected,
-			skipFlag && round.getTurn()!=3 ? null : liarNickname,
+			skipFlag && round.getTurn() != 3 ? null : liarNickname,
 			skipFlag ? null : liarId
 		);
 	}
@@ -493,10 +492,10 @@ public class RoundService {
 
 		String targetWord = switch (room.getGameMode()) {
 			case DEFAULT -> round.getWord1();
-			case FOOL    -> round.getWord2();
+			case FOOL -> round.getWord2();
 		};
 
-		String input  = req.guessText().replaceAll("\\s+", "").toLowerCase();
+		String input = req.guessText().replaceAll("\\s+", "").toLowerCase();
 		String answer = targetWord.replaceAll("\\s+", "").toLowerCase();
 
 		boolean isCorrect = input.equals(answer);
@@ -612,7 +611,7 @@ public class RoundService {
 		roundRepository.save(round);
 
 		lastNotifiedTurn.remove(round.getId());
-		
+
 		return new TurnUpdateResponse(round.getTurn());
 	}
 }

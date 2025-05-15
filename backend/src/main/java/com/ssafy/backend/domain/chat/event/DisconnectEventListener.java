@@ -1,16 +1,12 @@
 package com.ssafy.backend.domain.chat.event;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
@@ -53,16 +49,19 @@ public class DisconnectEventListener {
 			return;
 		}
 
-		String nickname = (String) accessor.getSessionAttributes().get("nickname");
-		String roomCode = (String) accessor.getSessionAttributes().get("roomCode");
+		String nickname = (String)accessor.getSessionAttributes().get("nickname");
+		String roomCode = (String)accessor.getSessionAttributes().get("roomCode");
 
-		if (nickname == null || roomCode == null) return;
+		if (nickname == null || roomCode == null)
+			return;
 
 		log.info("************************************************");
-		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId() ,nickname, roomCode);
+		log.info("[WS DISCONNECT] 끊김 감지 - sessionId: {}, nickname: {}, roomCode: {}", accessor.getSessionId(), nickname,
+			roomCode);
 
 		Room room = roomRepository.findByRoomCodeFetchSession(roomCode).orElse(null);
-		if (room == null) return;
+		if (room == null)
+			return;
 
 		SessionEntity session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
@@ -93,9 +92,9 @@ public class DisconnectEventListener {
 					room.changeHost(newHost);
 					roomRepository.save(room);
 				}
-			}else{
+			} else {
 				int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-				if(activeCount == 0){
+				if (activeCount == 0) {
 					roomRepository.deleteById(room.getId());
 				}
 			}

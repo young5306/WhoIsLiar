@@ -24,7 +24,8 @@ public class Synonym {
 	@JoinColumn(name = "main_word_id", nullable = false)
 	private CategoryWord mainWord;
 
-	protected Synonym() {}
+	protected Synonym() {
+	}
 
 	public Synonym(String synonym, CategoryWord mainWord) {
 		this.synonym = synonym;

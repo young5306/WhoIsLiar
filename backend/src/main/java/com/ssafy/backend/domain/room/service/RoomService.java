@@ -1,5 +1,14 @@
 package com.ssafy.backend.domain.room.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.chat.service.ChatSocketService;
@@ -27,28 +36,18 @@ import com.ssafy.backend.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class RoomService {
 
+	private static final int ROOM_CODE_LENGTH = 6;
+	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	private final RoomRepository roomRepository;
 	private final SessionRepository sessionRepository;
 	private final ParticipantRepository participantRepository;
 	private final ChatSocketService chatSocketService;
-
-	private static final int ROOM_CODE_LENGTH = 6;
-	private static final String ROOM_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 	// 방을 생성하고 호스트를 참가자로 등록
 	@Transactional
@@ -310,27 +309,27 @@ public class RoomService {
 
 		boolean wasHost = room.getSession().equals(session);
 
-		if(room.getRoomStatus()==RoomStatus.playing){
+		if (room.getRoomStatus() == RoomStatus.playing) {
 			participant.setActive(false);
-		}else{
+		} else {
 			participantRepository.deleteById(participant.getId());
 		}
 
-		if(wasHost){
+		if (wasHost) {
 			List<Participant> remain = participantRepository
 				.findByRoomAndIsActiveTrueOrderByCreatedAtAsc(room);
 
-			if(remain.isEmpty()){
+			if (remain.isEmpty()) {
 				roomRepository.deleteById(room.getId());
-			}else{
+			} else {
 				SessionEntity newHost = remain.get(0).getSession();
 				room.setSession(newHost);
 				room.setUpdatedAt(LocalDateTime.now());
 				roomRepository.save(room);
 			}
-		}else{
+		} else {
 			int activeCount = participantRepository.countByRoomAndIsActiveTrue(room);
-			if(activeCount == 0){
+			if (activeCount == 0) {
 				roomRepository.deleteById(room.getId());
 			}
 		}

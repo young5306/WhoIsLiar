@@ -2,6 +2,17 @@ package com.ssafy.backend.domain.room.controller;
 
 import static com.ssafy.backend.global.common.ResponseUtil.*;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ssafy.backend.domain.room.dto.request.GameStartRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomCreateRequest;
 import com.ssafy.backend.domain.room.dto.request.RoomJoinByCodeRequest;
@@ -27,10 +38,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rooms")
@@ -44,15 +51,15 @@ public class RoomController {
 	@Operation(summary = "방 생성", description = "새로운 방을 생성합니다.")
 	@ApiResponses({
 		@ApiResponse(responseCode = "201", description = "생성 성공",
-			content = @Content(schema=@Schema(implementation = RoomCreateResponse.class))),
-		@ApiResponse(responseCode = "400", description = "잘못된 요청", content=@Content),
-		@ApiResponse(responseCode = "401", description = "인증 필요", content=@Content),
-		@ApiResponse(responseCode = "403", description = "권한 없음", content=@Content),
+			content = @Content(schema = @Schema(implementation = RoomCreateResponse.class))),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+		@ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+		@ApiResponse(responseCode = "403", description = "권한 없음", content = @Content),
 		@ApiResponse(responseCode = "409", description = "이미 다른 방에 참여 중이거나 생성한 방이 존재합니다.", content = @Content),
-		@ApiResponse(responseCode = "500", description = "서버 오류", content=@Content)
+		@ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
 	})
 	public ResponseEntity<CommonResponse<RoomCreateResponse>> createRoom(
-		@Parameter(description="방 생성 요청 정보", required=true)
+		@Parameter(description = "방 생성 요청 정보", required = true)
 		@Valid
 		@RequestBody RoomCreateRequest request) {
 		RoomCreateResponse response = roomService.createRoom(request);

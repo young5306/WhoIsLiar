@@ -11,4 +11,5 @@ public record ParticipantInfo(
 
 	@Schema(description = "현재 활성 상태", example = "true")
 	boolean isActive
-) {}
+) {
+}

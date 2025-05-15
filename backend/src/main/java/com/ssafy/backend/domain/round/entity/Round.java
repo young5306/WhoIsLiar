@@ -1,18 +1,35 @@
 package com.ssafy.backend.domain.round.entity;
 
-import com.ssafy.backend.domain.participant.entity.ParticipantRound;
-import com.ssafy.backend.domain.room.entity.Room;
-import com.ssafy.backend.global.enums.RoundStatus;
-import com.ssafy.backend.global.enums.Winner;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import com.ssafy.backend.domain.participant.entity.ParticipantRound;
+import com.ssafy.backend.domain.room.entity.Room;
+import com.ssafy.backend.global.enums.RoundStatus;
+import com.ssafy.backend.global.enums.Winner;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter

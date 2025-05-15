@@ -37,4 +37,5 @@ public record RoomInfo(
 	@Schema(description = "방 상태", example = "waiting")
 	String status
 
-) {}
+) {
+}
