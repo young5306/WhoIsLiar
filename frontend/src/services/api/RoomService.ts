@@ -25,6 +25,7 @@ export interface RoomParticipant {
   participantId: number;
   nickName: string;
   isActive: boolean;
+  // isHost: string;
 }
 
 export interface RoomParticipantsWrapper {

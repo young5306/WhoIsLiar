@@ -542,6 +542,8 @@ const GameRoomPage = () => {
 
     console.log('비활성화 플레이어', inactiveUser);
     updateParticipants(inactiveUser);
+
+    // const hostUserName = roomParticipants.participants.filter((p) => p.isHost).map((p) => p.nickName)
   };
 
   useEffect(() => {
