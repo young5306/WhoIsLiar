@@ -1444,7 +1444,6 @@ const GameRoomPage = () => {
           </div>
         </>
       ) : null}
-
       {/* 투표 진행 화면 */}
       <div
         id="vote-overlay" // 마우스 위치 조정을 위한 ID
@@ -1456,7 +1455,6 @@ const GameRoomPage = () => {
           pointerEvents: 'none',
         }}
       />
-
       {/* 투표 결과 모달(voteResultModal) */}
       {showVoteResultModal && voteResult && (
         <VoteResultModal
@@ -1481,7 +1479,6 @@ const GameRoomPage = () => {
           }}
         />
       )}
-
       {/* 투표결과모달(voteResultModal) 후 로직 */}
       {/* 1) SkipModal */}
       {showSkipModal && voteResult && (
@@ -1509,7 +1506,6 @@ const GameRoomPage = () => {
           }}
         />
       )}
-
       {/* 2) LiarFoundModal */}
       {showLiarFoundModal && voteResult && (
         <LiarFoundModal
@@ -1537,7 +1533,6 @@ const GameRoomPage = () => {
           }
         />
       )}
-
       {/* 3) LiarNotFoundModal */}
       {showLiarNotFoundModal && voteResult && (
         <LiarNotFoundModal
@@ -1565,32 +1560,102 @@ const GameRoomPage = () => {
           }}
         />
       )}
-
       {/* 라이어가 추측한 제시어 표시 모달 */}
       {showGuessedWord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-white border-2 border-primary-600 text-gray-800 p-10 rounded-2xl text-center shadow-2xl max-w-xl w-full mx-4 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-600 via-blue-500 to-primary-600"></div>
             {guessedWord ? (
               <>
-                <p className="text-4xl font-bold mb-2">
-                  {isCorrect ? '정답' : '오답'}
+                <div className="flex justify-center mb-6">
+                  {isCorrect ? (
+                    <div className="bg-green-100 border-2 border-green-500 rounded-full p-6 animate-pulse shadow-lg shadow-green-500/20">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="80"
+                        height="80"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 border-2 border-red-500 rounded-full p-6 animate-pulse shadow-lg shadow-red-500/20">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="80"
+                        height="80"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <p className="display-medium mb-4 text-5xl font-bold">
+                  <span
+                    className={isCorrect ? 'text-green-600' : 'text-red-600'}
+                  >
+                    {isCorrect ? '정답!' : '오답!'}
+                  </span>
                 </p>
-                <p className="text-2xl font-bold mb-2">
+                <p className="headline-medium mb-6 text-gray-700">
                   라이어가 제시어로 제출한 단어는
                 </p>
-                <p className="text-4xl font-extrabold text-red-600">
-                  {guessedWord}
-                </p>
+                <div className="bg-gray-100 py-5 px-8 rounded-lg border border-primary-600/30 mb-4">
+                  <p className="display-small text-4xl font-extrabold text-primary-600 tracking-wider">
+                    {guessedWord}
+                  </p>
+                </div>
               </>
             ) : (
-              <p className="text-2xl font-bold text-red-600">
-                라이어가 제시어를 제출하지 못했습니다!
-              </p>
+              <>
+                <div className="flex justify-center mb-6">
+                  <div className="bg-yellow-100 border-2 border-yellow-500 rounded-full p-6 animate-pulse shadow-lg shadow-yellow-500/20">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#eab308"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                  </div>
+                </div>
+                <p className="display-medium mb-6 text-5xl text-yellow-600 font-bold">
+                  제한 시간 초과!
+                </p>
+                <p className="headline-medium text-red-600 max-w-lg mx-auto">
+                  라이어가 제시어를 제출하지 못했습니다!
+                </p>
+              </>
             )}
+            <div className="mt-8 text-sm text-gray-500 animate-pulse">
+              결과 화면은 잠시 후 자동으로 닫힙니다...
+            </div>
           </div>
         </div>
       )}
-
       {/* 점수 모달 */}
       {/* 
         점수 모달 열 때(fetchAndShowScore) 라운드 종료(endRound), 다음 roundNumber 갱신(setRound)
@@ -1607,14 +1672,12 @@ const GameRoomPage = () => {
           />
         </>
       )}
-
       {/* STT 디버깅 모달 */}
       {/* <SttDebugModal
         isOpen={showSttDebug}
         onClose={() => setShowSttDebug(false)}
         debugInfo={debugInfo}
       /> */}
-
       {/* 게임 시작 카운트다운 모달 */}
       <GameStartCountdownModal
         isOpen={showGameStartModal}
