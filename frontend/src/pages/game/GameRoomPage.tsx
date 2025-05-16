@@ -1263,7 +1263,7 @@ const GameRoomPage = () => {
                     ${isVoting ? 'cursor-pointer' : ''}
                     ${
                       sub.nickname === speakingPlayer
-                        ? 'ring-4 ring-point-neon rounded'
+                        ? 'ring-4 ring-point-neon rounded animate-glow'
                         : ''
                     }`}
                   >
