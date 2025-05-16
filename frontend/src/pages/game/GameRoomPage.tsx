@@ -1539,7 +1539,7 @@ const GameRoomPage = () => {
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
           liarNickname={voteResult.liarNickname}
-          onNext={async () => {
+          onNext={
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
             // setShowLiarNotFoundModal(false);
             // await fetchAndShowScore();
@@ -1556,8 +1556,8 @@ const GameRoomPage = () => {
                 }
               }
               setShowLiarNotFoundModal(false);
-            };
-          }}
+            }
+          }
         />
       )}
       {/* 라이어가 추측한 제시어 표시 모달 */}
