@@ -44,6 +44,7 @@ import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
+import com.ssafy.backend.domain.round.dto.response.WordResponseDto;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.entity.Synonym;
@@ -642,5 +643,20 @@ public class RoundService {
 			.collect(Collectors.toList());
 
 		return new ScoresResponseDto(entries);
+	}
+
+	@Transactional(readOnly = true)
+	public WordResponseDto getCurrentRoundWords(String roomCode) {
+		// 1) 방 객체 조회
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 2) 최신 라운드 조회
+		Round latestRound = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 3) DTO 리턴
+		return new WordResponseDto(latestRound.getWord1(), latestRound.getWord2());
 	}
 }
