@@ -1540,6 +1540,9 @@ const GameRoomPage = () => {
           <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
             {guessedWord ? (
               <>
+                <p className="text-4xl font-bold mb-2">
+                  {isCorrect ? '정답' : '오답'}
+                </p>
                 <p className="text-2xl font-bold mb-2">
                   라이어가 제시어로 제출한 단어는
                 </p>

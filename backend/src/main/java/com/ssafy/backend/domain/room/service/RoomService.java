@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.ssafy.backend.domain.round.service.RoundService;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
@@ -36,6 +37,8 @@ import com.ssafy.backend.global.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -382,36 +385,9 @@ public class RoomService {
 	// 그리고 room의 참가인원 -1 만큼 ready_status의 true 개수가 된다면, 참가자 전원 준비완료
 	// 이때 host에게 chatType == "ROOM_READY_STATUS"를 true로 반환.
 
-	public void gameReady(String roomCode) {
-		Room room = roomRepository.findByRoomCode(roomCode)
-			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-
-		String nickName = SecurityUtils.getCurrentNickname();
-
-		Participant participant = participantRepository
-				.findByRoomCodeAndNickname(roomCode, nickName)
-				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-
-		participant.setReadyStatus(!participant.getReadyStatus()); // 누른애의 레디 상태
-
-		chatSocketService.sendReadyStatus(roomCode, nickName, participant.getReadyStatus()); // 레디하면 누른애들한테 소켓
-
-		long readyCount = participantRepository.countByRoom_RoomCodeAndReadyStatusTrue(roomCode); // 몇 명이 준비함
-
-		int totalParticipants = participantRepository.countByRoom(room); // 현재 입장한 사람 수
-
-		// host에게만 알림
-		if (readyCount == totalParticipants - 1) {
-			chatSocketService.sendRoomReadyStatus(roomCode, true);
-		}else {
-			chatSocketService.sendRoomReadyStatus(roomCode, false);
-		}
-	}
-
-//	@Transactional(propagation = Propagation.REQUIRES_NEW)
 //	public void gameReady(String roomCode) {
 //		Room room = roomRepository.findByRoomCode(roomCode)
-//				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+//			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 //
 //		String nickName = SecurityUtils.getCurrentNickname();
 //
@@ -419,27 +395,54 @@ public class RoomService {
 //				.findByRoomCodeAndNickname(roomCode, nickName)
 //				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 //
-//		// 상태 토글
-//		participant.setReadyStatus(!participant.getReadyStatus());
+//		participant.setReadyStatus(!participant.getReadyStatus()); // 누른애의 레디 상태
 //
-//		// 변경된 상태 저장
-//		participantRepository.save(participant);
+//		chatSocketService.sendReadyStatus(roomCode, nickName, participant.getReadyStatus()); // 레디하면 누른애들한테 소켓
 //
-//		// afterCommit 콜백으로 지연 실행
-//		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-//			@Override
-//			public void afterCommit() {
-//				// 1. 레디를 누른 유저의 본인 레디 상태 웹소켓 전송
-//				chatSocketService.sendReadyStatus(roomCode, nickName, participant.getReadyStatus());
+//		long readyCount = participantRepository.countByRoom_RoomCodeAndReadyStatusTrue(roomCode); // 몇 명이 준비함
 //
-//				// 2. 레디 인원 수 계산 및 방장에게 전체 준비 여부 전송
-//				long readyCount = participantRepository.countByRoom_RoomCodeAndReadyStatusTrue(roomCode);
-//				int totalParticipants = participantRepository.countByRoom(room);
+//		int totalParticipants = participantRepository.countByRoom(room); // 현재 입장한 사람 수
 //
-//				boolean allReadyExceptHost = (readyCount == totalParticipants - 1);
-//				chatSocketService.sendRoomReadyStatus(roomCode, allReadyExceptHost);
-//			}
-//		});
+//		// host에게만 알림
+//		if (readyCount == totalParticipants - 1) {
+//			chatSocketService.sendRoomReadyStatus(roomCode, true);
+//		}else {
+//			chatSocketService.sendRoomReadyStatus(roomCode, false);
+//		}
 //	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void gameReady(String roomCode) {
+		Room room = roomRepository.findByRoomCode(roomCode)
+				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		String nickName = SecurityUtils.getCurrentNickname();
+
+		Participant participant = participantRepository
+				.findByRoomCodeAndNickname(roomCode, nickName)
+				.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 상태 토글
+		participant.setReadyStatus(!participant.getReadyStatus());
+
+		// 변경된 상태 저장
+		participantRepository.save(participant);
+
+		// afterCommit 콜백으로 지연 실행
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				// 1. 레디를 누른 유저의 본인 레디 상태 웹소켓 전송
+				chatSocketService.sendReadyStatus(roomCode, nickName, participant.getReadyStatus());
+
+				// 2. 레디 인원 수 계산 및 방장에게 전체 준비 여부 전송
+				long readyCount = participantRepository.countByRoom_RoomCodeAndReadyStatusTrue(roomCode);
+				int totalParticipants = participantRepository.countByRoom(room);
+
+				boolean allReadyExceptHost = (readyCount == totalParticipants - 1);
+				chatSocketService.sendRoomReadyStatus(roomCode, allReadyExceptHost);
+			}
+		});
+	}
 
 }
