@@ -1543,7 +1543,7 @@ const GameRoomPage = () => {
         <LiarNotFoundModal
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
-          liarNickName={voteResult.liarNickname}
+          liarNickname={voteResult.liarNickname}
           onNext={async () => {
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
             // setShowLiarNotFoundModal(false);
