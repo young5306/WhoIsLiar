@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.entity.ParticipantRound;
-import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.round.entity.Round;
 
 public interface ParticipantRoundRepository extends JpaRepository<ParticipantRound, Long> {
@@ -34,15 +33,7 @@ public interface ParticipantRoundRepository extends JpaRepository<ParticipantRou
 	@Query("UPDATE ParticipantRound pr SET pr.hasVoted = false WHERE pr.round = :round")
 	void resetHasVotedByRound(@Param("round") Round round);
 
-	long countByRound(Round round);
-
-	long countByRoundAndHasVotedTrue(Round round);
-
 	long countByRoundAndParticipantIsActiveTrue(Round round);
 
 	long countByRoundAndHasVotedTrueAndParticipantIsActiveTrue(Round round);
-
-	@Modifying(clearAutomatically = true)
-	@Query("DELETE FROM ParticipantRound pr WHERE pr.round.room = :room")
-	void deleteByRoom(@Param("room") Room room);
 }

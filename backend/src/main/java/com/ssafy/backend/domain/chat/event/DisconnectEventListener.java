@@ -2,8 +2,6 @@ package com.ssafy.backend.domain.chat.event;
 
 import java.util.List;
 
-import com.ssafy.backend.domain.chat.service.ChatSocketService;
-import com.ssafy.backend.domain.round.service.RoundService;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -14,6 +12,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import com.ssafy.backend.domain.auth.entity.SessionEntity;
 import com.ssafy.backend.domain.auth.repository.SessionRepository;
 import com.ssafy.backend.domain.chat.dto.ChatMessage;
+import com.ssafy.backend.domain.chat.service.ChatSocketService;
 import com.ssafy.backend.domain.participant.entity.Participant;
 import com.ssafy.backend.domain.participant.repository.ParticipantRepository;
 import com.ssafy.backend.domain.participant.repository.ParticipantRoundRepository;
@@ -21,6 +20,7 @@ import com.ssafy.backend.domain.room.entity.Room;
 import com.ssafy.backend.domain.room.repository.RoomRepository;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.repository.RoundRepository;
+import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.domain.round.service.TurnTimerService;
 import com.ssafy.backend.global.enums.ChatType;
 import com.ssafy.backend.global.enums.ResponseCode;
@@ -55,7 +55,7 @@ public class DisconnectEventListener {
 		}
 
 		String sessionId = accessor.getSessionId();
-		// 2) 구독된 적 없는 세션이면 무시 (unregister 하면 true)
+
 		if (!sessionRegistry.unregister(sessionId)) {
 			return;
 		}
@@ -81,7 +81,6 @@ public class DisconnectEventListener {
 
 		Participant participant = participantRepository.findByRoomAndSession(room, session).orElse(null);
 		if (participant != null) {
-			// participantRepository.delete(participant);
 			log.info("[WS GameMessage] {}님이 퇴장하셨습니다.", nickname);
 
 			if (room.getRoomStatus() == RoomStatus.waiting) {

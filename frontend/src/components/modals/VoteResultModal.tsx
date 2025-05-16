@@ -18,7 +18,7 @@ const VoteResultModal = ({
   const modalTimerRef = useRef<TimerRef>(null);
 
   useEffect(() => {
-    modalTimerRef?.current?.startTimer(3);
+    modalTimerRef?.current?.startTimer(5);
   }, []);
 
   return (
