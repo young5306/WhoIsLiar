@@ -1246,13 +1246,13 @@ const WaitingRoomContent = (): JSX.Element => {
                 <button
                   key={category.id}
                   onClick={() => handleCategorySelect(category.id)}
-                  className={`text-center text-base cursor-pointer transition-all duration-200
+                  className={`text-center text-base  transition-all duration-200
                     ${
                       category.id === displayCategory
                         ? 'text-rose-500 font-bold scale-105 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
                         : isHost
-                          ? 'text-gray-300 hover:text-white hover:scale-105 hover:bg-gray-700/50 px-3 py-1.5 rounded-lg'
-                          : 'text-gray-500 cursor-not-allowed'
+                          ? 'text-gray-300 cursor-pointer hover:text-white hover:scale-105 hover:bg-gray-700/50 px-3 py-1.5 rounded-lg'
+                          : 'text-gray-500'
                     }
                   `}
                 >
