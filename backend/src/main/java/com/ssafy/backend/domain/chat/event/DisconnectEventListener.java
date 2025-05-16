@@ -102,6 +102,8 @@ public class DisconnectEventListener {
 							if (pr.isLiar()) {
 								chatSocketService.sendLiarDisconnect(roomCode, nickname);
 								turnTimerService.cancelTurnSequence(roomCode);
+								chatSocketService.roundFullyEnded(roomCode);
+								return;
 							}
 							if (pr.getId().equals(state.getCurrentParticipantRoundId())) {
 								log.info("[WS TURN] 발언 중 참가자 퇴장 -> 즉시 endTurn 호출");
