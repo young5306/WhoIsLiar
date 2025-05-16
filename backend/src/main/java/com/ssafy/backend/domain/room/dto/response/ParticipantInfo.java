@@ -18,4 +18,5 @@ public record ParticipantInfo(
 	@Schema(description = "호스트 여부", example = "false")
 	boolean isHost
 
-) {}
+) {
+}

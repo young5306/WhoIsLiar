@@ -13,11 +13,10 @@ import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
-@Order(1)  // 컨트롤러 로깅(@Order(0)) 다음에 실행되게 하려면 이 값을 조정하세요.
+@Order(1)
 public class ServiceTimeAspect {
 	private static final Logger logger = LoggerFactory.getLogger(ServiceTimeAspect.class);
 
-	// com.ssafy.backend.domain 패키지 하위의 *Service 클래스 전부
 	@Pointcut("within(com.ssafy.backend.domain..*Service)")
 	public void serviceLayer() {
 	}
@@ -26,7 +25,6 @@ public class ServiceTimeAspect {
 	public void excludeValidate() {
 	}
 
-	// @Around("serviceLayer()")
 	@Around("serviceLayer() && !excludeValidate()")
 	public Object logService(ProceedingJoinPoint joinPoint) throws Throwable {
 		String className = joinPoint.getSignature().getDeclaringType().getSimpleName();

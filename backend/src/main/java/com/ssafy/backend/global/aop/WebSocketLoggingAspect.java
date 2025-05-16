@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Aspect
 @Component
-@Order(0)  // ControllerLoggingAspect 이후, ServiceTimeAspect 이전 순서
+@Order(0)
 public class WebSocketLoggingAspect {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebSocketLoggingAspect.class);
@@ -33,7 +33,6 @@ public class WebSocketLoggingAspect {
 		String sig = joinPoint.getSignature().toShortString();
 		Object[] args = joinPoint.getArgs();
 
-		// ● WS REQUEST
 		if (args != null && args.length > 0) {
 			try {
 				String payload = objectMapper.writeValueAsString(args[0]);
@@ -45,10 +44,8 @@ public class WebSocketLoggingAspect {
 			logger.info("[WS REQUEST]  {} ▶ no payload", sig);
 		}
 
-		// 실제 핸들러 실행
 		Object result = joinPoint.proceed();
 
-		// ● WS RESPONSE
 		if (result != null) {
 			try {
 				String json = objectMapper.writeValueAsString(result);

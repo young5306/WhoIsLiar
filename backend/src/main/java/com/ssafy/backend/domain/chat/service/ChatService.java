@@ -30,19 +30,15 @@ public class ChatService {
 
 	@Transactional
 	public void summarizeAndSave(ChatSummaryRequestDto request) {
-		// 1) 현재 로그인 사용자 조회
 		String nickname = SecurityUtils.getCurrentNickname();
 		var session = sessionRepository.findByNickname(nickname)
 			.orElseThrow(() -> new CustomException(ResponseCode.UNAUTHORIZED));
 
-		// 2) 사용자가 활성 상태(isActive=true)인 방 참가 정보 조회
 		Participant participant = participantRepository.findBySessionAndActive(session)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		// 3) GPT로 요약 생성
 		String summary = gptService.getSummary(request.getSpeech());
 
-		// 4) Chat 엔티티로 저장
 		Chat chat = Chat.builder()
 			.room(participant.getRoom())
 			.sender(session)

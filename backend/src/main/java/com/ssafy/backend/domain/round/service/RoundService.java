@@ -306,7 +306,6 @@ public class RoundService {
 			@Override
 			public void afterCommit() {
 				log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
-				// checkAndNotifyVoteCompleted(roomCode, round.getId());
 				eventPublisher.publishEvent(new AllVotesCompletedEvent(roomCode, round.getId()));
 			}
 		});
@@ -393,10 +392,6 @@ public class RoundService {
 
 		boolean wrongPicked = (selectedId != null && selectedId != liarId);
 		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
-		log.info("마지막 턴 확인 로그: {}", round.getTurn());
-		log.info("선택된 id가 있는지 로그로 확인: {}", selectedId);
-		log.info("그렇다면 마지막 스킵이 된 것이므로 : {}", lastTurnSkip);
-		log.info("라이어 id : {}, {}", liarId, liarPR.getParticipant().getSession().getNickname());
 
 		if (wrongPicked || lastTurnSkip) {
 			liarPR.addScore(100);
@@ -571,9 +566,6 @@ public class RoundService {
 		return String.format("%s! %s님이 %s(을)를 제출했습니다.", resultText, nickname, guessText);
 	}
 
-	/**
-	 * 방별 누적 점수 조회
-	 */
 	@Transactional(readOnly = true)
 	public ScoresResponseDto getScores(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
