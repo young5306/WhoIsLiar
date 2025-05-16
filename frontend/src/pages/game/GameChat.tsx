@@ -27,8 +27,8 @@ const GameChat = () => {
 
   // 시스템 메시지에서 유저 이름 강조 처리하는 함수
   const highlightUsername = (content: string) => {
-    // "xx님이" 패턴을 찾아서 강조 처리
-    const usernameRegex = /(\S+)님이/;
+    // "xx님이" 또는 "xx님의" 패턴을 찾아서 강조 처리
+    const usernameRegex = /(\S+)님[이|의]/;
     const match = content.match(usernameRegex);
 
     if (match && match[1]) {
@@ -181,44 +181,46 @@ const GameChat = () => {
             ref={chatContainerRef}
             className="absolute inset-0 space-y-1 overflow-y-auto pr-1 custom-scrollbar"
           >
-            {filteredMessages.map((msg, index) => (
-              <div key={index} className="flex flex-col">
-                {msg.sender === 'SYSTEM' ? (
-                  <div className="flex justify-center my-2">
-                    <span className="text-purple-400 text-xs font-medium bg-purple-500/10 border border-purple-500/20 px-4 py-1.5 rounded-full shadow-lg">
-                      {highlightUsername(msg.content)}
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    <div
-                      className={`flex flex-col ${msg.sender === userInfo?.nickname ? 'items-end' : 'items-start'} mb-1`}
-                    >
-                      <span
-                        className={`text-[10px] text-gray-400 mb-0.5 ${
-                          msg.sender === userInfo?.nickname
-                            ? 'text-green-400'
-                            : ''
-                        }`}
-                      >
-                        {msg.sender}
+            {filteredMessages
+              .filter((msg) => msg.chatType !== 'ROUND_SET')
+              .map((msg, index) => (
+                <div key={index} className="flex flex-col">
+                  {msg.sender === 'SYSTEM' ? (
+                    <div className="flex justify-center my-2">
+                      <span className="text-purple-400 text-xs font-medium bg-purple-500/10 border border-purple-500/20 px-4 py-1.5 rounded-full shadow-lg">
+                        {highlightUsername(msg.content)}
                       </span>
-                      <div
-                        className={`px-3 py-1.5 rounded-2xl max-w-[85%] ${
-                          msg.sender === userInfo?.nickname
-                            ? 'bg-green-500/20 text-green-500'
-                            : 'bg-gray-700/50 text-white'
-                        }`}
-                      >
-                        <span className="text-sm break-words">
-                          {msg.content}
-                        </span>
-                      </div>
                     </div>
-                  </>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <>
+                      <div
+                        className={`flex flex-col ${msg.sender === userInfo?.nickname ? 'items-end' : 'items-start'} mb-1`}
+                      >
+                        <span
+                          className={`text-[10px] text-gray-400 mb-0.5 ${
+                            msg.sender === userInfo?.nickname
+                              ? 'text-green-400'
+                              : ''
+                          }`}
+                        >
+                          {msg.sender}
+                        </span>
+                        <div
+                          className={`px-3 py-1.5 rounded-2xl max-w-[85%] ${
+                            msg.sender === userInfo?.nickname
+                              ? 'bg-green-500/20 text-green-500'
+                              : 'bg-gray-700/50 text-white'
+                          }`}
+                        >
+                          <span className="text-sm break-words">
+                            {msg.content}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
           </div>
 
           {/* 새 메시지 알림 */}

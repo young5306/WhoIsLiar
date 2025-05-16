@@ -101,6 +101,7 @@ public class DisconnectEventListener {
 							// **라이어 퇴장**: 별도 WS 알림
 							if (pr.isLiar()) {
 								chatSocketService.sendLiarDisconnect(roomCode, nickname);
+								turnTimerService.cancelTurnSequence(roomCode);
 							}
 							if (pr.getId().equals(state.getCurrentParticipantRoundId())) {
 								log.info("[WS TURN] 발언 중 참가자 퇴장 -> 즉시 endTurn 호출");

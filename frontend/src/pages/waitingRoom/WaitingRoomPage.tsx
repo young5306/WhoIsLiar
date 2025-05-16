@@ -359,7 +359,20 @@ const WaitingRoomContent = (): JSX.Element => {
         const newSubscription = stompClient.subscribe(
           `/topic/room.${contextRoomCode}`,
           async (frame) => {
-            const message = JSON.parse(frame.body);
+            // JSON 파싱 시도, 실패할 경우 원본 문자열 사용
+            let message;
+            try {
+              message = JSON.parse(frame.body);
+            } catch (error) {
+              console.log('JSON 파싱 실패, 원본 사용:', frame.body);
+              // 단순 문자열인 경우 content 필드에 원본 값 설정
+              message = {
+                chatType: 'SIMPLE_MESSAGE',
+                content: frame.body,
+                sender: 'System',
+              };
+            }
+
             // 채팅 메시지를 전역 상태에 추가
             addChatMessage(message);
             // 중복 메시지 체크
@@ -395,8 +408,18 @@ const WaitingRoomContent = (): JSX.Element => {
 
               // 방장에게만 상태 변화 알림 표시
               if (isHost) {
-                if (newReadyStatus) {
-                  console.log('🟢 방이 게임 시작 가능 상태로 변경됨');
+                // 인원 조건 (3명 이상)도 함께 확인
+                const hasEnoughPlayers =
+                  roomData &&
+                  roomData.participants &&
+                  roomData.participants.length >= 3;
+
+                if (newReadyStatus && hasEnoughPlayers) {
+                  console.log(
+                    '🟢 방이 게임 시작 가능 상태로 변경됨 (인원: ' +
+                      (roomData?.participants?.length || 0) +
+                      '명)'
+                  );
                   if (!isRoomReady) {
                     // 상태가 변경될 때만 알림
                     notify({
@@ -406,11 +429,26 @@ const WaitingRoomContent = (): JSX.Element => {
                   }
                 } else {
                   console.log('🔴 방이 게임 시작 불가능 상태로 변경됨');
+                  if (!newReadyStatus) {
+                    console.log('- 이유: 준비되지 않은 플레이어 있음');
+                  }
+                  if (!hasEnoughPlayers) {
+                    console.log(
+                      '- 이유: 플레이어 수 부족 (현재: ' +
+                        (roomData?.participants?.length || 0) +
+                        '명, 필요: 3명 이상)'
+                    );
+                  }
+
                   if (isRoomReady) {
                     // 상태가 변경될 때만 알림
+                    const reason = !newReadyStatus
+                      ? '준비되지 않은 플레이어가 있습니다.'
+                      : '플레이어가 3명 이상 필요합니다.';
+
                     notify({
                       type: 'warning',
-                      text: '준비되지 않은 플레이어가 있습니다. 게임을 시작할 수 없습니다.',
+                      text: `게임을 시작할 수 없습니다. ${reason}`,
                     });
                   }
                 }
@@ -497,7 +535,19 @@ const WaitingRoomContent = (): JSX.Element => {
         const newEmotionSubscription = stompClient.subscribe(
           `/topic/room.${contextRoomCode}.emotion`,
           (frame) => {
-            const message = JSON.parse(frame.body);
+            // JSON 파싱 시도, 실패할 경우 원본 문자열 사용
+            let message;
+            try {
+              message = JSON.parse(frame.body);
+            } catch (error) {
+              console.log('JSON 파싱 실패, 원본 사용:', frame.body);
+              // 단순 문자열인 경우 content 필드에 원본 값 설정
+              message = {
+                chatType: 'SIMPLE_MESSAGE',
+                content: frame.body,
+                sender: 'System',
+              };
+            }
             // emotion 메시지 처리 로직 추가
             addEmotionLog(message);
             // console.log('Emotion message received:', message);
@@ -1126,25 +1176,59 @@ const WaitingRoomContent = (): JSX.Element => {
                 onClick={() => setIsConfirmModalOpen(true)}
               />{' '}
               {isHost ? (
-                <GameButton
-                  text="게임시작"
-                  size="small"
-                  onClick={handleStartGame}
-                  disabled={
-                    !isRoomReady ||
+                <div className="relative group">
+                  {' '}
+                  <GameButton
+                    text="게임시작"
+                    size="small"
+                    onClick={handleStartGame}
+                    disabled={
+                      !isRoomReady ||
+                      !roomData ||
+                      !roomData.participants ||
+                      roomData.participants.length < 3
+                    }
+                    variant={
+                      isRoomReady &&
+                      roomData &&
+                      roomData.participants &&
+                      roomData.participants.length >= 3
+                        ? 'default'
+                        : 'gray'
+                    }
+                  />{' '}
+                  {/* 버튼이 비활성화된 경우에만 표시되는 툴팁 */}{' '}
+                  {(!isRoomReady ||
                     !roomData ||
                     !roomData.participants ||
-                    roomData.participants.length < 2
-                  }
-                  variant={
-                    isRoomReady &&
-                    roomData &&
-                    roomData.participants &&
-                    roomData.participants.length >= 2
-                      ? 'default'
-                      : 'gray'
-                  }
-                />
+                    roomData.participants.length < 3) && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-3 py-2 bg-black/80 text-white text-xs rounded-lg shadow-lg invisible group-hover:visible transition-opacity opacity-0 group-hover:opacity-100 z-10">
+                      {' '}
+                      {roomData &&
+                      roomData.participants &&
+                      roomData.participants.length < 3 ? (
+                        <div className="flex flex-col items-center">
+                          {' '}
+                          <span className="whitespace-nowrap">
+                            인원이 부족합니다!
+                          </span>{' '}
+                          <span className="whitespace-nowrap">
+                            최소 3명 이상 필요 (현재:{' '}
+                            {roomData.participants.length}명)
+                          </span>{' '}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          {' '}
+                          <span className="whitespace-nowrap">
+                            모든 플레이어가 준비되어야 합니다!
+                          </span>{' '}
+                        </div>
+                      )}{' '}
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 rotate-45 bg-black/80"></div>{' '}
+                    </div>
+                  )}{' '}
+                </div>
               ) : (
                 <GameButton
                   text={isUserReady ? '준비완료' : '게임준비'}
@@ -1162,13 +1246,13 @@ const WaitingRoomContent = (): JSX.Element => {
                 <button
                   key={category.id}
                   onClick={() => handleCategorySelect(category.id)}
-                  className={`text-center text-base cursor-pointer transition-all duration-200
+                  className={`text-center text-base  transition-all duration-200
                     ${
                       category.id === displayCategory
                         ? 'text-rose-500 font-bold scale-105 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg [text-shadow:_2px_2px_4px_rgba(0,0,0,0.25)]'
                         : isHost
-                          ? 'text-gray-300 hover:text-white hover:scale-105 hover:bg-gray-700/50 px-3 py-1.5 rounded-lg'
-                          : 'text-gray-500 cursor-not-allowed'
+                          ? 'text-gray-300 cursor-pointer hover:text-white hover:scale-105 hover:bg-gray-700/50 px-3 py-1.5 rounded-lg'
+                          : 'text-gray-500'
                     }
                   `}
                 >

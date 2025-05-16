@@ -927,8 +927,6 @@ const GameRoomPage = () => {
       const word = match?.[1] || null;
       console.log('guess submitted: ', word);
 
-      setShowLiarFoundModal(false);
-
       console.log('💡라이어가 추측한 제시어', word);
       setGuessedWord(word);
       setShowGuessedWord(true);
@@ -1060,7 +1058,9 @@ const GameRoomPage = () => {
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
-        // await setRound(roomCode!);
+        if (roundNumber < totalRoundNumber) {
+          await setRound(roomCode!);
+        }
       }
     } catch (error) {
       console.error('점수 조회 실패:', error);
@@ -1083,10 +1083,6 @@ const GameRoomPage = () => {
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
-        if (myUserName === hostNickname) {
-          await setRound(roomCode!);
-        }
-
         const playerInfoRes = await getPlayerInfo(roomCode!);
         console.log('✅playerInfoRes', playerInfoRes);
         console.log('✅세팅 끝');
@@ -1261,11 +1257,7 @@ const GameRoomPage = () => {
                     onClick={() => isVoting && handleSelectTarget(sub.nickname)}
                     className={`relative ${getParticipantPosition(position!, subscribers.length)} 
                     ${isVoting ? 'cursor-pointer' : ''}
-                    ${
-                      sub.nickname === speakingPlayer
-                        ? 'ring-4 ring-point-neon rounded'
-                        : ''
-                    }`}
+                    ${sub.nickname === speakingPlayer ? 'rounded animate-glow' : ''}`}
                   >
                     {/* 선택된 타겟에 과녁 이미지 */}
                     {selectedTargetNickname === sub.nickname && (
@@ -1326,6 +1318,26 @@ const GameRoomPage = () => {
                         />
                       </div>
                     </div>
+                    {/* 👉 발언자 표시 포인팅 이모지 */}
+                    {sub.nickname === speakingPlayer && (
+                      <>
+                        {position === 2 || position === 5 ? (
+                          <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
+                            <img
+                              src="assets/point-purple-right.png"
+                              className="w-[100px]"
+                            />
+                          </div>
+                        ) : (
+                          <div className="animate-bounce-x-left absolute bottom-15 right-[-290px] z-60">
+                            <img
+                              src="assets/point-purple-left.png"
+                              className="w-[100px]"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 );
               })}
@@ -1335,11 +1347,7 @@ const GameRoomPage = () => {
                 onClick={() => isVoting && handleSelectTarget(myUserName)}
                 className={`relative ${myPosition} 
                 ${isVoting ? 'cursor-pointer' : ''}
-                ${
-                  myUserName === speakingPlayer
-                    ? 'ring-4 ring-point-neon rounded'
-                    : ''
-                }`}
+                ${myUserName === speakingPlayer ? 'animate-glow' : ''}`}
               >
                 {selectedTargetNickname === myUserName && (
                   <img
@@ -1407,6 +1415,15 @@ const GameRoomPage = () => {
                     </>
                   )}
                 </div>
+                {/* 👉 발언자 표시 포인팅 이모지 */}
+                {myUserName === speakingPlayer && (
+                  <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
+                    <img
+                      src="assets/point-purple-right.png"
+                      className="w-[100px]"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1515,6 +1532,7 @@ const GameRoomPage = () => {
                   notify({ type: 'error', text: msg });
                 }
               }
+              setShowLiarFoundModal(false);
             }
           }
         />
@@ -1528,8 +1546,22 @@ const GameRoomPage = () => {
           liarNickName={voteResult.liarNickname}
           onNext={async () => {
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
-            setShowLiarNotFoundModal(false);
-            await fetchAndShowScore();
+            // setShowLiarNotFoundModal(false);
+            // await fetchAndShowScore();
+            async (word: string) => {
+              if (myUserName === voteResult.liarNickname) {
+                try {
+                  console.log('라이어가 입력한 제시어: ', word);
+                  await submitWordGuess(roomCode!, roundNumber, word);
+                } catch (err: any) {
+                  const msg =
+                    err?.response?.data?.message ||
+                    '제시어 제출에 실패했습니다.';
+                  notify({ type: 'error', text: msg });
+                }
+              }
+              setShowLiarNotFoundModal(false);
+            };
           }}
         />
       )}
@@ -1540,6 +1572,9 @@ const GameRoomPage = () => {
           <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
             {guessedWord ? (
               <>
+                <p className="text-4xl font-bold mb-2">
+                  {isCorrect ? '정답' : '오답'}
+                </p>
                 <p className="text-2xl font-bold mb-2">
                   라이어가 제시어로 제출한 단어는
                 </p>

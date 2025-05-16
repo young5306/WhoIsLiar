@@ -189,3 +189,53 @@
 .animate-spin-once-counter {
   animation: spin-once-counter 0.5s ease-in-out;
 }
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 6px var(--color-point-neon),
+      0 0 12px var(--color-point-neon);
+  }
+  50% {
+    box-shadow:
+      0 0 15px var(--color-point-neon),
+      0 0 30px var(--color-point-neon);
+  }
+}
+
+.animate-glow {
+  animation: glow 1.2s ease-in-out infinite;
+}
+
+@keyframes bounce-horizontal-right {
+  0%,
+  100% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateX(25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-x-right {
+  animation: bounce-horizontal-right 1s infinite;
+}
+
+@keyframes bounce-horizontal-left {
+  0%,
+  100% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateX(-25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-x-left {
+  animation: bounce-horizontal-left 1s infinite;
+}
