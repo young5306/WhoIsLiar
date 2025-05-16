@@ -25,12 +25,14 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
     },
   };
 
+const defaultStyle = {
+  imageUrl: '/bgImages/mainBg.svg',
+  backgroundColor: 'bg-[#211926]',
+};
+
 const Layout = () => {
   const location = useLocation();
-  const pageStyle = bgImages[location.pathname] || {
-    imageUrl: '',
-    backgroundColor: '',
-  };
+  const pageStyle = bgImages[location.pathname] || defaultStyle;
 
   return (
     <div
