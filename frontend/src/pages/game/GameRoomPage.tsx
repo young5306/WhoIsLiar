@@ -54,6 +54,7 @@ import ScoreModal from '../../components/modals/ScoreModal';
 import { MicOff, VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
+import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
 import { notify } from '../../components/common/Toast';
 import { useMessageStore } from '../../stores/useMessageStore';
@@ -449,7 +450,6 @@ const GameRoomPage = () => {
 
     clearRoomCode();
     outGameRoom();
-    // navigation('/room-list');
     setIsInGame(false);
   }, [
     session,
@@ -523,48 +523,6 @@ const GameRoomPage = () => {
       setIsVideoEnabled(newVideoState);
     }
   };
-
-  // 플레이어가 중간에 퇴장하는 경우 감지
-  const updateParticipants = (inactivaUser: string[]) => {
-    console.log('현재 참가자 리스트', participants);
-    const updateParticipants = participants.filter(
-      (p) => !inactivaUser.includes(p.participantNickname)
-    );
-
-    console.log('업데이트 플레이어 정보', updateParticipants);
-    setParticipants(updateParticipants);
-  };
-
-  const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
-    const inactiveUser = roomParticipants.participants
-      .filter((p) => !p.isActive)
-      .map((p) => p.nickName);
-
-    console.log('비활성화 플레이어', inactiveUser);
-    updateParticipants(inactiveUser);
-  };
-
-  useEffect(() => {
-    if (leaveMessageReceive) {
-      console.log('플레이어가 퇴장했습니다. GameInfo 다시 받아오기');
-      const newPlayerInfo = async () => {
-        try {
-          const roomParticipants = await getRoomParticipants(roomCode!);
-          console.log('✅newRoomParticipants', roomParticipants);
-          if (roomParticipants && roomParticipants.participants) {
-            inactiveNickNames(roomParticipants);
-          } else {
-            console.error('참가자 정보가 유효하지 않습니다.');
-          }
-        } catch (err) {
-          console.error('플레이어 정보갱신 오류', err);
-        } finally {
-          leaveMessageState(false);
-        }
-      };
-      newPlayerInfo();
-    }
-  }, [leaveMessageReceive]);
 
   const getParticipantPosition = (
     index: number,
@@ -689,6 +647,7 @@ const GameRoomPage = () => {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showLiarFoundModal, setShowLiarFoundModal] = useState(false);
   const [showLiarNotFoundModal, setShowLiarNotFoundModal] = useState(false);
+  const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -696,6 +655,60 @@ const GameRoomPage = () => {
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+
+  // 플레이어가 중간에 퇴장하는 경우 감지
+  const updateParticipants = (inactivaUser: string[]) => {
+    console.log('현재 참가자 리스트', participants);
+    const updateParticipants = participants.filter(
+      (p) => !inactivaUser.includes(p.participantNickname)
+    );
+
+    console.log('업데이트 플레이어 정보', updateParticipants);
+    setParticipants(updateParticipants);
+  };
+
+  const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
+    const inactiveUser = roomParticipants.participants
+      .filter((p) => !p.isActive)
+      .map((p) => p.nickName);
+
+    console.log('비활성화 플레이어', inactiveUser);
+    updateParticipants(inactiveUser);
+
+    const hostUserName = roomParticipants.participants
+      .filter((p) => p.isHost)
+      .map((p) => p.nickName);
+    console.log('방장 플레이어', hostUserName);
+    setHostNickname(hostUserName[0] ?? '');
+  };
+
+  // 방장 플레이어 변경 확인
+  useEffect(() => {
+    console.log('방장 플레이어 이름 출력', hostNickname);
+  }, [hostNickname]);
+
+  // 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
+  useEffect(() => {
+    if (leaveMessageReceive) {
+      console.log('플레이어가 퇴장했습니다. roomPlayerInfo 다시 받아오기');
+      const newPlayerInfo = async () => {
+        try {
+          const roomParticipants = await getRoomParticipants(roomCode!);
+          console.log('✅newRoomParticipants', roomParticipants);
+          if (roomParticipants && roomParticipants.participants) {
+            inactiveNickNames(roomParticipants);
+          } else {
+            console.error('참가자 정보가 유효하지 않습니다.');
+          }
+        } catch (err) {
+          console.error('플레이어 정보갱신 오류', err);
+        } finally {
+          leaveMessageState(false);
+        }
+      };
+      newPlayerInfo();
+    }
+  }, [leaveMessageReceive]);
 
   // 참가자 관련 (참가자 순서 지정)
   const [participants, setParticipants] = useState<
@@ -916,6 +929,7 @@ const GameRoomPage = () => {
           setShowVoteResultModal(true);
         } catch (error) {
           console.error('투표 결과 조회 실패:', error);
+          console.log('투표 결과 조회 실패시 (호스트)', hostNickname);
         }
       })();
     }
@@ -927,8 +941,6 @@ const GameRoomPage = () => {
       const word = match?.[1] || null;
       console.log('guess submitted: ', word);
 
-      setShowLiarFoundModal(false);
-
       console.log('💡라이어가 추측한 제시어', word);
       setGuessedWord(word);
       setShowGuessedWord(true);
@@ -937,6 +949,13 @@ const GameRoomPage = () => {
         setShowGuessedWord(false);
         await fetchAndShowScore();
       }, 2000);
+    }
+
+    if (latest.chatType === 'LIAR_DISCONNECT') {
+      if (latest) {
+        console.log(`${latest.chatType} 메시지 수신:`, latest);
+        setShowLiarLeaveModal(true);
+      }
     }
   }, [chatMessages, myUserName, publisher]);
 
@@ -1066,6 +1085,23 @@ const GameRoomPage = () => {
       }
     } catch (error) {
       console.error('점수 조회 실패:', error);
+    }
+  };
+
+  // 점수 조회 및 모달 표시
+  const onlyFetchGameInfo = async () => {
+    try {
+      console.log('현재 라운드 끝', roundNumber);
+      console.log('현재 호스트', hostNickname);
+      setCurrentTurn(1); // 초기화
+      if (myUserName === hostNickname) {
+        await endRound(roomCode!, roundNumber);
+        if (roundNumber < totalRoundNumber) {
+          await setRound(roomCode!);
+        }
+      }
+    } catch (error) {
+      console.error('GameInfo fetch 실패:', error);
     }
   };
 
@@ -1259,11 +1295,7 @@ const GameRoomPage = () => {
                     onClick={() => isVoting && handleSelectTarget(sub.nickname)}
                     className={`relative ${getParticipantPosition(position!, subscribers.length)} 
                     ${isVoting ? 'cursor-pointer' : ''}
-                    ${
-                      sub.nickname === speakingPlayer
-                        ? 'ring-4 ring-point-neon rounded animate-glow'
-                        : ''
-                    }`}
+                    ${sub.nickname === speakingPlayer ? 'rounded animate-glow' : ''}`}
                   >
                     {/* 선택된 타겟에 과녁 이미지 */}
                     {selectedTargetNickname === sub.nickname && (
@@ -1324,6 +1356,26 @@ const GameRoomPage = () => {
                         />
                       </div>
                     </div>
+                    {/* 👉 발언자 표시 포인팅 이모지 */}
+                    {sub.nickname === speakingPlayer && (
+                      <>
+                        {position === 2 || position === 5 ? (
+                          <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
+                            <img
+                              src="assets/point-purple-right.png"
+                              className="w-[100px]"
+                            />
+                          </div>
+                        ) : (
+                          <div className="animate-bounce-x-left absolute bottom-15 right-[-290px] z-60">
+                            <img
+                              src="assets/point-purple-left.png"
+                              className="w-[100px]"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 );
               })}
@@ -1333,11 +1385,7 @@ const GameRoomPage = () => {
                 onClick={() => isVoting && handleSelectTarget(myUserName)}
                 className={`relative ${myPosition} 
                 ${isVoting ? 'cursor-pointer' : ''}
-                ${
-                  myUserName === speakingPlayer
-                    ? 'ring-4 ring-point-neon rounded'
-                    : ''
-                }`}
+                ${myUserName === speakingPlayer ? 'animate-glow' : ''}`}
               >
                 {selectedTargetNickname === myUserName && (
                   <img
@@ -1405,6 +1453,15 @@ const GameRoomPage = () => {
                     </>
                   )}
                 </div>
+                {/* 👉 발언자 표시 포인팅 이모지 */}
+                {myUserName === speakingPlayer && (
+                  <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
+                    <img
+                      src="assets/point-purple-right.png"
+                      className="w-[100px]"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1425,7 +1482,6 @@ const GameRoomPage = () => {
           </div>
         </>
       ) : null}
-
       {/* 투표 진행 화면 */}
       <div
         id="vote-overlay" // 마우스 위치 조정을 위한 ID
@@ -1437,7 +1493,6 @@ const GameRoomPage = () => {
           pointerEvents: 'none',
         }}
       />
-
       {/* 투표 결과 모달(voteResultModal) */}
       {showVoteResultModal && voteResult && (
         <VoteResultModal
@@ -1462,7 +1517,6 @@ const GameRoomPage = () => {
           }}
         />
       )}
-
       {/* 투표결과모달(voteResultModal) 후 로직 */}
       {/* 1) SkipModal */}
       {showSkipModal && voteResult && (
@@ -1490,7 +1544,6 @@ const GameRoomPage = () => {
           }}
         />
       )}
-
       {/* 2) LiarFoundModal */}
       {showLiarFoundModal && voteResult && (
         <LiarFoundModal
@@ -1513,47 +1566,147 @@ const GameRoomPage = () => {
                   notify({ type: 'error', text: msg });
                 }
               }
+              setShowLiarFoundModal(false);
             }
           }
         />
       )}
-
       {/* 3) LiarNotFoundModal */}
       {showLiarNotFoundModal && voteResult && (
         <LiarNotFoundModal
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
-          liarNickName={voteResult.liarNickname}
-          onNext={async () => {
+          liarNickname={voteResult.liarNickname}
+          onNext={
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
-            setShowLiarNotFoundModal(false);
-            await fetchAndShowScore();
+            // setShowLiarNotFoundModal(false);
+            // await fetchAndShowScore();
+            async (word: string) => {
+              if (myUserName === voteResult.liarNickname) {
+                try {
+                  console.log('라이어가 입력한 제시어: ', word);
+                  await submitWordGuess(roomCode!, roundNumber, word);
+                } catch (err: any) {
+                  const msg =
+                    err?.response?.data?.message ||
+                    '제시어 제출에 실패했습니다.';
+                  notify({ type: 'error', text: msg });
+                }
+              }
+              setShowLiarNotFoundModal(false);
+            }
+          }
+        />
+      )}
+
+      {/* 4) LiarLeaveModal */}
+      {showLiarLeaveModal && (
+        <LiarLeaveModal
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          onNext={async () => {
+            setShowLiarLeaveModal(false);
+            await onlyFetchGameInfo();
           }}
         />
       )}
 
       {/* 라이어가 추측한 제시어 표시 모달 */}
       {showGuessedWord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-white text-black p-8 rounded-lg text-center shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-white border-2 border-primary-600 text-gray-800 p-10 rounded-2xl text-center shadow-2xl max-w-xl w-full mx-4 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-600 via-blue-500 to-primary-600"></div>
             {guessedWord ? (
               <>
-                <p className="text-2xl font-bold mb-2">
+                <div className="flex justify-center mb-6">
+                  {isCorrect ? (
+                    <div className="bg-green-100 border-2 border-green-500 rounded-full p-6 animate-pulse shadow-lg shadow-green-500/20">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="80"
+                        height="80"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 border-2 border-red-500 rounded-full p-6 animate-pulse shadow-lg shadow-red-500/20">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="80"
+                        height="80"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <p className="display-medium mb-4 text-5xl font-bold">
+                  <span
+                    className={isCorrect ? 'text-green-600' : 'text-red-600'}
+                  >
+                    {isCorrect ? '정답!' : '오답!'}
+                  </span>
+                </p>
+                <p className="headline-medium mb-6 text-gray-700">
                   라이어가 제시어로 제출한 단어는
                 </p>
-                <p className="text-4xl font-extrabold text-red-600">
-                  {guessedWord}
-                </p>
+                <div className="bg-gray-100 py-5 px-8 rounded-lg border border-primary-600/30 mb-4">
+                  <p className="display-small text-4xl font-extrabold text-primary-600 tracking-wider">
+                    {guessedWord}
+                  </p>
+                </div>
               </>
             ) : (
-              <p className="text-2xl font-bold text-red-600">
-                라이어가 제시어를 제출하지 못했습니다!
-              </p>
+              <>
+                <div className="flex justify-center mb-6">
+                  <div className="bg-yellow-100 border-2 border-yellow-500 rounded-full p-6 animate-pulse shadow-lg shadow-yellow-500/20">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#eab308"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                  </div>
+                </div>
+                <p className="display-medium mb-6 text-5xl text-yellow-600 font-bold">
+                  제한 시간 초과!
+                </p>
+                <p className="headline-medium text-red-600 max-w-lg mx-auto">
+                  라이어가 제시어를 제출하지 못했습니다!
+                </p>
+              </>
             )}
+            <div className="mt-8 text-sm text-gray-500 animate-pulse">
+              결과 화면은 잠시 후 자동으로 닫힙니다...
+            </div>
           </div>
         </div>
       )}
-
       {/* 점수 모달 */}
       {/* 
         점수 모달 열 때(fetchAndShowScore) 라운드 종료(endRound), 다음 roundNumber 갱신(setRound)
@@ -1570,14 +1723,12 @@ const GameRoomPage = () => {
           />
         </>
       )}
-
       {/* STT 디버깅 모달 */}
       {/* <SttDebugModal
         isOpen={showSttDebug}
         onClose={() => setShowSttDebug(false)}
         debugInfo={debugInfo}
       /> */}
-
       {/* 게임 시작 카운트다운 모달 */}
       <GameStartCountdownModal
         isOpen={showGameStartModal}

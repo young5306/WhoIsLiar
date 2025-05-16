@@ -43,8 +43,4 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	long countByRoom_RoomCodeAndReadyStatusTrue(String roomCode);
 
 	List<Participant> findByRoomAndIsActiveFalse(Room room);
-
-	@Modifying
-	@Query("DELETE FROM Participant p WHERE p.room = :room")
-	void deleteByRoom(@Param("room") Room room);
 }

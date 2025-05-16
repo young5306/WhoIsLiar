@@ -70,9 +70,11 @@ public class OpenViduService {
 			Session session = openVidu.getActiveSession(roomCode);
 			boolean needNewSession = (session == null);
 
-			// 세션 객체는 있지만, 실제 OpenVidu 서버에선 존재하지 않을 수 있음
-			// 참가자가 모두 나가면 OpenVidu는 알아서 세션 정리
-			// getActiveSession은 참가자가 모두 나간 경우에도 존재한다고 뜸
+			/**
+			 * 세션 객체는 있지만, 실제 OpenVidu 서버에선 존재하지 않을 수 있음
+			 * 참가자가 모두 나가면 OpenVidu는 알아서 세션 정리
+			 * getActiveSession은 참가자가 모두 나간 경우에도 존재한다고 뜸
+			 */
 			if (!needNewSession && !sessionExists(roomCode)) {
 				needNewSession = true;
 			}
@@ -133,8 +135,10 @@ public class OpenViduService {
 		);
 	}
 
-	// openVidu.fetch() 메서드로 OpenVidu 내 세션이 존재하는지 확인가능 하지만 모든 세션 조회
-	// REST API로 해당 sessionId에 대한 OpenVidu 세션 활성화 여부 판단
+	/**
+	 * openVidu.fetch() 메서드로 OpenVidu 내 세션이 존재하는지 확인가능 하지만 모든 세션 조회
+	 * REST API로 해당 sessionId에 대한 OpenVidu 세션 활성화 여부 판단
+	 */
 	private boolean sessionExists(String sessionId) {
 		try {
 			HttpClient client = HttpClientBuilder.create().build();

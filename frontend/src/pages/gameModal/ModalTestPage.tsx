@@ -5,6 +5,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import { VoteResultResponse } from '../../services/api/GameService';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
+import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 
 const dummyVoteResult: VoteResultResponse = {
@@ -51,6 +52,10 @@ const ModalTestPage = () => {
         <GameButton
           text="Liar Not Found Modal"
           onClick={() => setOpenModal('new-liar-not-found')}
+        />
+        <GameButton
+          text="Liar Leave Modal"
+          onClick={() => setOpenModal('new-liar-leave')}
         />
         <GameButton
           text="Skip Modal"
@@ -100,7 +105,15 @@ const ModalTestPage = () => {
         <LiarNotFoundModal
           roundNumber={2}
           totalRoundNumber={3}
-          liarNickName="홍길동"
+          liarNickname="홍길동"
+          onNext={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === 'new-liar-leave' && (
+        <LiarLeaveModal
+          roundNumber={2}
+          totalRoundNumber={3}
           onNext={() => setOpenModal(null)}
         />
       )}
