@@ -26,6 +26,7 @@ import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
+import com.ssafy.backend.domain.round.dto.response.WordResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.domain.round.service.TurnTimerService;
 import com.ssafy.backend.global.common.CommonResponse;
@@ -283,6 +284,21 @@ public class RoundController {
 		String roomCode
 	) {
 		ScoresResponseDto dto = roundService.getCurrentRoundScores(roomCode);
+		return ok(dto);
+	}
+
+	@Operation(
+		summary = "현재(최신) 라운드 단어 조회",
+		description = "해당 방(roomCode)에 속한 가장 최신 라운드의 word1, word2를 반환합니다."
+	)
+	@ApiResponse(responseCode = "200", description = "조회 성공")
+	@GetMapping("/{roomCode}/words/current")
+	public ResponseEntity<CommonResponse<WordResponseDto>> getCurrentRoundWords(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode
+	) {
+		WordResponseDto dto = roundService.getCurrentRoundWords(roomCode);
 		return ok(dto);
 	}
 }
