@@ -29,7 +29,7 @@ const EmotionLog = ({ emotion, isLogReady }: EmotionLogProps) => {
       const time = new Date().toLocaleTimeString(); // 현재 시간
       const log = `[${time}] ${
         EMOTION_STYLE[emotionResult.topEmotion.emotion].emoji
-      } ${EMOTION_STYLE[emotionResult.topEmotion.emotion].label}`;
+      }${EMOTION_STYLE[emotionResult.topEmotion.emotion].label}`;
 
       // 중복 방지 및 강조 처리
       setEmotionLog((prev) => {
@@ -82,7 +82,7 @@ const EmotionLog = ({ emotion, isLogReady }: EmotionLogProps) => {
   return (
     <>
       <div className="w-[190px]"></div>
-      <div className="max-h-[170px] min-h-[160px] w-[162px] min-w-[152px] rounded-xl px-2 py-1 bg-[#320000] text-red-600 flex justify-center">
+      <div className="max-h-[170px] min-h-[160px] w-[168px] min-w-[168px] rounded-xl p-1 bg-[#320000] text-red-600 flex justify-center">
         {!isLogReady ? (
           <p className="flex justify-center items-center">👀 Loading...</p>
         ) : (
@@ -124,8 +124,8 @@ const EmotionLog = ({ emotion, isLogReady }: EmotionLogProps) => {
                   </div>
                 )}
               </div>
-              <div className="w-full max-h-[70px] min-h-[70px] min-w-[136px] rounded-xl py-2 px-1 bg-white border">
-                <div className="w-full max-h-[50px] rounded-xl px-[6px] py-1 bg-white overflow-y-auto">
+              <div className="w-full max-h-[76px] min-h-[76px] min-w-[142px] rounded-xl p-1 bg-white border">
+                <div className="w-full max-h-[64px] rounded-xl p-1 bg-white overflow-y-auto">
                   {emotionLog.length === 0 ? (
                     <p className="text-xs text-gray-500">기록 없음</p>
                   ) : (
