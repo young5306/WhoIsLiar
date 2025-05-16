@@ -54,6 +54,7 @@ import ScoreModal from '../../components/modals/ScoreModal';
 import { MicOff, VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
+import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
 import { notify } from '../../components/common/Toast';
 import { useMessageStore } from '../../stores/useMessageStore';
@@ -449,7 +450,6 @@ const GameRoomPage = () => {
 
     clearRoomCode();
     outGameRoom();
-    // navigation('/room-list');
     setIsInGame(false);
   }, [
     session,
@@ -523,54 +523,6 @@ const GameRoomPage = () => {
       setIsVideoEnabled(newVideoState);
     }
   };
-
-  // 플레이어가 중간에 퇴장하는 경우 감지
-  const updateParticipants = (inactivaUser: string[]) => {
-    console.log('현재 참가자 리스트', participants);
-    const updateParticipants = participants.filter(
-      (p) => !inactivaUser.includes(p.participantNickname)
-    );
-
-    console.log('업데이트 플레이어 정보', updateParticipants);
-    setParticipants(updateParticipants);
-  };
-
-  const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
-    const inactiveUser = roomParticipants.participants
-      .filter((p) => !p.isActive)
-      .map((p) => p.nickName);
-
-    console.log('비활성화 플레이어', inactiveUser);
-    updateParticipants(inactiveUser);
-
-    const hostUserName = roomParticipants.participants
-      .filter((p) => p.isHost)
-      .map((p) => p.nickName);
-    console.log('방장 플레이어', hostUserName);
-    setHostNickname(hostUserName[0] ?? '');
-  };
-
-  useEffect(() => {
-    if (leaveMessageReceive) {
-      console.log('플레이어가 퇴장했습니다. GameInfo 다시 받아오기');
-      const newPlayerInfo = async () => {
-        try {
-          const roomParticipants = await getRoomParticipants(roomCode!);
-          console.log('✅newRoomParticipants', roomParticipants);
-          if (roomParticipants && roomParticipants.participants) {
-            inactiveNickNames(roomParticipants);
-          } else {
-            console.error('참가자 정보가 유효하지 않습니다.');
-          }
-        } catch (err) {
-          console.error('플레이어 정보갱신 오류', err);
-        } finally {
-          leaveMessageState(false);
-        }
-      };
-      newPlayerInfo();
-    }
-  }, [leaveMessageReceive]);
 
   const getParticipantPosition = (
     index: number,
@@ -695,6 +647,7 @@ const GameRoomPage = () => {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showLiarFoundModal, setShowLiarFoundModal] = useState(false);
   const [showLiarNotFoundModal, setShowLiarNotFoundModal] = useState(false);
+  const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -703,10 +656,59 @@ const GameRoomPage = () => {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  // 플레이어가 중간에 퇴장하는 경우 감지
+  const updateParticipants = (inactivaUser: string[]) => {
+    console.log('현재 참가자 리스트', participants);
+    const updateParticipants = participants.filter(
+      (p) => !inactivaUser.includes(p.participantNickname)
+    );
+
+    console.log('업데이트 플레이어 정보', updateParticipants);
+    setParticipants(updateParticipants);
+  };
+
+  const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
+    const inactiveUser = roomParticipants.participants
+      .filter((p) => !p.isActive)
+      .map((p) => p.nickName);
+
+    console.log('비활성화 플레이어', inactiveUser);
+    updateParticipants(inactiveUser);
+
+    const hostUserName = roomParticipants.participants
+      .filter((p) => p.isHost)
+      .map((p) => p.nickName);
+    console.log('방장 플레이어', hostUserName);
+    setHostNickname(hostUserName[0] ?? '');
+  };
+
   // 방장 플레이어 변경 확인
   useEffect(() => {
     console.log('방장 플레이어 이름 출력', hostNickname);
   }, [hostNickname]);
+
+  // 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
+  useEffect(() => {
+    if (leaveMessageReceive) {
+      console.log('플레이어가 퇴장했습니다. roomPlayerInfo 다시 받아오기');
+      const newPlayerInfo = async () => {
+        try {
+          const roomParticipants = await getRoomParticipants(roomCode!);
+          console.log('✅newRoomParticipants', roomParticipants);
+          if (roomParticipants && roomParticipants.participants) {
+            inactiveNickNames(roomParticipants);
+          } else {
+            console.error('참가자 정보가 유효하지 않습니다.');
+          }
+        } catch (err) {
+          console.error('플레이어 정보갱신 오류', err);
+        } finally {
+          leaveMessageState(false);
+        }
+      };
+      newPlayerInfo();
+    }
+  }, [leaveMessageReceive]);
 
   // 참가자 관련 (참가자 순서 지정)
   const [participants, setParticipants] = useState<
@@ -954,8 +956,7 @@ const GameRoomPage = () => {
     if (latest.chatType === 'LIAR_DISCONNECT') {
       if (latest) {
         console.log(`${latest.chatType} 메시지 수신:`, latest);
-        // 라이어 퇴장 시, 해당 라운드 종료 연결하기
-        // 모달? -> 점수판 연결
+        setShowLiarLeaveModal(true);
       }
     }
   }, [chatMessages, myUserName, publisher]);
@@ -1074,6 +1075,24 @@ const GameRoomPage = () => {
     try {
       const result = await getScores(roomCode!);
       setScoreData(result);
+      setShowScoreModal(true);
+
+      console.log('현재 라운드 끝', roundNumber);
+      setCurrentTurn(1); // 초기화
+      if (myUserName === hostNickname) {
+        await endRound(roomCode!, roundNumber);
+        if (roundNumber < totalRoundNumber) {
+          await setRound(roomCode!);
+        }
+      }
+    } catch (error) {
+      console.error('점수 조회 실패:', error);
+    }
+  };
+
+  // 점수 조회 및 모달 표시
+  const onlyFetchGameInfo = async () => {
+    try {
       setShowScoreModal(true);
 
       console.log('현재 라운드 끝', roundNumber);
@@ -1548,6 +1567,18 @@ const GameRoomPage = () => {
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
             setShowLiarNotFoundModal(false);
             await fetchAndShowScore();
+          }}
+        />
+      )}
+
+      {/* 4) LiarLeaveModal */}
+      {showLiarLeaveModal && (
+        <LiarLeaveModal
+          roundNumber={roundNumber}
+          totalRoundNumber={totalRoundNumber}
+          onNext={async () => {
+            setShowLiarLeaveModal(false);
+            await onlyFetchGameInfo();
           }}
         />
       )}
