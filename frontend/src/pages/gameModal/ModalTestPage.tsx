@@ -23,12 +23,21 @@ const dummyVoteResult: VoteResultResponse = {
 };
 
 const dummyScores = [
-  { participantNickname: 'user_01', totalScore: 45 },
-  { participantNickname: 'user_02', totalScore: 30 },
-  { participantNickname: 'user_03', totalScore: 20 },
-  { participantNickname: 'user_04', totalScore: 45 },
-  { participantNickname: 'user_05', totalScore: 30 },
-  { participantNickname: 'user_06', totalScore: 20 },
+  { participantNickname: 'user_01', score: 45 },
+  { participantNickname: 'user_02', score: 30 },
+  { participantNickname: 'user_03', score: 20 },
+  { participantNickname: 'user_04', score: 45 },
+  { participantNickname: 'user_05', score: 30 },
+  { participantNickname: 'user_06', score: 20 },
+];
+
+const dummyRoundScores = [
+  { participantNickname: 'user_01', score: 10 },
+  { participantNickname: 'user_02', score: 20 },
+  { participantNickname: 'user_03', score: 0 },
+  { participantNickname: 'user_04', score: -10 },
+  { participantNickname: 'user_05', score: 0 },
+  { participantNickname: 'user_06', score: -20 },
 ];
 
 const ModalTestPage = () => {
@@ -131,6 +140,7 @@ const ModalTestPage = () => {
         <ScoreModal
           type="liar-win"
           scores={dummyScores}
+          roundScores={dummyRoundScores}
           roundNumber={2}
           totalRoundNumber={5}
           onNext={() => setOpenModal(null)}
@@ -140,6 +150,7 @@ const ModalTestPage = () => {
         <ScoreModal
           type="civilian-win"
           scores={dummyScores}
+          roundScores={dummyRoundScores}
           roundNumber={2}
           totalRoundNumber={5}
           onNext={() => setOpenModal(null)}
@@ -149,6 +160,7 @@ const ModalTestPage = () => {
         <ScoreModal
           type="final-score"
           scores={dummyScores}
+          roundScores={dummyRoundScores}
           roundNumber={5}
           totalRoundNumber={5}
           onNext={() => setOpenModal(null)}

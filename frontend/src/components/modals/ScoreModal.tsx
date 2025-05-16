@@ -6,7 +6,8 @@ interface ScoreModalProps {
   type: 'liar-win' | 'civilian-win' | 'final-score';
   roundNumber: number;
   totalRoundNumber: number;
-  scores: ScoreResponse['scores'];
+  scores: ScoreResponse['scores']; // 누적 점수
+  roundScores?: ScoreResponse['scores']; // 라운드 점수
   onNext: () => void;
 }
 
@@ -23,6 +24,7 @@ const ScoreModal = ({
   roundNumber,
   totalRoundNumber,
   scores,
+  roundScores = [],
   onNext,
 }: ScoreModalProps) => {
   const titleImage = titleImageMap[type];
@@ -31,6 +33,11 @@ const ScoreModal = ({
   useEffect(() => {
     modalTimerRef?.current?.startTimer(10);
   }, []);
+
+  const getRoundScore = (nickname: string) => {
+    const found = roundScores.find((r) => r.participantNickname === nickname);
+    return found?.score ?? 0;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
@@ -70,7 +77,18 @@ const ScoreModal = ({
                   />
                   <span>{s.participantNickname}</span>
                 </div>
-                <span>{s.totalScore}점</span>
+                <div className="flex items-center gap-4 text-sm">
+                  {/* 라운드 점수 표시 */}
+                  {getRoundScore(s.participantNickname) !== 0 && (
+                    <span className="text-yellow-200 animate-fade-up">
+                      {getRoundScore(s.participantNickname) > 0
+                        ? `+${getRoundScore(s.participantNickname)}점`
+                        : `${getRoundScore(s.participantNickname)}점`}
+                    </span>
+                  )}
+                  {/* 누적 점수 표시 */}
+                  <span className="text-gray-0">{s.score}점</span>
+                </div>
               </div>
             </li>
           ))}

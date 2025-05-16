@@ -56,7 +56,7 @@ export interface WordGuessResponse {
 
 export interface ScoreItem {
   participantNickname: string;
-  totalScore: number;
+  score: number;
 }
 
 export interface ScoreResponse {
@@ -169,6 +169,14 @@ export const submitWordGuess = async (
   const res = await api.post(`/rounds/${roomCode}/${roundNumber}/guess`, {
     guessText,
   });
+  return res.data.data;
+};
+
+// 라운드별 점수 조회
+export const getRoundScores = async (
+  roomCode: string
+): Promise<ScoreResponse> => {
+  const res = await api.get(`/rounds/${roomCode}/score/current`);
   return res.data.data;
 };
 

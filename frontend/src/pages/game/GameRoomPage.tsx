@@ -27,6 +27,7 @@ import {
   endRound,
   setRound,
   submitWordGuess,
+  getRoundScores,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -652,6 +653,9 @@ const GameRoomPage = () => {
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
   // 점수 관련
+  const [roundScoreData, setRoundScoreData] = useState<ScoreResponse | null>(
+    null
+  );
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -1071,8 +1075,13 @@ const GameRoomPage = () => {
   // 점수 조회 및 모달 표시
   const fetchAndShowScore = async () => {
     try {
-      const result = await getScores(roomCode!);
-      setScoreData(result);
+      const [roundResult, totalResult] = await Promise.all([
+        getRoundScores(roomCode!),
+        getScores(roomCode!),
+      ]);
+
+      setRoundScoreData(roundResult);
+      setScoreData(totalResult);
       setShowScoreModal(true);
 
       console.log('현재 라운드 끝', roundNumber);
@@ -1719,6 +1728,7 @@ const GameRoomPage = () => {
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             scores={scoreData.scores}
+            roundScores={roundScoreData?.scores}
             onNext={handleScoreTimeEnd}
           />
         </>
