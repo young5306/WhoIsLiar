@@ -36,7 +36,7 @@ const ScoreModal = ({
 
   const getRoundScore = (nickname: string) => {
     const found = roundScores.find((r) => r.participantNickname === nickname);
-    return found?.score ?? 0;
+    return found?.totalScore ?? 0;
   };
 
   return (
@@ -87,7 +87,7 @@ const ScoreModal = ({
                     </span>
                   )}
                   {/* 누적 점수 표시 */}
-                  <span className="text-gray-0">{s.score}점</span>
+                  <span className="text-gray-0">{s.totalScore}점</span>
                 </div>
               </div>
             </li>

@@ -56,7 +56,7 @@ export interface WordGuessResponse {
 
 export interface ScoreItem {
   participantNickname: string;
-  score: number;
+  totalScore: number;
 }
 
 export interface ScoreResponse {
