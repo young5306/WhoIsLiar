@@ -470,23 +470,23 @@ const GameRoomPage = () => {
     leaveSession();
   }, [leaveSession]);
 
-  // // 새로고침 이벤트 처리 (room-list 이동)
-  // useEffect(() => {
-  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  // 새로고침 이벤트 처리 (room-list 이동)
+  useEffect(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
-  //   return () => {
-  //     // 컴포넌트 언마운트 시 플래그 제거
-  //     window.removeEventListener('beforeunload', handleBeforeUnload);
-  //     setIsInGame(false);
-  //   };
-  // }, [handleBeforeUnload]);
+    return () => {
+      // 컴포넌트 언마운트 시 플래그 제거
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      setIsInGame(false);
+    };
+  }, [handleBeforeUnload]);
 
-  // // 새로고침 후 감지 및 redirect
-  // useEffect(() => {
-  //   if (!isInGame) {
-  //     navigation('/room-list');
-  //   }
-  // }, []);
+  // 새로고침 후 감지 및 redirect
+  useEffect(() => {
+    if (!isInGame) {
+      navigation('/room-list');
+    }
+  }, []);
 
   const toggleAudio = () => {
     if (publisher) {
@@ -926,8 +926,6 @@ const GameRoomPage = () => {
       const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
       const word = match?.[1] || null;
       console.log('guess submitted: ', word);
-
-      setShowLiarFoundModal(false);
 
       console.log('💡라이어가 추측한 제시어', word);
       setGuessedWord(word);
@@ -1534,6 +1532,7 @@ const GameRoomPage = () => {
                   notify({ type: 'error', text: msg });
                 }
               }
+              setShowLiarFoundModal(false);
             }
           }
         />
@@ -1547,8 +1546,22 @@ const GameRoomPage = () => {
           liarNickName={voteResult.liarNickname}
           onNext={async () => {
             // LiarNotFoundModal 이후 - ScoreModal(LIAR WIN) 열기기
-            setShowLiarNotFoundModal(false);
-            await fetchAndShowScore();
+            // setShowLiarNotFoundModal(false);
+            // await fetchAndShowScore();
+            async (word: string) => {
+              if (myUserName === voteResult.liarNickname) {
+                try {
+                  console.log('라이어가 입력한 제시어: ', word);
+                  await submitWordGuess(roomCode!, roundNumber, word);
+                } catch (err: any) {
+                  const msg =
+                    err?.response?.data?.message ||
+                    '제시어 제출에 실패했습니다.';
+                  notify({ type: 'error', text: msg });
+                }
+              }
+              setShowLiarNotFoundModal(false);
+            };
           }}
         />
       )}
