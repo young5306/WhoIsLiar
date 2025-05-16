@@ -1094,7 +1094,7 @@ const GameRoomPage = () => {
   const onlyFetchGameInfo = async () => {
     try {
       console.log('현재 라운드 끝', roundNumber);
-      console.log('호스트', hostNickname);
+      console.log('현재 호스트', hostNickname);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
@@ -1103,7 +1103,7 @@ const GameRoomPage = () => {
         }
       }
     } catch (error) {
-      console.error('점수 조회 실패:', error);
+      console.error('GameInfo fetch 실패:', error);
     }
   };
 
