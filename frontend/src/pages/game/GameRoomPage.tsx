@@ -28,6 +28,7 @@ import {
   setRound,
   submitWordGuess,
   getRoundScores,
+  getWords,
 } from '../../services/api/GameService';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useRoomStore } from '../../stores/useRoomStore';
@@ -659,6 +660,8 @@ const GameRoomPage = () => {
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [answerWord, setAnswerWord] = useState<string | null>(null);
+  const [foolLiarWord, setFoolLiarWord] = useState<string | null>(null);
 
   // 플레이어가 중간에 퇴장하는 경우 감지
   const updateParticipants = (inactivaUser: string[]) => {
@@ -940,19 +943,29 @@ const GameRoomPage = () => {
 
     // 라이어 제시어 추측 제출 후 (LiarFoundModal 이후 로직)
     if (latest.chatType === 'GUESS_SUBMITTED') {
-      setIsCorrect(latest.content.startsWith('정답!') ? true : false);
-      const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
-      const word = match?.[1] || null;
-      console.log('guess submitted: ', word);
+      (async () => {
+        setIsCorrect(latest.content.startsWith('정답!') ? true : false);
+        const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
+        const word = match?.[1] || null;
+        console.log('guess submitted: ', word);
 
-      console.log('💡라이어가 추측한 제시어', word);
-      setGuessedWord(word);
-      setShowGuessedWord(true);
+        console.log('💡라이어가 추측한 제시어', word);
+        setGuessedWord(word);
+        setShowGuessedWord(true);
 
-      setTimeout(async () => {
-        setShowGuessedWord(false);
-        await fetchAndShowScore();
-      }, 2000);
+        try {
+          const words = await getWords(roomCode!);
+          setAnswerWord(words.word1);
+          setFoolLiarWord(words.word2);
+        } catch (err) {
+          console.error('단어 조회 실패:', err);
+        }
+
+        setTimeout(async () => {
+          setShowGuessedWord(false);
+          await fetchAndShowScore();
+        }, 2000);
+      })();
     }
 
     if (latest.chatType === 'LIAR_DISCONNECT') {
@@ -1710,12 +1723,31 @@ const GameRoomPage = () => {
                 </p>
               </>
             )}
+            {answerWord && (
+              <div className="flex justify-center">
+                <div className="mt-4 headline-small text-[#6F2872] ">
+                  <p className="mb-1">정답 제시어</p>
+                  <div className="inline-block px-3 py-1 bg-gray-100 border border-gray-300 rounded-full headline-medium font-semibold text-gray-700">
+                    {answerWord}
+                  </div>
+                </div>
+                {gameMode === 'FOOL' && (
+                  <div className="mt-4 headline-small text-[#6F2872] ml-5">
+                    <p className="mb-1">라이어 제시어</p>
+                    <div className="inline-block px-3 py-1 bg-gray-100 border border-gray-300 rounded-full headline-medium font-semibold text-gray-700">
+                      {foolLiarWord}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="mt-8 text-sm text-gray-500 animate-pulse">
               결과 화면은 잠시 후 자동으로 닫힙니다...
             </div>
           </div>
         </div>
       )}
+
       {/* 점수 모달 */}
       {/* 
         점수 모달 열 때(fetchAndShowScore) 라운드 종료(endRound), 다음 roundNumber 갱신(setRound)

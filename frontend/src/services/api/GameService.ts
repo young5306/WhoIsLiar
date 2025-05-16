@@ -185,3 +185,9 @@ export const getScores = async (roomCode: string): Promise<ScoreResponse> => {
   const res = await api.get(`/rounds/${roomCode}/score`);
   return res.data.data;
 };
+
+// 정답 / 바보제시어 조회
+export const getWords = async (roomCode: string) => {
+  const res = await api.get(`/rounds/${roomCode}/words/current`);
+  return res.data.data;
+};
