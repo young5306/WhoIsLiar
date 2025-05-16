@@ -617,4 +617,30 @@ public class RoundService {
 
 		return new TurnUpdateResponse(round.getTurn());
 	}
+
+	@Transactional(readOnly = true)
+	public ScoresResponseDto getCurrentRoundScores(String roomCode) {
+		// 1) 방 조회
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 2) 최신 라운드 조회
+		Round latestRound = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 3) ParticipantRound 목록(Fetch join 으로 세션까지 한 번에)
+		List<ParticipantRound> prs = participantRoundRepository
+			.findByRoundWithParticipantSession(latestRound);
+
+		// 4) DTO 변환
+		List<ScoresResponseDto.ScoreEntry> entries = prs.stream()
+			.map(pr -> new ScoresResponseDto.ScoreEntry(
+				pr.getParticipant().getSession().getNickname(),
+				pr.getScore()
+			))
+			.collect(Collectors.toList());
+
+		return new ScoresResponseDto(entries);
+	}
 }
