@@ -504,10 +504,7 @@ public class RoundService {
 		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		String targetWord = switch (room.getGameMode()) {
-			case DEFAULT -> round.getWord1();
-			case FOOL -> round.getWord2();
-		};
+		String targetWord = round.getWord1();
 
 		String input = req.guessText().replaceAll("\\s+", "").toLowerCase();
 		String answer = targetWord.replaceAll("\\s+", "").toLowerCase();
@@ -534,11 +531,6 @@ public class RoundService {
 		}
 
 		Winner winnerEnum = isCorrect ? Winner.liar : Winner.civil;
-		// if (room.getGameMode() == GameMode.DEFAULT) {
-		// 	winnerEnum
-		// } else {
-		// 	winnerEnum = isCorrect ? Winner.civil : Winner.liar;
-		// }
 
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
 
