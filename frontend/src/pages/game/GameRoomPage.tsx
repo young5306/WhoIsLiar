@@ -1080,7 +1080,9 @@ const GameRoomPage = () => {
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
-        // await setRound(roomCode!);
+        if (roundNumber < totalRoundNumber) {
+          await setRound(roomCode!);
+        }
       }
     } catch (error) {
       console.error('점수 조회 실패:', error);
@@ -1103,10 +1105,6 @@ const GameRoomPage = () => {
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
-        if (myUserName === hostNickname) {
-          await setRound(roomCode!);
-        }
-
         const playerInfoRes = await getPlayerInfo(roomCode!);
         console.log('✅playerInfoRes', playerInfoRes);
         console.log('✅세팅 끝');
@@ -1283,7 +1281,7 @@ const GameRoomPage = () => {
                     ${isVoting ? 'cursor-pointer' : ''}
                     ${
                       sub.nickname === speakingPlayer
-                        ? 'ring-4 ring-point-neon rounded'
+                        ? 'ring-4 ring-point-neon rounded animate-glow'
                         : ''
                     }`}
                   >

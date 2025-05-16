@@ -27,8 +27,8 @@ const GameChat = () => {
 
   // 시스템 메시지에서 유저 이름 강조 처리하는 함수
   const highlightUsername = (content: string) => {
-    // "xx님이" 패턴을 찾아서 강조 처리
-    const usernameRegex = /(\S+)님이/;
+    // "xx님이" 또는 "xx님의" 패턴을 찾아서 강조 처리
+    const usernameRegex = /(\S+)님[이|의]/;
     const match = content.match(usernameRegex);
 
     if (match && match[1]) {
