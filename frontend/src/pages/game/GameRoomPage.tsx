@@ -927,6 +927,7 @@ const GameRoomPage = () => {
           setShowVoteResultModal(true);
         } catch (error) {
           console.error('투표 결과 조회 실패:', error);
+          console.log('투표 결과 조회 실패시 (호스트)', hostNickname);
         }
       })();
     }
