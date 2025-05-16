@@ -62,7 +62,8 @@ public class Participant {
 	private List<ParticipantRound> participantRounds = new ArrayList<>();
 
 	@Builder
-	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, Boolean readyStatus) {
+	public Participant(SessionEntity session, Room room, boolean isActive, LocalDateTime createdAt,
+		LocalDateTime updatedAt, Boolean readyStatus) {
 		this.session = session;
 		this.room = room;
 		this.isActive = isActive;

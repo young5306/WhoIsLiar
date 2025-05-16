@@ -44,7 +44,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 		if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			try {
 				SessionEntity session = authService.validateAndRefresh(token);
-				// 3) SecurityContext 에 사용자 정보 등록
+
 				var auth = new UsernamePasswordAuthenticationToken(
 					session.getNickname(),
 					null,
@@ -53,7 +53,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 				auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(auth);
 			} catch (Exception ex) {
-				// 토큰 만료·비정상 시에는 그냥 인증안된 상태로 진행
+
 			}
 		}
 

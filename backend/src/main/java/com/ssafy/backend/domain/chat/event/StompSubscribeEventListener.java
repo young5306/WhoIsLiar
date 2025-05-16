@@ -23,7 +23,7 @@ public class StompSubscribeEventListener {
 	@EventListener
 	public void handleSubscribeEvent(SessionSubscribeEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-		String destination = accessor.getDestination(); // ex: "/topic/room.n8SymH"
+		String destination = accessor.getDestination();
 		String sessionId = accessor.getSessionId();
 
 		log.info("************************************************");

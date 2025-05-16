@@ -62,7 +62,7 @@ public class TurnTimerService {
 		TurnState state = new TurnState(roundNumber, 0, null);
 		turnMap.put(roomCode, state);
 
-		startNextTurn(roomCode, state); // 첫 턴은 즉시 시작
+		startNextTurn(roomCode, state);
 	}
 
 	public void endTurn(String roomCode) {
@@ -88,12 +88,6 @@ public class TurnTimerService {
 		TurnState state = turnMap.get(roomCode);
 		if (state == null)
 			return;
-		//
-		// if (state.getIndex() >= state.getTurns().size()) {
-		// 	chatSocketService.roundFullyEnded(roomCode);
-		// 	turnMap.remove(roomCode);
-		// 	return;
-		// }
 
 		// 이후 턴부터는 3초 대기
 		scheduler.schedule(() -> startNextTurn(roomCode, state), Instant.now().plusSeconds(TURN_DELAY_SECONDS));
