@@ -533,12 +533,12 @@ public class RoundService {
 			}
 		}
 
-		Winner winnerEnum;
-		if (room.getGameMode() == GameMode.DEFAULT) {
-			winnerEnum = isCorrect ? Winner.liar : Winner.civil;
-		} else {
-			winnerEnum = isCorrect ? Winner.civil : Winner.liar;
-		}
+		Winner winnerEnum = isCorrect ? Winner.liar : Winner.civil;
+		// if (room.getGameMode() == GameMode.DEFAULT) {
+		// 	winnerEnum
+		// } else {
+		// 	winnerEnum = isCorrect ? Winner.civil : Winner.liar;
+		// }
 
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
 
