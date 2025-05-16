@@ -1093,9 +1093,8 @@ const GameRoomPage = () => {
   // 점수 조회 및 모달 표시
   const onlyFetchGameInfo = async () => {
     try {
-      setShowScoreModal(true);
-
       console.log('현재 라운드 끝', roundNumber);
+      console.log('호스트', hostNickname);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
