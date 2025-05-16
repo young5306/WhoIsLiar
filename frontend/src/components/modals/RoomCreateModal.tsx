@@ -157,7 +157,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setVideoMode('VIDEO')}
-                className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${videoMode === 'VIDEO' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+                className={`flex-1 p-2 rounded-md border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-600/20 ${
+                  videoMode === 'VIDEO'
+                    ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]'
+                    : 'border-[#734AA1] hover:border-primary-600'
+                }`}
               >
                 <img
                   src="assets/videoMode.png"
@@ -168,7 +172,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
               </button>
               <button
                 onClick={() => setVideoMode('BLIND')}
-                className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${videoMode === 'BLIND' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+                className={`flex-1 p-2 rounded-md border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-600/20 ${
+                  videoMode === 'BLIND'
+                    ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]'
+                    : 'border-[#734AA1] hover:border-primary-600'
+                }`}
               >
                 <img
                   src="assets/blindMode.png"
@@ -187,7 +195,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setGameMode('DEFAULT')}
-                className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${gameMode === 'DEFAULT' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+                className={`flex-1 p-2 rounded-md border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-600/20 ${
+                  gameMode === 'DEFAULT'
+                    ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]'
+                    : 'border-[#734AA1] hover:border-primary-600'
+                }`}
               >
                 <img
                   src="assets/defaultMode.png"
@@ -198,7 +210,11 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
               </button>
               <button
                 onClick={() => setGameMode('FOOL')}
-                className={`flex-1 p-2 rounded-md border-2 cursor-pointer ${gameMode === 'FOOL' ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]' : 'border-[#734AA1]'}`}
+                className={`flex-1 p-2 rounded-md border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-600/20 ${
+                  gameMode === 'FOOL'
+                    ? 'border-primary-600 bg-gradient-to-br from-[#A41D55] to-[#3C0B38]'
+                    : 'border-[#734AA1] hover:border-primary-600'
+                }`}
               >
                 <img
                   src="assets/foolMode.png"
@@ -272,10 +288,10 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                   <button
                     key={num}
                     onClick={() => setRoundCount(num)}
-                    className={`w-22 h-9 flex items-center justify-center rounded-md border-2 headline-small cursor-pointer ${
+                    className={`w-22 h-9 flex items-center justify-center rounded-md border-2 headline-small cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-600/20 ${
                       roundCount === num
                         ? 'border-primary-600 text-primary-600'
-                        : 'border-[#734AA1] text-[#734AA1]'
+                        : 'border-[#734AA1] text-[#734AA1] hover:border-primary-600 hover:text-primary-600'
                     }`}
                   >
                     {num}
