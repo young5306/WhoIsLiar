@@ -900,6 +900,7 @@ const GameRoomPage = () => {
 
     // 모든 발언 종료 후 투표 시작
     if (latest.chatType === 'ROUND_END') {
+      if (showLiarLeaveModal) return;
       console.log('💡투표 시작');
 
       // 내가 마지막 발언자였으면 녹음 종료 및 요약 요청
@@ -926,6 +927,8 @@ const GameRoomPage = () => {
 
     // HINT 메시지 처리
     if (latest.chatType === 'HINT') {
+      if (showLiarLeaveModal) return;
+
       console.log('💡HINT 메시지 수신:', latest);
       console.log('💡발신자:', latest.sender, '내용:', latest.content);
 
@@ -939,6 +942,8 @@ const GameRoomPage = () => {
 
     // 모든 플레이어 투표 종료 후 (VoteResultModal 열기)
     if (latest.chatType === 'VOTE_SUBMITTED') {
+      if (showLiarLeaveModal) return;
+
       console.log('🔥🔥🔥모든 플레이어 투표 완료');
       console.log(latest);
 
@@ -963,6 +968,7 @@ const GameRoomPage = () => {
 
     // 라이어 제시어 추측 제출 후 (LiarFoundModal 이후 로직)
     if (latest.chatType === 'GUESS_SUBMITTED') {
+      if (showLiarLeaveModal) return;
       (async () => {
         setIsCorrect(latest.content.startsWith('정답!') ? true : false);
         const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
@@ -1160,6 +1166,7 @@ const GameRoomPage = () => {
   const handleScoreTimeEnd = async () => {
     try {
       setShowScoreModal(false);
+      setShowLiarLeaveModal(false);
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
@@ -1656,8 +1663,9 @@ const GameRoomPage = () => {
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
           onNext={async () => {
-            setShowLiarLeaveModal(false);
+            // setShowLiarLeaveModal(false);
             await onlyFetchGameInfo();
+            await handleScoreTimeEnd();
           }}
         />
       )}
