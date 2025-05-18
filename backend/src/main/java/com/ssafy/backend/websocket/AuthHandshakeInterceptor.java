@@ -59,7 +59,6 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
 		boolean exists = sessionRepository.existsByToken(AUTH_TOKEN);
 		if (!exists) {
-			// log.warn("Invalid token: {}", AUTH_TOKEN);
 			return false;
 		}
 
@@ -94,7 +93,6 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 	@Override
 	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
 		WebSocketHandler wsHandler, Exception ex) {
-		// 필요시 사용
 	}
 }
 

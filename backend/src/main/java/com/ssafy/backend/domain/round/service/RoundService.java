@@ -44,6 +44,7 @@ import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
+import com.ssafy.backend.domain.round.dto.response.WordResponseDto;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.entity.Synonym;
@@ -306,7 +307,6 @@ public class RoundService {
 			@Override
 			public void afterCommit() {
 				log.info("[afterCommit] vote() 콜백 실행 – roomCode={} roundId={}", roomCode, round.getId());
-				// checkAndNotifyVoteCompleted(roomCode, round.getId());
 				eventPublisher.publishEvent(new AllVotesCompletedEvent(roomCode, round.getId()));
 			}
 		});
@@ -393,10 +393,6 @@ public class RoundService {
 
 		boolean wrongPicked = (selectedId != null && selectedId != liarId);
 		boolean lastTurnSkip = (selectedId == null && round.getTurn() == 3);
-		log.info("마지막 턴 확인 로그: {}", round.getTurn());
-		log.info("선택된 id가 있는지 로그로 확인: {}", selectedId);
-		log.info("그렇다면 마지막 스킵이 된 것이므로 : {}", lastTurnSkip);
-		log.info("라이어 id : {}, {}", liarId, liarPR.getParticipant().getSession().getNickname());
 
 		if (wrongPicked || lastTurnSkip) {
 			liarPR.addScore(100);
@@ -509,10 +505,7 @@ public class RoundService {
 		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
-		String targetWord = switch (room.getGameMode()) {
-			case DEFAULT -> round.getWord1();
-			case FOOL -> round.getWord2();
-		};
+		String targetWord = round.getWord1();
 
 		String input = req.guessText().replaceAll("\\s+", "").toLowerCase();
 		String answer = targetWord.replaceAll("\\s+", "").toLowerCase();
@@ -538,12 +531,7 @@ public class RoundService {
 			}
 		}
 
-		Winner winnerEnum;
-		if (room.getGameMode() == GameMode.DEFAULT) {
-			winnerEnum = isCorrect ? Winner.liar : Winner.civil;
-		} else {
-			winnerEnum = isCorrect ? Winner.civil : Winner.liar;
-		}
+		Winner winnerEnum = isCorrect ? Winner.liar : Winner.civil;
 
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
 
@@ -571,9 +559,6 @@ public class RoundService {
 		return String.format("%s! %s님이 %s(을)를 제출했습니다.", resultText, nickname, guessText);
 	}
 
-	/**
-	 * 방별 누적 점수 조회
-	 */
 	@Transactional(readOnly = true)
 	public ScoresResponseDto getScores(String roomCode) {
 		Room room = roomRepository.findByRoomCode(roomCode)
@@ -632,5 +617,46 @@ public class RoundService {
 		lastNotifiedTurn.remove(round.getId());
 
 		return new TurnUpdateResponse(round.getTurn());
+	}
+
+	@Transactional(readOnly = true)
+	public ScoresResponseDto getCurrentRoundScores(String roomCode) {
+		// 1) 방 조회
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 2) 최신 라운드 조회
+		Round latestRound = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 3) ParticipantRound 목록(Fetch join 으로 세션까지 한 번에)
+		List<ParticipantRound> prs = participantRoundRepository
+			.findByRoundWithParticipantSession(latestRound);
+
+		// 4) DTO 변환
+		List<ScoresResponseDto.ScoreEntry> entries = prs.stream()
+			.map(pr -> new ScoresResponseDto.ScoreEntry(
+				pr.getParticipant().getSession().getNickname(),
+				pr.getScore()
+			))
+			.collect(Collectors.toList());
+
+		return new ScoresResponseDto(entries);
+	}
+
+	@Transactional(readOnly = true)
+	public WordResponseDto getCurrentRoundWords(String roomCode) {
+		// 1) 방 객체 조회
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 2) 최신 라운드 조회
+		Round latestRound = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 3) DTO 리턴
+		return new WordResponseDto(latestRound.getWord1(), latestRound.getWord2());
 	}
 }

@@ -3,6 +3,7 @@ import { useAuthStore } from '../../../stores/useAuthStore';
 import GameButton2 from '../../common/GameButton2';
 import Timer, { TimerRef } from '../../common/Timer';
 import { notify } from '../../common/Toast';
+import { Brain, Loader2 } from 'lucide-react';
 
 interface Props {
   roundNumber: number;
@@ -65,12 +66,29 @@ const LiarFoundModal = ({
             <img src="assets/mask-fill.png" className="w-13 h-14 pt-1" />
             LIAR FOUND!
           </div>
-          <div className="display-medium text-primary-600">{liarNickname}</div>
+          <div className="flex flex-col items-center gap-2 mt-4">
+            <div className="flex items-center gap-3">
+              <Brain className="w-8 h-8 text-primary-600 animate-bounce" />
+              <div className="text-primary-600 body-medium">
+                라이어가 제시어를 추측하여 작성중입니다.
+              </div>
+              <Brain className="w-8 h-8 text-primary-600 animate-bounce [animation-delay:500ms]" />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
+              <Loader2 className="w-5 h-5 text-primary-600 animate-spin [animation-delay:200ms]" />
+              <Loader2 className="w-5 h-5 text-primary-600 animate-spin [animation-delay:400ms]" />
+            </div>
+          </div>
+          <div className="display-medium text-primary-600 mt-3">
+            {liarNickname}
+          </div>
           {isLiar && (
             <>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                maxLength={30}
                 placeholder="정답을 입력해주세요."
                 className="px-3 py-3 mt-6 w-[98%] rounded border outline-none border-primary-600 bg-gray-900 text-gray-0 headline-medium placeholder-gray-0/60 focus:ring-2 focus:ring-primary-600/60"
                 onKeyDown={(e) => {

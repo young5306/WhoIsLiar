@@ -90,7 +90,7 @@ const GameStartCountdownModal = ({
           <div className="bg-gray-700 p-3 rounded-lg hover:bg-gray-600">
             <p className="text-xs text-gray-300">화면 모드</p>
             <p className="text-base font-bold leading-tight">
-              {videoMode === 'DEFAULT' ? '비디오 모드' : '블라인드 모드'}
+              {videoMode === 'VIDEO' ? '비디오 모드' : '블라인드 모드'}
             </p>
           </div>
           <div className="bg-gray-700 p-3 rounded-lg hover:bg-gray-600">
