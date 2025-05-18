@@ -484,7 +484,8 @@ const GameRoomPage = () => {
   // 새로고침 후 감지 및 redirect
   useEffect(() => {
     if (!isInGame) {
-      navigation('/room-list');
+      // navigation('/room-list');
+      window.location.href = '/room-list';
     }
   }, []);
 
@@ -633,6 +634,7 @@ const GameRoomPage = () => {
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
   const speechTimerRef = useRef<TimerRef>(null);
+  const pauseTimerRef = useRef<TimerRef>(null);
   const [isSkippingSpeech, setIsSkippingSpeech] = useState(false); // 스킵 중복 클릭 방지
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
@@ -817,6 +819,11 @@ const GameRoomPage = () => {
       });
     }
   }, [speakingPlayer, isTimerReady, gameStarted]);
+
+  // 발언시간 skip 시 타이머
+  useEffect(() => {
+    pauseTimerRef.current?.startTimer(3);
+  }, [isSkippingSpeech]);
 
   // 채팅 감지
   useEffect(() => {
@@ -1213,7 +1220,9 @@ const GameRoomPage = () => {
                   />
                 )}
                 {/* 발언 타이머는 모두에게 표시 */}
+                {/* speakingPlayer가 skip 버튼을 누르지 않은 경우 */}
                 {speakingPlayer && (
+                  // {speakingPlayer && !isSkippingSpeech && (
                   <div className="relative">
                     <Timer
                       ref={speechTimerRef}
@@ -1221,6 +1230,13 @@ const GameRoomPage = () => {
                       size="medium"
                       onMount={handleTimerMount}
                     />
+                  </div>
+                )}
+
+                {/* speakingPlayer가 skip 버튼을 누른 경우 */}
+                {speakingPlayer && isSkippingSpeech && (
+                  <div className="relative">
+                    <Timer ref={pauseTimerRef} size="medium" />
                   </div>
                 )}
               </>
@@ -1305,7 +1321,7 @@ const GameRoomPage = () => {
                         className="absolute top-1/2 left-1/2 w-20 h-20 z-50 -translate-x-1/2 -translate-y-1/2"
                       />
                     )}
-                    <div className="flex flex-row justify-start items-center gap-2">
+                    <div className="flex flex-row justify-start items-center gap-2 mb-1">
                       <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
@@ -1477,6 +1493,7 @@ const GameRoomPage = () => {
                 onToggleAudio={toggleAudio}
                 onToggleVideo={toggleVideo}
                 onLeaveSession={leaveSession}
+                videoMode={videoMode}
               />
             </div>
           </div>
