@@ -1,0 +1,29 @@
+/* 기본 커서 스타일 */
+* {
+  cursor: url('/assets/cursors/default.png'), auto;
+}
+
+/* 클릭 가능한 요소에 대한 커서 스타일 */
+button,
+a,
+[role='button'],
+.clickable {
+  cursor: url('/assets/cursors/pointer.png'), pointer;
+}
+
+/* 커서 애니메이션 */
+@keyframes cursorClick {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cursor-click {
+  animation: cursorClick 0.2s ease-in-out;
+}

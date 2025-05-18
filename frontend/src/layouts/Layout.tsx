@@ -1,5 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import BackgroundMusic from '../components/common/BackgroundMusic';
+import useCustomCursor from '../hooks/useCustomCursor';
+import '../styles/cursor.css';
 
 const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
   {
@@ -33,6 +35,7 @@ const defaultStyle = {
 const Layout = () => {
   const location = useLocation();
   const pageStyle = bgImages[location.pathname] || defaultStyle;
+  useCustomCursor();
 
   return (
     <div
