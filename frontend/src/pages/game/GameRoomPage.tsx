@@ -638,6 +638,7 @@ const GameRoomPage = () => {
   const speechTimerRef = useRef<TimerRef>(null);
   const pauseTimerRef = useRef<TimerRef>(null);
   const [isSkippingSpeech, setIsSkippingSpeech] = useState(false); // 스킵 중복 클릭 방지
+  const [isTurnSkip, setIsTurnSkip] = useState(false);
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
   const [selectedTargetNickname, setSelectedTargetNickname] = useState<
@@ -829,8 +830,16 @@ const GameRoomPage = () => {
 
   // 발언시간 skip 시 타이머
   useEffect(() => {
+    if (!isTurnSkip) return;
+
     pauseTimerRef.current?.startTimer(3);
-  }, [isSkippingSpeech]);
+
+    const timeoutId = setTimeout(() => {
+      setIsTurnSkip(false);
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [isTurnSkip]);
 
   // 채팅 감지
   useEffect(() => {
@@ -844,6 +853,9 @@ const GameRoomPage = () => {
     // 개인 발언
     if (latest.chatType === 'TURN_START') {
       console.log('💡TURN_START 수신 확인');
+
+      setIsTurnSkip(false);
+
       // 닉네임 파싱
       const nickname = latest.content.split('님의')[0]?.trim();
       if (nickname) {
@@ -883,6 +895,7 @@ const GameRoomPage = () => {
     // 턴 스킵
     if (latest.chatType === 'TURN_SKIP') {
       speechTimerRef.current?.pauseTimer();
+      setIsTurnSkip(true);
     }
 
     // 모든 발언 종료 후 투표 시작
@@ -1243,8 +1256,7 @@ const GameRoomPage = () => {
                 )}
                 {/* 발언 타이머는 모두에게 표시 */}
                 {/* speakingPlayer가 skip 버튼을 누르지 않은 경우 */}
-                {speakingPlayer && (
-                  // {speakingPlayer && !isSkippingSpeech && (
+                {speakingPlayer && !isTurnSkip && (
                   <div className="relative">
                     <Timer
                       ref={speechTimerRef}
@@ -1256,7 +1268,7 @@ const GameRoomPage = () => {
                 )}
 
                 {/* speakingPlayer가 skip 버튼을 누른 경우 */}
-                {speakingPlayer && isSkippingSpeech && (
+                {isTurnSkip && (
                   <div className="relative">
                     <Timer ref={pauseTimerRef} size="medium" />
                   </div>
