@@ -1382,14 +1382,14 @@ const GameRoomPage = () => {
                     {sub.nickname === speakingPlayer && (
                       <>
                         {position === 2 || position === 5 ? (
-                          <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
+                          <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-55">
                             <img
                               src="assets/point-purple-right.webp"
                               className="w-[100px]"
                             />
                           </div>
                         ) : (
-                          <div className="animate-bounce-x-left absolute bottom-15 right-[-290px] z-60">
+                          <div className="animate-bounce-x-left absolute bottom-15 right-[-290px] z-55">
                             <img
                               src="assets/point-purple-left.webp"
                               className="w-[100px]"
