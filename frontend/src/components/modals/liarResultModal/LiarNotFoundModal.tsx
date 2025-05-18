@@ -26,7 +26,7 @@ const LiarNotFoundModal = ({
   const modalTimerRef = useRef<TimerRef>(null);
 
   useEffect(() => {
-    modalTimerRef?.current?.startTimer(20);
+    modalTimerRef?.current?.startTimer(10);
   }, []);
 
   const handleSubmit = () => {
