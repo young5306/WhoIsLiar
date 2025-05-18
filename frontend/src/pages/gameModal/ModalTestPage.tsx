@@ -261,12 +261,12 @@ const ModalTestPage = () => {
                   미나리
                 </div>
               </div>
-              {/* <div className="mt-4 headline-small text-[#6F2872] ml-5">
+              <div className="mt-4 headline-small text-[#6F2872] ml-5">
                 <p className="mb-1">라이어 제시어</p>
                 <div className="inline-block px-3 py-1 bg-gray-100 border border-gray-300 rounded-full headline-medium font-semibold text-gray-700">
                   청경채
                 </div>
-              </div> */}
+              </div>
             </div>
             <div className="mt-8 text-sm text-gray-500 animate-pulse">
               결과 화면은 잠시 후 자동으로 닫힙니다...
