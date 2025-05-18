@@ -239,3 +239,24 @@
 .animate-bounce-x-left {
   animation: bounce-horizontal-left 1s infinite;
 }
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* 느리게 시작 */
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(4px);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1); /* 가속 */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
