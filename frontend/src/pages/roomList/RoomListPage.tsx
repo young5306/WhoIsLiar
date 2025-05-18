@@ -231,7 +231,7 @@ const RoomListPage = () => {
           rooms.map((room, idx) => (
             <div
               key={idx}
-              className="border-2 border-transparent hover:border-primary-600 flex items-center justify-between px-4 py-1 my-3 bg-gray-0/20 rounded-lg headline-medium w-full"
+              className="cursor-default border-2 border-transparent hover:border-primary-600 flex items-center justify-between px-4 py-1 my-3 bg-gray-0/20 rounded-lg headline-medium w-full"
               onDoubleClick={() => handleJoinRoom(room)}
             >
               <div className="flex items-center w-full text-gray-0">
