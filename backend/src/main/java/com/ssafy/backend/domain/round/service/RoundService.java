@@ -44,6 +44,7 @@ import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto.Result;
+import com.ssafy.backend.domain.round.dto.response.WordResponseDto;
 import com.ssafy.backend.domain.round.entity.CategoryWord;
 import com.ssafy.backend.domain.round.entity.Round;
 import com.ssafy.backend.domain.round.entity.Synonym;
@@ -616,5 +617,46 @@ public class RoundService {
 		lastNotifiedTurn.remove(round.getId());
 
 		return new TurnUpdateResponse(round.getTurn());
+	}
+
+	@Transactional(readOnly = true)
+	public ScoresResponseDto getCurrentRoundScores(String roomCode) {
+		// 1) 방 조회
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 2) 최신 라운드 조회
+		Round latestRound = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 3) ParticipantRound 목록(Fetch join 으로 세션까지 한 번에)
+		List<ParticipantRound> prs = participantRoundRepository
+			.findByRoundWithParticipantSession(latestRound);
+
+		// 4) DTO 변환
+		List<ScoresResponseDto.ScoreEntry> entries = prs.stream()
+			.map(pr -> new ScoresResponseDto.ScoreEntry(
+				pr.getParticipant().getSession().getNickname(),
+				pr.getScore()
+			))
+			.collect(Collectors.toList());
+
+		return new ScoresResponseDto(entries);
+	}
+
+	@Transactional(readOnly = true)
+	public WordResponseDto getCurrentRoundWords(String roomCode) {
+		// 1) 방 객체 조회
+		Room room = roomRepository.findByRoomCode(roomCode)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 2) 최신 라운드 조회
+		Round latestRound = roundRepository
+			.findTopByRoomOrderByRoundNumberDesc(room)
+			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
+
+		// 3) DTO 리턴
+		return new WordResponseDto(latestRound.getWord1(), latestRound.getWord2());
 	}
 }
