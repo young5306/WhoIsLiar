@@ -62,7 +62,7 @@ const LiarNotFoundModal = ({
         </p>
         <div className="flex flex-col items-center gap-3">
           <div className="text-primary-600 display-medium flex items-center justify-center gap-2 mt-5">
-            <img src="assets/mask-fill.png" className="w-13 h-14 pt-1" />
+            <img src="assets/mask-fill.webp" className="w-13 h-14 pt-1" />
             LIAR NOT FOUND!
           </div>
           <div className="display-medium text-primary-600">{liarNickname}</div>

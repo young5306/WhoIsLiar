@@ -175,7 +175,7 @@ const RoomListPage = () => {
           <h1 className="display-small text-gray-0">방 목록</h1>
           {/* 새로고침 아이콘 버튼 */}
           <button onClick={handleRefresh} className="cursor-pointer">
-            <img src="/assets/renew.png" alt="갱신" className="w-10" />
+            <img src="/assets/renew.webp" alt="갱신" className="w-10" />
           </button>
         </div>
 

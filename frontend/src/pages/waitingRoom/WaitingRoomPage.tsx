@@ -886,7 +886,7 @@ const WaitingRoomContent = (): JSX.Element => {
             {/* 화면 모드 표시 */}
             <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
               <img
-                src={`/assets/${roomData?.roomInfo.videoMode === 'VIDEO' ? 'videoMode' : 'blindMode'}.png`}
+                src={`/assets/${roomData?.roomInfo.videoMode === 'VIDEO' ? 'videoMode' : 'blindMode'}.webp`}
                 alt="video-mode"
                 width={28}
                 height={28}
@@ -901,7 +901,7 @@ const WaitingRoomContent = (): JSX.Element => {
             {/* 게임 모드 표시 */}
             <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-lg">
               <img
-                src={`/assets/${roomData?.roomInfo.gameMode === 'DEFAULT' ? 'defaultMode' : 'foolMode'}.png`}
+                src={`/assets/${roomData?.roomInfo.gameMode === 'DEFAULT' ? 'defaultMode' : 'foolMode'}.webp`}
                 alt="game-mode"
                 width={28}
                 height={28}

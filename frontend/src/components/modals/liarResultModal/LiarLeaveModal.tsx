@@ -34,7 +34,7 @@ const LiarLeaveModal = ({
           </p>
           <div className="flex flex-col gap-3">
             <div className="text-primary-600 display-medium flex items-center justify-center gap-2 mt-5">
-              <img src="assets/mask_smile.png" className="w-15 h-16 pt-1" />
+              <img src="assets/mask_smile.webp" className="w-15 h-16 pt-1" />
             </div>
             <div className="text-primary-600 display-small">
               <p className="mb-3">LIAR가 퇴장하여 게임을 계속할 수 없습니다.</p>
