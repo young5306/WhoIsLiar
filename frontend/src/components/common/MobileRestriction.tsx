@@ -12,7 +12,7 @@ const MobileRestriction: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     // 배경 이미지 미리 로드
     const img = new Image();
-    img.src = '/bgImages/loginBg.svg';
+    img.src = '/bgImages/loginBg.webp';
     img.onload = () => setIsImageLoaded(true);
   }, []);
 
@@ -36,7 +36,7 @@ const MobileRestriction: React.FC<{ children: React.ReactNode }> = ({
             transition={{ duration: 0.8, ease: 'easeInOut' }}
             className="fixed inset-0 flex items-center justify-center z-50"
             style={{
-              backgroundImage: 'url(/bgImages/loginBg.svg)',
+              backgroundImage: 'url(/bgImages/loginBg.webp)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
