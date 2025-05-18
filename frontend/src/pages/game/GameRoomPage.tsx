@@ -516,6 +516,12 @@ const GameRoomPage = () => {
       if (videoTrack) {
         // 비디오 트랙의 활성 상태를 제어
         videoTrack.enabled = newVideoState;
+        // 실제 카메라 장치 제어
+        if (newVideoState) {
+          videoTrack.applyConstraints({ width: 640, height: 480 });
+        } else {
+          videoTrack.stop(); // 카메라 장치 완전히 중지
+        }
         publisher.publishVideo(newVideoState);
         // console.log(`📷 비디오 상태: ${newVideoState ? '켜짐' : '꺼짐'}`);
       } else {
