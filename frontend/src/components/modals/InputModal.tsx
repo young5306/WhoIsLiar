@@ -66,6 +66,12 @@ const InputModal = ({
             const filtered = numeric ? input.replace(/[^0-9]/g, '') : input;
             setValue(filtered);
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleConfirm();
+            }
+          }}
           placeholder={placeholder}
           className="w-full h-[70px] headline-medium px-3 mb-8 rounded-lg bg-gray-0/20 outline-none placeholder-gray-300 text-gray-0
                      border-3 border-primary-600 focus:ring-2 focus:ring-primary-600/60"
