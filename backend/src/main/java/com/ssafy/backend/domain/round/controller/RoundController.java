@@ -26,6 +26,7 @@ import com.ssafy.backend.domain.round.dto.response.ScoresResponseDto;
 import com.ssafy.backend.domain.round.dto.response.TurnUpdateResponse;
 import com.ssafy.backend.domain.round.dto.response.VoteResponseDto;
 import com.ssafy.backend.domain.round.dto.response.VoteResultsResponseDto;
+import com.ssafy.backend.domain.round.dto.response.WordResponseDto;
 import com.ssafy.backend.domain.round.service.RoundService;
 import com.ssafy.backend.domain.round.service.TurnTimerService;
 import com.ssafy.backend.global.common.CommonResponse;
@@ -265,6 +266,40 @@ public class RoundController {
 	public ResponseEntity<CommonResponse<Void>> startTurn(@Valid @RequestBody RoundStartRequest request) {
 		turnTimerService.startTurnSequence(request.roomCode(), request.roundNumber());
 		return ok(null);
+	}
+
+	@Operation(
+		summary = "현재(최신) 라운드 점수 조회",
+		description = "해당 방(roomCode)에 속한 가장 최신 라운드의 참가자별 점수를 반환합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "조회 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청(방 코드 형식 오류)"),
+		@ApiResponse(responseCode = "404", description = "방 또는 라운드를 찾을 수 없음")
+	})
+	@GetMapping("/{roomCode}/score/current")
+	public ResponseEntity<CommonResponse<ScoresResponseDto>> getCurrentRoundScores(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode
+	) {
+		ScoresResponseDto dto = roundService.getCurrentRoundScores(roomCode);
+		return ok(dto);
+	}
+
+	@Operation(
+		summary = "현재(최신) 라운드 단어 조회",
+		description = "해당 방(roomCode)에 속한 가장 최신 라운드의 word1, word2를 반환합니다."
+	)
+	@ApiResponse(responseCode = "200", description = "조회 성공")
+	@GetMapping("/{roomCode}/words/current")
+	public ResponseEntity<CommonResponse<WordResponseDto>> getCurrentRoundWords(
+		@PathVariable
+		@Pattern(regexp = "^[A-Za-z0-9]{6}$", message = "방 코드는 6자리 영문·숫자이어야 합니다.")
+		String roomCode
+	) {
+		WordResponseDto dto = roundService.getCurrentRoundWords(roomCode);
+		return ok(dto);
 	}
 }
 
