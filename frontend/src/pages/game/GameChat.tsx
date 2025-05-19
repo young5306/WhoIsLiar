@@ -168,7 +168,7 @@ const GameChat = () => {
   };
 
   return (
-    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-[calc(100vh-5rem)] flex flex-col flex-shrink-0 z-50">
+    <div className="pt-11 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-[calc(100vh-5rem)] flex flex-col flex-shrink-0 z-50">
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-3 flex flex-col h-full">
         <div className="text-white text-sm mb-2 border-b border-gray-700 pb-1">
           채팅
