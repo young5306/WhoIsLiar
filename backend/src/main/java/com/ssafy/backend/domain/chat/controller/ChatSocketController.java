@@ -7,6 +7,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.ssafy.backend.config.StopWordFilter;
 import com.ssafy.backend.domain.chat.dto.ChatMessage;
 import com.ssafy.backend.domain.chat.dto.EmotionBroadcastMessage;
 import com.ssafy.backend.global.enums.ChatType;
@@ -20,10 +21,19 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatSocketController {
 
 	private final SimpMessagingTemplate messagingTemplate;
+	private final StopWordFilter stopWordFilter;
 
 	@MessageMapping("/chat.send/{roomCode}")
 	public void sendMessage(@DestinationVariable String roomCode, @Payload ChatMessage message) {
 		log.info("[WS GameMessage][chat][{}] {}: {}", roomCode, message.sender(), message.content());
+
+		String filtered = stopWordFilter.censor(message.content());
+		ChatMessage maskedMsg = new ChatMessage(
+			message.sender(),
+			filtered,
+			message.chatType()
+		);
+
 		// /topic/room.{roomCode} 구독자에게 메시지 전송
 		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
 	}
