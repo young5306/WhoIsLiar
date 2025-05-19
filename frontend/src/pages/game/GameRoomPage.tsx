@@ -53,7 +53,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { MicOff, VideoOff } from 'lucide-react';
+import { MicOff, TimerIcon, VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
@@ -631,6 +631,7 @@ const GameRoomPage = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   const [gameMode, setGameMode] = useState<string>('DEFAULT');
   const [videoMode, setVideoMode] = useState<string>('VIDEO');
+  const [roomName, setRoomName] = useState<string>('');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
@@ -779,6 +780,7 @@ const GameRoomPage = () => {
         setGameMode(roomInfoRes.roomInfo.gameMode);
         setVideoMode(roomInfoRes.roomInfo.videoMode);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
+        setRoomName(roomInfoRes.roomInfo.roomName);
 
         setParticipants(playerInfoRes.data.participants);
 
@@ -1291,6 +1293,56 @@ const GameRoomPage = () => {
                 </>
               )}
             </div>
+            <div className="flex items-center justify-between mb-[1vh] z-55">
+              <div className="flex items-end gap-4">
+                <div className="text-white headline-small font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-xl">
+                  {roomName || '게임방'}
+                </div>
+
+                {/* 화면 모드 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <img
+                    src={`/assets/${videoMode === 'VIDEO' ? 'videoMode' : 'blindMode'}.webp`}
+                    alt="video-mode"
+                    width={28}
+                    height={28}
+                    className="text-rose-600"
+                  />
+                  <span className="text-white text-base font-medium">
+                    {videoMode === 'VIDEO' ? '비디오 모드' : '블라인드 모드'}
+                  </span>
+                </div>
+                {/* 게임 모드 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <img
+                    src={`/assets/${gameMode === 'DEFAULT' ? 'defaultMode' : 'foolMode'}.webp`}
+                    alt="game-mode"
+                    width={28}
+                    height={28}
+                    className="text-rose-600"
+                  />
+                  <span className="text-white text-base font-medium">
+                    {gameMode === 'DEFAULT' ? '일반 모드' : '바보 모드'}
+                  </span>
+                </div>
+                {/* 라운드 정보 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <TimerIcon className="w-5 h-5 text-rose-600" />
+                  <span className="text-white text-base font-medium">
+                    {totalRoundNumber} 라운드
+                  </span>
+                </div>
+                {/* 제시어 카테고리 표시 */}
+                <div className="bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg">
+                  <div className="flex items-center gap-1">
+                    <span className="text-rose-500 text-sm">카테고리</span>
+                    <span className="text-rose-500 text-base font-bold">
+                      {category}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
                 round={roundNumber}
@@ -1327,7 +1379,7 @@ const GameRoomPage = () => {
                         className="absolute top-1/2 left-1/2 w-20 h-20 z-50 -translate-x-1/2 -translate-y-1/2"
                       />
                     )}
-                    <div className="flex flex-row justify-start items-center gap-2">
+                    <div className="flex flex-row justify-start items-center gap-2 mb-1">
                       <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
@@ -1487,10 +1539,10 @@ const GameRoomPage = () => {
               </div>
             </div>
 
-            <div className="mb-2 mt-1 text-white">
-              <div className="z-10 justify-center">
-                <GameChat />
-              </div>
+            <div className="z-10 justify-center">
+              <GameChat />
+            </div>
+            <div className="text-white">
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}
