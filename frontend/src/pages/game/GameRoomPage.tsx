@@ -632,6 +632,8 @@ const GameRoomPage = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   const [gameMode, setGameMode] = useState<string>('DEFAULT');
   const [videoMode, setVideoMode] = useState<string>('VIDEO');
+  const [numberOfPlayer, setNumberOfPlayer] = useState<number>(4);
+
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
@@ -654,6 +656,7 @@ const GameRoomPage = () => {
   const [showLiarNotFoundModal, setShowLiarNotFoundModal] = useState(false);
   const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
   const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
+  const isLiarDisconnectedRef = useRef(isLiarDisconnected);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -698,6 +701,19 @@ const GameRoomPage = () => {
     console.log('방장 플레이어 이름 출력', hostNickname);
   }, [hostNickname]);
 
+  // 플레이어 수 변경 확인
+  useEffect(() => {
+    console.log('현재 플레이어 수', numberOfPlayer);
+
+    // if (numberOfPlayer < 3) {
+    //   console.log(
+    //     '게임 진행을 위한 플레이어 수가 부족합니다. 게임을 종료합니다.'
+    //   );
+    //   disconnectOpenVidu();
+    //   navigation('/waiting-room');
+    // }
+  }, [numberOfPlayer]);
+
   // 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
   useEffect(() => {
     if (leaveMessageReceive) {
@@ -732,6 +748,9 @@ const GameRoomPage = () => {
   // '나'를 제외한 참가자 순서대로 재정렬
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
+
+    // 플레이어 수 세팅 (확인용)
+    setNumberOfPlayer(participants.length);
 
     const filtered = participants.filter(
       (p) => p.participantNickname !== myUserName
@@ -911,8 +930,18 @@ const GameRoomPage = () => {
       }
 
       setSpeakingPlayer('');
+      console.log('라이어 플래그 2', isLiarDisconnectedRef.current);
       // setIsVoting(true);
-      getIsVoting();
+      // getIsVoting();
+      setIsVoting(() => {
+        if (isLiarDisconnectedRef.current) {
+          console.log('라이어 퇴장, 투표 x', isLiarDisconnectedRef.current);
+          return false;
+        } else {
+          console.log('라이어 존재, 투표 o', isLiarDisconnectedRef.current);
+          return true;
+        }
+      });
 
       setSelectedTargetNickname(null);
       // STT 서비스 발언자 초기화
@@ -997,7 +1026,12 @@ const GameRoomPage = () => {
         console.log('💡라이어 퇴장으로 인한 현재 라운드 종료');
 
         setIsLiarDisconnected(true);
-        console.log('라이어 플래그', isLiarDisconnected);
+        isLiarDisconnectedRef.current = true;
+        console.log(
+          '라이어 플래그',
+          isLiarDisconnected,
+          isLiarDisconnectedRef.current
+        );
 
         setShowLiarLeaveModal(true);
 
@@ -1058,11 +1092,16 @@ const GameRoomPage = () => {
     }
   }, [myUserName, speakingPlayer]);
 
-  const getIsVoting = () => {
-    if (isLiarDisconnected) return;
-    console.log('아직 라이어 있음', isLiarDisconnected);
-    setIsVoting(true);
-  };
+  // const getIsVoting = () => {
+  //   if (isLiarDisconnected) return;
+  //   console.log('아직 라이어 있음', isLiarDisconnected);
+  //   setIsVoting(true);
+  // };
+
+  // useEffect(() => {
+  //   isLiarDisconnectedRef.current = isLiarDisconnected;
+  //   console.log('라이어 연결 확인', isLiarDisconnected);
+  // }, [isLiarDisconnected]);
 
   useEffect(() => {
     if (isVoting) {
@@ -1183,6 +1222,7 @@ const GameRoomPage = () => {
     try {
       setShowScoreModal(false);
       setIsLiarDisconnected(false);
+      isLiarDisconnectedRef.current = false;
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
