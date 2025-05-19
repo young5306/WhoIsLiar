@@ -33,7 +33,7 @@ const FaceApiEmotion = ({
   const [isReady, setIsReady] = useState(false);
   const { sendEmotion: emotionSend, isConnected } = useWebSocketContext();
 
-  const pollingIntervalMs = 1000;
+  const pollingIntervalMs = 1500;
 
   const waitForModelReady = async (retry = 10) => {
     return new Promise<void>((resolve, reject) => {

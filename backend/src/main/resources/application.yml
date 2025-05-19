@@ -46,3 +46,6 @@ openvidu:
 
 openai:
   api-key: ${OPENAI_API_KEY}
+
+app:
+  stopwords-file: classpath:stopwords.txt
