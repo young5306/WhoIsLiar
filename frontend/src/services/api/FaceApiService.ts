@@ -17,7 +17,7 @@ export interface EmotionLogMessage {
   roomCode: string;
   order: number;
   userName: string;
-  emotionResult: FaceApiResult;
+  emotionResult: FaceApiResult | null;
 }
 
 export interface FaceApiResult {

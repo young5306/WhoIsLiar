@@ -19,6 +19,7 @@ interface GameControlsProps {
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onLeaveSession: () => void;
+  videoMode: string;
 }
 
 const GameControls = ({
@@ -26,6 +27,7 @@ const GameControls = ({
   isVideoEnabled,
   myUserName,
   speakingPlayer,
+  videoMode,
   onToggleAudio,
   onToggleVideo,
   onLeaveSession,
@@ -56,16 +58,18 @@ const GameControls = ({
               )}
             </button>
 
-            <button
-              onClick={onToggleVideo}
-              className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600 hover:opacity-80 hover:bg-gray-800' : 'bg-red-600 border border-red-600 hover:bg-red-700'} cursor-pointer`}
-            >
-              {isVideoEnabled ? (
-                <Video className="h-5 w-5" />
-              ) : (
-                <VideoOff className="h-5 w-5" />
-              )}
-            </button>
+            {videoMode === 'VIDEO' && (
+              <button
+                onClick={onToggleVideo}
+                className={`p-2 rounded-full ${isVideoEnabled ? 'bg-transparent border border-gray-600 hover:opacity-80 hover:bg-gray-800' : 'bg-red-600 border border-red-600 hover:bg-red-700'} cursor-pointer`}
+              >
+                {isVideoEnabled ? (
+                  <Video className="h-5 w-5" />
+                ) : (
+                  <VideoOff className="h-5 w-5" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
