@@ -153,7 +153,20 @@ public class RoundService {
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = "";
 		if (gameMode == GameMode.FOOL) {
-			w2 = gptService.getSimilarWord(w1, actualCategory.name());
+			if (actualCategory == Category.노래) {
+				List<String> songList = candidates.stream()
+					.map(CategoryWord::getWord)
+					.filter(song -> !song.equals(w1))
+					.toList();
+
+				if (songList.isEmpty()) {
+					w2 = gptService.getSimilarWord(w1, actualCategory.name());
+				} else {
+					w2 = songList.get(random.nextInt(songList.size()));
+				}
+			} else {
+				w2 = gptService.getSimilarWord(w1, actualCategory.name());
+			}
 		}
 
 		Round round = Round.builder()
