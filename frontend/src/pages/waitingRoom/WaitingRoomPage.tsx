@@ -725,7 +725,7 @@ const WaitingRoomContent = (): JSX.Element => {
     }
   };
 
-  const handleLeaveRoom = async () => {
+  const handleOutRoom = async () => {
     try {
       if (contextRoomCode) {
         // 방 나가기 API 호출
@@ -753,7 +753,8 @@ const WaitingRoomContent = (): JSX.Element => {
           }
 
           notify({ type: 'success', text: '방을 나갔습니다.' });
-          navigate('/room-list');
+          // room-list로 이동하면서 state로 새로고침 필요 여부 전달
+          navigate('/room-list', { state: { shouldRefresh: true } });
         }
       }
     } catch (error) {
@@ -1373,7 +1374,7 @@ const WaitingRoomContent = (): JSX.Element => {
       <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={handleLeaveRoom}
+        onConfirm={handleOutRoom}
         title="방 나가기"
         message="정말로 방을 나가시겠습니까?"
       />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import GameButton from '../../components/common/GameButton';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import RoomCreateModal from '../../components/modals/RoomCreateModal';
 import {
   getRoomList,
@@ -16,6 +16,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { logoutApi } from '../../services/api/AuthService';
 
 const RoomListPage = () => {
+  const location = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -68,10 +69,17 @@ const RoomListPage = () => {
 
     loadRooms();
 
+    // location state에서 shouldRefresh가 true인 경우 방 목록 새로고침
+    if (location.state?.shouldRefresh) {
+      fetchRooms();
+      // state 초기화
+      window.history.replaceState({}, document.title);
+    }
+
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [location]);
 
   const handleSearch = () => {
     fetchRooms(search);
