@@ -931,8 +931,7 @@ const GameRoomPage = () => {
 
       setSpeakingPlayer('');
       console.log('라이어 플래그 2', isLiarDisconnectedRef.current);
-      // setIsVoting(true);
-      // getIsVoting();
+
       setIsVoting(() => {
         if (isLiarDisconnectedRef.current) {
           console.log('라이어 퇴장, 투표 x', isLiarDisconnectedRef.current);
@@ -1027,11 +1026,11 @@ const GameRoomPage = () => {
 
         setIsLiarDisconnected(true);
         isLiarDisconnectedRef.current = true;
-        console.log(
-          '라이어 플래그',
-          isLiarDisconnected,
-          isLiarDisconnectedRef.current
-        );
+        // console.log(
+        //   '라이어 플래그',
+        //   isLiarDisconnected,
+        //   isLiarDisconnectedRef.current
+        // );
 
         setShowLiarLeaveModal(true);
 
@@ -1091,17 +1090,6 @@ const GameRoomPage = () => {
       sttService.finishSpeechRecording();
     }
   }, [myUserName, speakingPlayer]);
-
-  // const getIsVoting = () => {
-  //   if (isLiarDisconnected) return;
-  //   console.log('아직 라이어 있음', isLiarDisconnected);
-  //   setIsVoting(true);
-  // };
-
-  // useEffect(() => {
-  //   isLiarDisconnectedRef.current = isLiarDisconnected;
-  //   console.log('라이어 연결 확인', isLiarDisconnected);
-  // }, [isLiarDisconnected]);
 
   useEffect(() => {
     if (isVoting) {
