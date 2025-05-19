@@ -33,7 +33,7 @@ public class StompSubscribeEventListener {
 		if (destination != null && destination.startsWith("/topic/room.")
 			&& !destination.contains(".emotion")) {
 
-			// sessionRegistry.register(sessionId);
+			sessionRegistry.register(sessionId);
 
 			String nickname = (String)accessor.getSessionAttributes().get("nickname");
 
