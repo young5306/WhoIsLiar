@@ -35,7 +35,7 @@ public class ChatSocketController {
 		);
 
 		// /topic/room.{roomCode} 구독자에게 메시지 전송
-		messagingTemplate.convertAndSend("/topic/room." + roomCode, message);
+		messagingTemplate.convertAndSend("/topic/room." + roomCode, maskedMsg);
 	}
 
 	@MessageMapping("/game.start/{roomCode}")
