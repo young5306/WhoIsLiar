@@ -396,7 +396,10 @@ const WaitingRoomContent = (): JSX.Element => {
             // 게임 시작 메시지 처리
             if (message.chatType === 'GAME_START') {
               if (contextRoomCode && !isHost) {
-                navigate('/game-room');
+                // 참가자는 1초 후에 이동
+                setTimeout(() => {
+                  navigate('/game-room');
+                }, 1000);
               }
             }
 
@@ -798,7 +801,7 @@ const WaitingRoomContent = (): JSX.Element => {
         await startGame(contextRoomCode);
         console.log('✅startGame 완료');
 
-        // 모든 API 호출이 성공적으로 완료된 후 페이지 이동
+        // 방장은 즉시 이동
         navigate('/game-room');
       }
     } catch (error) {
