@@ -387,16 +387,11 @@ const WaitingRoomContent = (): JSX.Element => {
             // 게임 시작 메시지 처리
             if (message.chatType === 'GAME_START') {
               if (contextRoomCode && !isHost) {
-                // 참가자는 1초 후에 이동
-                setTimeout(() => {
-                  navigate('/game-room');
-                }, 1000);
+                navigate('/game-room');
               }
             }
 
             if (message.chatType === 'ROOM_READY_STATUS') {
-              console.log('방 준비 상태 메시지 수신:', message.content);
-
               // 이전 상태와 새 상태 비교
               const newReadyStatus = message.content === 'TRUE';
 
