@@ -319,8 +319,19 @@ const GameRoomPage = () => {
   };
 
   // 세션 참가
-  const joinSession = async (e?: React.FormEvent) => {
+  const joinSession = async (
+    e?: React.FormEvent,
+    retryCount = 0,
+    delay = 500
+  ) => {
     if (e) e.preventDefault();
+
+    // openvidu 연결 재시도
+    const MAX_RETRIES = 5;
+
+    if (retryCount > 0) {
+      console.log(`세션 연결 재시도 중... (${retryCount}/${MAX_RETRIES})`);
+    }
 
     OV.current = new OpenVidu();
     const mySession = OV.current.initSession();
@@ -406,6 +417,18 @@ const GameRoomPage = () => {
       setCurrentMicDevice(currentMicDevice);
     } catch (error) {
       console.error('세션 연결 중 오류 발생:', error);
+
+      if (String(error).includes('423') && retryCount < MAX_RETRIES) {
+        console.warn(
+          `세션 잠금 상태: ${delay}ms 후 재시도 (${retryCount + 1}/${MAX_RETRIES})`
+        );
+
+        const nextDelay = Math.min(delay * 1.5, 3000);
+
+        setTimeout(() => joinSession(e, retryCount + 1, nextDelay), delay);
+      } else if (retryCount >= MAX_RETRIES) {
+        console.error('최대 재시도 횟수를 초과했습니다.');
+      }
     }
   };
 
