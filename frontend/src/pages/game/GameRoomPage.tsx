@@ -53,7 +53,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { MicOff, VideoOff } from 'lucide-react';
+import { MicOff, TimerIcon, VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
@@ -634,6 +634,7 @@ const GameRoomPage = () => {
   const [videoMode, setVideoMode] = useState<string>('VIDEO');
   const [numberOfPlayer, setNumberOfPlayer] = useState<number>(4);
 
+  const [roomName, setRoomName] = useState<string>('');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
@@ -802,6 +803,7 @@ const GameRoomPage = () => {
         setGameMode(roomInfoRes.roomInfo.gameMode);
         setVideoMode(roomInfoRes.roomInfo.videoMode);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
+        setRoomName(roomInfoRes.roomInfo.roomName);
 
         setParticipants(playerInfoRes.data.participants);
 
@@ -1375,7 +1377,139 @@ const GameRoomPage = () => {
                 round={roundNumber}
                 totalRoundNumber={totalRoundNumber}
                 turn={currentTurn}
-                category={category}
+                // category={category}
+                topic={
+                  myWord
+                    ? myWord
+                    : '당신은 라이어입니다! 제시어를 추측해보세요.'
+                }
+                isLiar={playerState.isLiar} // 투표 결과 조회 때 받음
+              />
+              {/* --- 발언 시간 --- */}
+              <>
+                {/* 발언자만 skip 버튼 표시 */}
+                {myUserName === speakingPlayer && (
+                  <GameButton
+                    text="Skip"
+                    size="small"
+                    variant="neon"
+                    onClick={() => handleSkipTurn(roomCode)}
+                    disabled={isSkippingSpeech}
+                  />
+                )}
+                {/* 발언 타이머는 모두에게 표시 */}
+                {speakingPlayer && (
+                  <div className="relative">
+                    <Timer
+                      ref={speechTimerRef}
+                      onTimeEnd={handleSpeechTimerEnd}
+                      size="medium"
+                      onMount={handleTimerMount}
+                    />
+                  </div>
+                )}
+              </>
+              {/* --- 투표 시간 --- */}
+              {isVoting && (
+                <>
+                  {currentTurn < 3 ? (
+                    <>
+                      <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
+                        <p>플레이어를 선택해 투표를 해주세요.</p>
+                        <p>
+                          ※ 시간 내에 투표하지 않으면{' '}
+                          <span className="text-primary-600 font-bold">
+                            기권
+                          </span>
+                          으로 투표됩니다.
+                        </p>
+                      </div>
+                      <GameButton
+                        text="기권"
+                        size="small"
+                        variant={
+                          selectedTargetNickname === '__SKIP__'
+                            ? 'default'
+                            : 'gray'
+                        }
+                        onClick={handleVoteSkip}
+                      />
+                    </>
+                  ) : (
+                    <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
+                      ※ 시간 내에 투표하지 않으면{' '}
+                      <span className="text-primary-600 font-bold">
+                        자기 자신
+                      </span>
+                      에게 투표됩니다
+                    </div>
+                  )}
+                  <div className="relative">
+                    <Timer
+                      ref={voteTimerRef}
+                      onTimeEnd={handleVotingEnd}
+                      size="medium"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex items-center justify-between mb-[1vh]">
+              <div className="flex items-end gap-4">
+                <div className="text-white headline-small font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-xl">
+                  {roomName || '게임방'}
+                </div>
+
+                {/* 화면 모드 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <img
+                    src={`/assets/${videoMode === 'VIDEO' ? 'videoMode' : 'blindMode'}.webp`}
+                    alt="video-mode"
+                    width={28}
+                    height={28}
+                    className="text-rose-600"
+                  />
+                  <span className="text-white text-base font-medium">
+                    {videoMode === 'VIDEO' ? '비디오 모드' : '블라인드 모드'}
+                  </span>
+                </div>
+                {/* 게임 모드 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <img
+                    src={`/assets/${gameMode === 'DEFAULT' ? 'defaultMode' : 'foolMode'}.webp`}
+                    alt="game-mode"
+                    width={28}
+                    height={28}
+                    className="text-rose-600"
+                  />
+                  <span className="text-white text-base font-medium">
+                    {gameMode === 'DEFAULT' ? '일반 모드' : '바보 모드'}
+                  </span>
+                </div>
+                {/* 라운드 정보 표시 */}
+                <div className="flex items-center gap-1 bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <TimerIcon className="w-5 h-5 text-rose-600" />
+                  <span className="text-white text-base font-medium">
+                    {totalRoundNumber} 라운드
+                  </span>
+                </div>
+                {/* 제시어 카테고리 표시 */}
+                <div className="bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg">
+                  <div className="flex items-center gap-1">
+                    <span className="text-rose-500 text-sm">카테고리</span>
+                    <span className="text-rose-500 text-base font-bold">
+                      {category}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="text-white w-full h-full grid grid-cols-7">
+              <GameInfo
+                round={roundNumber}
+                totalRoundNumber={totalRoundNumber}
+                turn={currentTurn}
+                // category={category}
                 topic={
                   myWord
                     ? myWord
@@ -1395,8 +1529,7 @@ const GameRoomPage = () => {
                     key={sub.id || index}
                     onClick={() => isVoting && handleSelectTarget(sub.nickname)}
                     className={`relative ${getParticipantPosition(position!, subscribers.length)} 
-                    ${isVoting ? 'cursor-pointer' : ''}
-                    ${sub.nickname === speakingPlayer ? 'rounded animate-glow' : ''}`}
+                    ${isVoting ? 'cursor-pointer' : ''}`}
                   >
                     {/* 선택된 타겟에 과녁 이미지 */}
                     {selectedTargetNickname === sub.nickname && (
@@ -1407,7 +1540,10 @@ const GameRoomPage = () => {
                       />
                     )}
                     <div className="flex flex-row justify-start items-center gap-2 mb-1">
-                      <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
+                      <div
+                        className={`w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl
+                    ${sub.nickname === speakingPlayer ? 'animate-glow' : ''}`}
+                      >
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
                             <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
@@ -1485,8 +1621,7 @@ const GameRoomPage = () => {
               <div
                 onClick={() => isVoting && handleSelectTarget(myUserName)}
                 className={`relative ${myPosition} 
-                ${isVoting ? 'cursor-pointer' : ''}
-                ${myUserName === speakingPlayer ? 'animate-glow' : ''}`}
+                ${isVoting ? 'cursor-pointer' : ''}`}
               >
                 {selectedTargetNickname === myUserName && (
                   <img
@@ -1496,7 +1631,10 @@ const GameRoomPage = () => {
                   />
                 )}
                 <div className="flex flex-row justify-start items-center gap-2">
-                  <div className="w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                  <div
+                    className={`w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg
+                ${myUserName === speakingPlayer ? 'animate-glow' : ''}`}
+                  >
                     <div className="w-full min-h-[150px] max-h-[170px] relative">
                       <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
@@ -1566,10 +1704,10 @@ const GameRoomPage = () => {
               </div>
             </div>
 
-            <div className="mb-2 mt-1 text-white">
-              <div className="z-10 justify-center">
-                <GameChat />
-              </div>
+            <div className="z-10 justify-center">
+              <GameChat />
+            </div>
+            <div className="text-white">
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}
