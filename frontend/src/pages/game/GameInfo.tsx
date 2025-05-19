@@ -2,7 +2,7 @@ interface GameInfoProps {
   round: number;
   totalRoundNumber: number;
   turn: number;
-  category: string;
+  // category: string;
   topic: string;
   isLiar: boolean;
 }
@@ -11,7 +11,7 @@ const GameInfo = ({
   round,
   // totalRoundNumber,
   turn,
-  category,
+  // category,
   topic,
   isLiar,
 }: GameInfoProps) => {

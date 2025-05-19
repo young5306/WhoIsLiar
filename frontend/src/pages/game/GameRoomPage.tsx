@@ -1293,7 +1293,7 @@ const GameRoomPage = () => {
                 </>
               )}
             </div>
-            <div className="flex items-center justify-between mb-[1vh] z-55">
+            <div className="flex items-center justify-between mb-[1vh]">
               <div className="flex items-end gap-4">
                 <div className="text-white headline-small font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-xl">
                   {roomName || '게임방'}
@@ -1326,7 +1326,7 @@ const GameRoomPage = () => {
                   </span>
                 </div>
                 {/* 라운드 정보 표시 */}
-                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                <div className="flex items-center gap-1 bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
                   <TimerIcon className="w-5 h-5 text-rose-600" />
                   <span className="text-white text-base font-medium">
                     {totalRoundNumber} 라운드
@@ -1348,7 +1348,7 @@ const GameRoomPage = () => {
                 round={roundNumber}
                 totalRoundNumber={totalRoundNumber}
                 turn={currentTurn}
-                category={category}
+                // category={category}
                 topic={
                   myWord
                     ? myWord
