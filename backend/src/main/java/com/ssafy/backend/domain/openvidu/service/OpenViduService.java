@@ -58,13 +58,13 @@ public class OpenViduService {
 
 		RLock lock = redissonClient.getLock("openvidu:lock:" + roomCode);
 
-		int retryAttempts = 3;
-		int delayTime = 500;
+		int retryAttempts = 10;
+		int delayTime = 200;
 
 		while (retryAttempts-- > 0) {
 
 			try {
-				boolean isLocked = lock.tryLock(1, 5, TimeUnit.SECONDS);
+				boolean isLocked = lock.tryLock(2, 1, TimeUnit.SECONDS);
 				if (!isLocked) {
 					log.warn("Redisson 락 획득 실패 - roomCode: {}, 남은 시도: {}", roomCode, retryAttempts);
 					Thread.sleep(delayTime);
