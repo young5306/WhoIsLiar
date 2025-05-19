@@ -153,7 +153,20 @@ public class RoundService {
 		String w1 = candidates.get(random.nextInt(candidates.size())).getWord();
 		String w2 = "";
 		if (gameMode == GameMode.FOOL) {
-			w2 = gptService.getSimilarWord(w1, actualCategory.name());
+			if (actualCategory == Category.노래) {
+				List<String> songList = candidates.stream()
+					.map(CategoryWord::getWord)
+					.filter(song -> !song.equals(w1))
+					.toList();
+
+				if (songList.isEmpty()) {
+					w2 = gptService.getSimilarWord(w1, actualCategory.name());
+				} else {
+					w2 = songList.get(random.nextInt(songList.size()));
+				}
+			} else {
+				w2 = gptService.getSimilarWord(w1, actualCategory.name());
+			}
 		}
 
 		Round round = Round.builder()
@@ -336,7 +349,7 @@ public class RoundService {
 		if (votedActive == totalActive) {
 			Integer prev = lastNotifiedTurn.putIfAbsent(roundId, round.getTurn());
 			if (prev == null) {
-				applyVoteScoring(round);
+				// applyVoteScoring(round);
 
 				chatSocketService.voteCompleted(roomCode);
 			}
@@ -499,18 +512,18 @@ public class RoundService {
 	public GuessResponseDto submitGuess(String roomCode,
 		int roundNumber,
 		GuessRequestDto req) {
+
+		// 1) 방/라운드 조회
 		Room room = roomRepository.findByRoomCode(roomCode)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
-
 		Round round = roundRepository.findByRoomAndRoundNumber(room, roundNumber)
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
+		// 2) 단어 정답 여부 판정
 		String targetWord = round.getWord1();
-
-		String input = req.guessText().replaceAll("\\s+", "").toLowerCase();
-		String answer = targetWord.replaceAll("\\s+", "").toLowerCase();
-
-		boolean isCorrect = input.equals(answer);
+		String normalizedInput  = req.guessText().replaceAll("\\s+", "").toLowerCase();
+		String normalizedAnswer  = targetWord.replaceAll("\\s+", "").toLowerCase();
+		boolean isCorrect = normalizedInput.equals(normalizedAnswer);
 
 		if (!isCorrect) {
 			if (room.getGameMode() == GameMode.DEFAULT) {
@@ -519,7 +532,7 @@ public class RoundService {
 					List<Synonym> syns = synonymRepository.findByMainWord(cwOpt.get());
 					for (Synonym s : syns) {
 						String normSyn = s.getSynonym().replaceAll("\\s+", "").toLowerCase();
-						if (input.equals(normSyn)) {
+						if (normalizedInput.equals(normSyn)) {
 							isCorrect = true;
 							break;
 						}
@@ -531,27 +544,115 @@ public class RoundService {
 			}
 		}
 
-		Winner winnerEnum = isCorrect ? Winner.liar : Winner.civil;
+		Winner winner = isCorrect ? Winner.liar : Winner.civil;
 
+		// 3) ParticipantRound 목록
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
+		ParticipantRound liarPR = prList.stream()
+			.filter(ParticipantRound::isLiar)
+			.findFirst()
+			.orElseThrow(() -> new CustomException(ResponseCode.SERVER_ERROR));
+		long liarId = liarPR.getParticipant().getId();
+		List<ParticipantRound> civPRs = prList.stream()
+			.filter(pr -> !pr.isLiar())
+			.collect(Collectors.toList());
 
-		if (winnerEnum == Winner.civil) {
-			prList.stream()
-				.filter(pr -> !pr.isLiar())
-				.forEach(pr -> pr.addScore(100));
-		} else {
-			prList.stream()
-				.filter(ParticipantRound::isLiar)
-				.forEach(pr -> pr.addScore(100));
+		int skipCount = 0;
+		Map<Long,Integer> voteCounts = new HashMap<>();
+		for (ParticipantRound pr : prList) {
+			if (pr.getTargetParticipant() == null) {
+				skipCount++;
+			} else {
+				long tid = pr.getTargetParticipant().getId();
+				voteCounts.put(tid, voteCounts.getOrDefault(tid, 0) + 1);
+			}
 		}
 
-		round.setWinner(winnerEnum);
+		// 5) nonSkipCounts, maxCount, minCount 계산
+		List<Integer> nonSkipCounts = new ArrayList<>(voteCounts.values());
+		int maxCount = nonSkipCounts.isEmpty() ? 0 : Collections.max(nonSkipCounts);
+		int minCount = nonSkipCounts.isEmpty() ? 0 : Collections.min(nonSkipCounts);
+
+		long topTieCount = voteCounts.values().stream()
+			.filter(v -> v == maxCount)
+			.count();
+
+		// 6) skipFlag 판정
+		boolean skipFlag;
+		if (nonSkipCounts.isEmpty()) {
+			skipFlag = true;
+		} else if (skipCount >= maxCount) {
+			skipFlag = true;
+		} else if (minCount == maxCount) {
+			skipFlag = true;
+		} else if (topTieCount > 1) {
+			skipFlag = true;
+		} else {
+			skipFlag = false;
+		}
+
+		// 7) topVotedId (지목된 시민)
+		final Long topVotedId = skipFlag
+			? null
+			: voteCounts.entrySet().stream()
+			.max(Map.Entry.comparingByValue())
+			.map(Map.Entry::getKey)
+			.orElse(null);
+
+		// 8) “시민이 라이어를 찾았는지”
+		boolean citizenFoundLiar = (topVotedId != null && topVotedId.equals(liarId));
+
+		// 9) 점수 부여
+		if (winner == Winner.civil) {
+			// ▶ 시민 승리
+			if (citizenFoundLiar) {
+				// 1) 시민이 라이어를 찾고 + 라이어 오답
+				civPRs.forEach(pr -> pr.addScore(100));
+			} else {
+				// 2) 시민이 못 찾고 + 라이어 오답
+				liarPR.addScore(100);
+				if (!skipFlag && topVotedId != null) {
+					// 지목된 시민에만 페널티
+					prList.stream()
+						.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
+						.forEach(pr -> pr.addScore(-100));
+				}
+				// 나머지 시민
+				civPRs.forEach(pr -> pr.addScore(-100));
+			}
+		} else {
+			// ▶ 라이어 승리
+			if (citizenFoundLiar) {
+				// 1) 시민이 라이어 찾았으나 라이어 정답
+				liarPR.addScore(100);
+				civPRs.forEach(pr -> pr.addScore(-100));
+			} else {
+				// 시민이 못 찾았을 때
+				if (isCorrect) {
+					// 3) 라이어 정답
+					liarPR.addScore(200);
+				} else {
+					// 2) 라이어 오답
+					liarPR.addScore(100);
+				}
+				if (!skipFlag && topVotedId != null) {
+					prList.stream()
+						.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
+						.forEach(pr -> pr.addScore(-100));
+				}
+				// 나머지 시민
+				civPRs.forEach(pr -> pr.addScore(-100));
+			}
+		}
+
+		round.setWinner(winner);
+		prList.forEach(participantRoundRepository::save);
 
 		String nickname = SecurityUtils.getCurrentNickname();
 		String socketMessage = formatGuessMessage(nickname, req.guessText(), isCorrect);
 		chatSocketService.guessSubmitted(roomCode, socketMessage);
 
-		return new GuessResponseDto(isCorrect, winnerEnum.name());
+		return new GuessResponseDto(isCorrect, winner.name());
 	}
 
 	private String formatGuessMessage(String nickname, String guessText, boolean isCorrect) {
