@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const pageImages = [
-  '/bgImages/ruleBook/1.svg',
-  '/bgImages/ruleBook/2.svg',
-  '/bgImages/ruleBook/3.svg',
-  '/bgImages/ruleBook/4.svg',
-  '/bgImages/ruleBook/5.svg',
+  '/bgImages/ruleBook/1.webp',
+  '/bgImages/ruleBook/2.webp',
+  '/bgImages/ruleBook/3.webp',
+  '/bgImages/ruleBook/4.webp',
+  '/bgImages/ruleBook/5.webp',
+  '/bgImages/ruleBook/6.webp',
 ];
 
 const RuleBookPage = () => {
@@ -69,7 +70,7 @@ const RuleBookPage = () => {
         onClick={handleBack}
         className="absolute bottom-6 right-6 flex items-center gap-2 z-20 cursor-pointer"
       >
-        <img src="/backIcon.png" alt="뒤로가기" className="w-16 h-16" />
+        <img src="assets/backIcon.webp" alt="뒤로가기" className="w-16 h-16" />
       </button>
     </div>
   );
