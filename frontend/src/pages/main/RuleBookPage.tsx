@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomCursor from '../../components/CustomCursor';
 
 const pageImages = [
   '/bgImages/ruleBook/1.webp',
@@ -30,11 +31,12 @@ const RuleBookPage = () => {
   };
 
   const handleBack = () => {
-    navigate('/');
+    navigate(-1);
   };
 
   return (
     <div className="relative w-screen h-screen bg-black">
+      <CustomCursor />
       <img
         src={pageImages[pageIndex]}
         alt={`RuleBook Page ${pageIndex + 1}`}

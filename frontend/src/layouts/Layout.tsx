@@ -1,5 +1,8 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import BackgroundMusic from '../components/common/BackgroundMusic';
+import useCustomCursor from '../hooks/useCustomCursor';
+import '../styles/cursor.css';
+import CustomCursor from '../components/CustomCursor';
 
 const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
   {
@@ -25,17 +28,21 @@ const bgImages: Record<string, { imageUrl: string; backgroundColor: string }> =
     },
   };
 
+const defaultStyle = {
+  imageUrl: '/bgImages/mainBg.svg',
+  backgroundColor: 'bg-[#211926]',
+};
+
 const Layout = () => {
   const location = useLocation();
-  const pageStyle = bgImages[location.pathname] || {
-    imageUrl: '',
-    backgroundColor: '',
-  };
+  const pageStyle = bgImages[location.pathname] || defaultStyle;
+  useCustomCursor();
 
   return (
     <div
       className={`w-screen h-screen overflow-hidden ${pageStyle.backgroundColor}`}
     >
+      <CustomCursor />
       {/* 배경 이미지 */}
       <img
         src={pageStyle.imageUrl}
