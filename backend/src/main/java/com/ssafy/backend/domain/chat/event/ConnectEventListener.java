@@ -19,7 +19,7 @@ public class ConnectEventListener {
 	public void handleSessionConnect(SessionConnectEvent event) {
 		StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
 		String sessionId = sha.getSessionId();
-		log.debug("[WS CONNECT] sessionId={} 등록", sessionId);
+		log.info("[WS CONNECT] sessionId={} 등록", sessionId);
 		sessionRegistry.register(sessionId);
 	}
 }
