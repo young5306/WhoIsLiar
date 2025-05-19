@@ -653,6 +653,7 @@ const GameRoomPage = () => {
   const [showLiarFoundModal, setShowLiarFoundModal] = useState(false);
   const [showLiarNotFoundModal, setShowLiarNotFoundModal] = useState(false);
   const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
+  const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -900,7 +901,6 @@ const GameRoomPage = () => {
 
     // 모든 발언 종료 후 투표 시작
     if (latest.chatType === 'ROUND_END') {
-      if (showLiarLeaveModal) return;
       console.log('💡투표 시작');
 
       // 내가 마지막 발언자였으면 녹음 종료 및 요약 요청
@@ -911,7 +911,9 @@ const GameRoomPage = () => {
       }
 
       setSpeakingPlayer('');
-      setIsVoting(true);
+      // setIsVoting(true);
+      getIsVoting();
+
       setSelectedTargetNickname(null);
       // STT 서비스 발언자 초기화
       sttService.clearSpeakingPlayer();
@@ -927,8 +929,6 @@ const GameRoomPage = () => {
 
     // HINT 메시지 처리
     if (latest.chatType === 'HINT') {
-      if (showLiarLeaveModal) return;
-
       console.log('💡HINT 메시지 수신:', latest);
       console.log('💡발신자:', latest.sender, '내용:', latest.content);
 
@@ -942,8 +942,6 @@ const GameRoomPage = () => {
 
     // 모든 플레이어 투표 종료 후 (VoteResultModal 열기)
     if (latest.chatType === 'VOTE_SUBMITTED') {
-      if (showLiarLeaveModal) return;
-
       console.log('🔥🔥🔥모든 플레이어 투표 완료');
       console.log(latest);
 
@@ -968,7 +966,6 @@ const GameRoomPage = () => {
 
     // 라이어 제시어 추측 제출 후 (LiarFoundModal 이후 로직)
     if (latest.chatType === 'GUESS_SUBMITTED') {
-      if (showLiarLeaveModal) return;
       (async () => {
         setIsCorrect(latest.content.startsWith('정답!') ? true : false);
         const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
@@ -997,7 +994,20 @@ const GameRoomPage = () => {
     if (latest.chatType === 'LIAR_DISCONNECT') {
       if (latest) {
         console.log(`${latest.chatType} 메시지 수신:`, latest);
+        console.log('💡라이어 퇴장으로 인한 현재 라운드 종료');
+
+        setIsLiarDisconnected(true);
+        console.log('라이어 플래그', isLiarDisconnected);
+
         setShowLiarLeaveModal(true);
+
+        Promise.all([onlyFetchGameInfo()])
+          .then(() => {
+            console.log('✅ LiarLeave 후 라운드 정보 업데이트 완료');
+          })
+          .catch((err) => {
+            console.log('❌ LiarLeave 후 라운드 정보 가져오기 실패:', err);
+          });
       }
     }
   }, [chatMessages, myUserName, publisher]);
@@ -1047,6 +1057,12 @@ const GameRoomPage = () => {
       sttService.finishSpeechRecording();
     }
   }, [myUserName, speakingPlayer]);
+
+  const getIsVoting = () => {
+    if (isLiarDisconnected) return;
+    console.log('아직 라이어 있음', isLiarDisconnected);
+    setIsVoting(true);
+  };
 
   useEffect(() => {
     if (isVoting) {
@@ -1166,7 +1182,7 @@ const GameRoomPage = () => {
   const handleScoreTimeEnd = async () => {
     try {
       setShowScoreModal(false);
-      setShowLiarLeaveModal(false);
+      setIsLiarDisconnected(false);
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
@@ -1663,9 +1679,8 @@ const GameRoomPage = () => {
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
           onNext={async () => {
-            // setShowLiarLeaveModal(false);
-            await onlyFetchGameInfo();
             await handleScoreTimeEnd();
+            setShowLiarLeaveModal(false);
           }}
         />
       )}
