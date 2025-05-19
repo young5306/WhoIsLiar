@@ -809,10 +809,20 @@ const WaitingRoomContent = (): JSX.Element => {
   };
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
       e.preventDefault();
+
+      // HTTP 퇴장 요청 보내기
+      const roomCode = useRoomStore.getState().roomCode;
+      if (roomCode) {
+        try {
+          await outRoom(roomCode);
+        } catch (error) {
+          console.error('퇴장 요청 실패:', error);
+        }
+      }
+
       clearRoomCode(); // roomCode 초기화
-      return (e.returnValue = '');
     };
 
     // 뒤로가기 버튼 클릭시 경고창 방지를 위함
@@ -827,12 +837,23 @@ const WaitingRoomContent = (): JSX.Element => {
   // 플레이어가 뒤로가기 버튼 누른 경우
   useEffect(() => {
     history.pushState(null, '', window.location.href);
-    const handlePopState = () => {
+    const handlePopState = async () => {
       const shouldLeave = window.confirm('대기방에서 나가시겠습니까?');
       if (shouldLeave) {
         if (beforeUnloadRef.current) {
           window.removeEventListener('beforeunload', beforeUnloadRef.current);
         }
+
+        // HTTP 퇴장 요청 보내기
+        const roomCode = useRoomStore.getState().roomCode;
+        if (roomCode) {
+          try {
+            await outRoom(roomCode);
+          } catch (error) {
+            console.error('퇴장 요청 실패:', error);
+          }
+        }
+
         clearRoomCode();
         window.location.href = '/room-list';
       }

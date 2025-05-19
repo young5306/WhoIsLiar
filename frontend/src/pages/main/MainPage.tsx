@@ -3,6 +3,7 @@ import GameButton from '../../components/common/GameButton';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useEffect } from 'react';
 import { useRoomStore } from '../../stores/useRoomStore';
+import logo from '/assets/logo.png';
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -24,9 +25,11 @@ const MainPage = () => {
 
   return (
     <div className="relative h-screen">
-      <h1 className="absolute top-2/5 left-1/2 -translate-x-1/2 text-primary-600 display-xlarge">
-        믿지마
-      </h1>
+      <img
+        src={logo}
+        alt="믿지마"
+        className="absolute top-1/7 left-1/2 -translate-x-1/2 w-auto h-100"
+      />
       <div className="absolute top-[55%] left-1/2 -translate-x-1/2 flex flex-col gap-6">
         <GameButton text="게임 시작" size="large" onClick={handleStartGame} />
         <GameButton text="룰북" size="large" onClick={handleRuleBook} />

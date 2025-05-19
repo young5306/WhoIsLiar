@@ -12,6 +12,7 @@ import { useRoomStore } from '../../stores/useRoomStore';
 import { notify } from '../../components/common/Toast';
 import InputModal from '../../components/modals/InputModal';
 import { Crown } from 'lucide-react';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { logoutApi } from '../../services/api/AuthService';
 
@@ -178,6 +179,18 @@ const RoomListPage = () => {
           onClick={handleLogout}
         />
       </div>
+
+      {/* 룰북 버튼 */}
+      <div className="absolute bottom-8 right-8">
+        <button
+          onClick={() => navigate('/rule-book')}
+          className="group bg-gray-800/50 hover:bg-gray-700/50 backdrop-blur-sm p-3 rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-rose-500/20"
+          title="게임 규칙 보기"
+        >
+          <QuestionMarkIcon className="w-7 h-7 text-rose-500 group-hover:scale-110 transition-transform duration-200" />
+        </button>
+      </div>
+
       <div className="flex items-end justify-between mb-5">
         <div className="flex items-center gap-2">
           <h1 className="display-small text-gray-0">방 목록</h1>
