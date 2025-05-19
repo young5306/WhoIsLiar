@@ -506,6 +506,8 @@ const WaitingRoomContent = (): JSX.Element => {
 
               // 약간의 지연 후 방 정보 갱신 (서버 데이터 업데이트 대기)
               setTimeout(async () => {
+                if (window.location.pathname.includes('game-room')) return;
+
                 try {
                   console.log('방 정보 갱신 시작');
                   const response = await getRoomData(contextRoomCode);

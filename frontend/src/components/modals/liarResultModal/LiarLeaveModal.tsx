@@ -38,7 +38,11 @@ const LiarLeaveModal = ({
             </div>
             <div className="text-primary-600 display-small">
               <p className="mb-3">LIAR가 퇴장하여 게임을 계속할 수 없습니다.</p>
-              <p>다음 라운드로 자동 진행됩니다.</p>
+              {roundNumber !== totalRoundNumber ? (
+                <p>다음 라운드로 자동 진행됩니다.</p>
+              ) : (
+                <p>잠시후 게임이 종료됩니다.</p>
+              )}
             </div>
           </div>
         </div>

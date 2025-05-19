@@ -14,7 +14,7 @@ interface FaceApiEmotionProps {
   roomCode: string | null;
   isLogReady: boolean;
   setIsLogReady: (isLogReady: boolean) => void;
-  onEmotionUpdate: (emotion: FaceApiResult) => void;
+  onEmotionUpdate: (emotion: FaceApiResult | null) => void;
 }
 
 const FaceApiEmotion = ({
@@ -134,6 +134,8 @@ const FaceApiEmotion = ({
 
           if (res) {
             setEmotionResult(res);
+          } else {
+            setEmotionResult(null);
           }
         } catch (error) {
           console.error(`${name} - 감정 분석 오류:`, error);
@@ -148,9 +150,15 @@ const FaceApiEmotion = ({
   }, [isReady]);
 
   useEffect(() => {
-    if (!emotionResult?.expressions) return;
+    if (!emotionResult?.expressions) {
+      onEmotionUpdate(null);
+    } else {
+      onEmotionUpdate(emotionResult);
+    }
 
-    onEmotionUpdate(emotionResult);
+    // if (!emotionResult?.expressions) return;
+
+    // onEmotionUpdate(emotionResult);
     // console.log(`${name} - 감정 결과 전송`, isLogReady, emotionResult);
 
     if (!isConnected) {
