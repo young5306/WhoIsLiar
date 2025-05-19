@@ -36,7 +36,7 @@ const VoteResultModal = ({
 
         <div className="flex justify-center items-center gap-4">
           <img
-            src="assets/mask-fill.png"
+            src="assets/mask-fill.webp"
             alt="vote-icon"
             className="w-12 h-12"
           />
