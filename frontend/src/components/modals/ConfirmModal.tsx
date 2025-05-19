@@ -26,7 +26,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-60"
       onClick={handleBackdropClick}
     >
       <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl p-6 w-96 border border-gray-700/50">

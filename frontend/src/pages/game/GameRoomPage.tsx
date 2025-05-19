@@ -1322,7 +1322,7 @@ const GameRoomPage = () => {
                     {/* 선택된 타겟에 과녁 이미지 */}
                     {selectedTargetNickname === sub.nickname && (
                       <img
-                        src="assets/target.png"
+                        src="assets/target.webp"
                         alt="타겟"
                         className="absolute top-1/2 left-1/2 w-20 h-20 z-50 -translate-x-1/2 -translate-y-1/2"
                       />
@@ -1355,7 +1355,7 @@ const GameRoomPage = () => {
                             {sub.stream.videoActive ? (
                               videoMode === 'BLIND' ? (
                                 <img
-                                  src="/assets/blindMode.png"
+                                  src="/assets/blindMode.webp"
                                   alt="blind mode"
                                   className="w-full h-full object-cover"
                                 />
@@ -1382,16 +1382,16 @@ const GameRoomPage = () => {
                     {sub.nickname === speakingPlayer && (
                       <>
                         {position === 2 || position === 5 ? (
-                          <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
+                          <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-55">
                             <img
-                              src="assets/point-purple-right.png"
+                              src="assets/point-purple-right.webp"
                               className="w-[100px]"
                             />
                           </div>
                         ) : (
-                          <div className="animate-bounce-x-left absolute bottom-15 right-[-290px] z-60">
+                          <div className="animate-bounce-x-left absolute bottom-15 right-[-290px] z-55">
                             <img
-                              src="assets/point-purple-left.png"
+                              src="assets/point-purple-left.webp"
                               className="w-[100px]"
                             />
                           </div>
@@ -1411,7 +1411,7 @@ const GameRoomPage = () => {
               >
                 {selectedTargetNickname === myUserName && (
                   <img
-                    src="assets/target.png"
+                    src="assets/target.webp"
                     alt="타겟"
                     className="absolute top-1/2 left-1/2 w-20 h-20 z-30 -translate-x-1/2 -translate-y-1/2"
                   />
@@ -1479,7 +1479,7 @@ const GameRoomPage = () => {
                 {myUserName === speakingPlayer && (
                   <div className="animate-bounce-x-right absolute bottom-15 left-[-120px] z-60">
                     <img
-                      src="assets/point-purple-right.png"
+                      src="assets/point-purple-right.webp"
                       className="w-[100px]"
                     />
                   </div>

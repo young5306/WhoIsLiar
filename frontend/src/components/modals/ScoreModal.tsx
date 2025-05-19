@@ -12,12 +12,12 @@ interface ScoreModalProps {
 }
 
 const titleImageMap = {
-  'liar-win': 'assets/liar-win.png',
-  'civilian-win': 'assets/civilian-win.png',
-  'final-score': 'assets/final-score.png',
+  'liar-win': 'assets/liar-win.webp',
+  'civilian-win': 'assets/civilian-win.webp',
+  'final-score': 'assets/final-score.webp',
 };
 
-const medalIcons = ['assets/1st.png', 'assets/2nd.png', 'assets/3rd.png'];
+const medalIcons = ['assets/1st.webp', 'assets/2nd.webp', 'assets/3rd.webp'];
 
 const ScoreModal = ({
   type,
@@ -71,7 +71,7 @@ const ScoreModal = ({
               <div className="flex flex-1 justify-between items-center bg-gray-800 rounded px-5 py-2">
                 <div className="flex items-center gap-2">
                   <img
-                    src="assets/score-tag.png"
+                    src="assets/score-tag.webp"
                     alt="player-icon"
                     className="w-5 h-5 mr-1"
                   />
