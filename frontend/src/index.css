@@ -41,6 +41,11 @@
   --color-point-logbox: #320000;
 }
 
+/* Hide system cursor globally */
+* {
+  cursor: none !important;
+}
+
 @layer utilities {
   /* Display */
   .display-xlarge {

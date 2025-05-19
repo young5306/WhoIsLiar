@@ -5,6 +5,7 @@ import RuleBookPage from '../pages/main/RuleBookPage';
 import LoginPage from '../pages/main/LoginPage';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useRoomStore } from '../stores/useRoomStore';
+import NotFound from '../pages/NotFound';
 
 import GameRoomPage from '../pages/game/GameRoomPage';
 
@@ -66,8 +67,6 @@ const Router = () => {
             </GameRoomProtectedRoute>
           }
         />
-
-        {/* openvidu */}
         <Route
           path="/game-room"
           element={
@@ -76,6 +75,7 @@ const Router = () => {
             </GameRoomProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Route>
       <Route path="/rule-book" element={<RuleBookPage />} />
       <Route path="/modal" element={<ModalTestPage />} />

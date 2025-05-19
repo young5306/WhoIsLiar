@@ -72,7 +72,7 @@ const LiarNotFoundModal = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 maxLength={30}
-                placeholder="한글로 입력해주세요."
+                placeholder="정답을 입력해주세요."
                 className="px-3 py-3 mt-6 w-[98%] rounded border outline-none border-primary-600 bg-gray-900 text-gray-0 headline-medium placeholder-gray-0/60 focus:ring-2 focus:ring-primary-600/60"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {

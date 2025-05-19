@@ -53,7 +53,7 @@ import VoteResultModal from '../../components/modals/VoteResultModal';
 import FaceApiEmotion from './FaceApi';
 import EmotionLog from './EmotionLog';
 import ScoreModal from '../../components/modals/ScoreModal';
-import { MicOff, VideoOff } from 'lucide-react';
+import { MicOff, TimerIcon, VideoOff } from 'lucide-react';
 import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
@@ -486,7 +486,8 @@ const GameRoomPage = () => {
   // 새로고침 후 감지 및 redirect
   useEffect(() => {
     if (!isInGame) {
-      navigation('/room-list');
+      // navigation('/room-list');
+      window.location.href = '/room-list';
     }
   }, []);
 
@@ -516,6 +517,12 @@ const GameRoomPage = () => {
       if (videoTrack) {
         // 비디오 트랙의 활성 상태를 제어
         videoTrack.enabled = newVideoState;
+        // 실제 카메라 장치 제어
+        if (newVideoState) {
+          videoTrack.applyConstraints({ width: 640, height: 480 });
+        } else {
+          videoTrack.stop(); // 카메라 장치 완전히 중지
+        }
         publisher.publishVideo(newVideoState);
         // console.log(`📷 비디오 상태: ${newVideoState ? '켜짐' : '꺼짐'}`);
       } else {
@@ -631,11 +638,16 @@ const GameRoomPage = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   const [gameMode, setGameMode] = useState<string>('DEFAULT');
   const [videoMode, setVideoMode] = useState<string>('VIDEO');
+  const [numberOfPlayer, setNumberOfPlayer] = useState<number>(4);
+
+  const [roomName, setRoomName] = useState<string>('');
   // 발언 진행 관련
   const [speakingPlayer, setSpeakingPlayer] = useState<string>('');
   const [isTimerReady, setIsTimerReady] = useState(false);
   const speechTimerRef = useRef<TimerRef>(null);
+  const pauseTimerRef = useRef<TimerRef>(null);
   const [isSkippingSpeech, setIsSkippingSpeech] = useState(false); // 스킵 중복 클릭 방지
+  const [isTurnSkip, setIsTurnSkip] = useState(false);
   // 투표 진행 관련
   const [isVoting, setIsVoting] = useState(false);
   const [selectedTargetNickname, setSelectedTargetNickname] = useState<
@@ -650,6 +662,8 @@ const GameRoomPage = () => {
   const [showLiarFoundModal, setShowLiarFoundModal] = useState(false);
   const [showLiarNotFoundModal, setShowLiarNotFoundModal] = useState(false);
   const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
+  const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
+  const isLiarDisconnectedRef = useRef(isLiarDisconnected);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -694,6 +708,19 @@ const GameRoomPage = () => {
     console.log('방장 플레이어 이름 출력', hostNickname);
   }, [hostNickname]);
 
+  // 플레이어 수 변경 확인
+  useEffect(() => {
+    console.log('현재 플레이어 수', numberOfPlayer);
+
+    // if (numberOfPlayer < 3) {
+    //   console.log(
+    //     '게임 진행을 위한 플레이어 수가 부족합니다. 게임을 종료합니다.'
+    //   );
+    //   disconnectOpenVidu();
+    //   navigation('/waiting-room');
+    // }
+  }, [numberOfPlayer]);
+
   // 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
   useEffect(() => {
     if (leaveMessageReceive) {
@@ -728,6 +755,9 @@ const GameRoomPage = () => {
   // '나'를 제외한 참가자 순서대로 재정렬
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
+
+    // 플레이어 수 세팅 (확인용)
+    setNumberOfPlayer(participants.length);
 
     const filtered = participants.filter(
       (p) => p.participantNickname !== myUserName
@@ -779,6 +809,7 @@ const GameRoomPage = () => {
         setGameMode(roomInfoRes.roomInfo.gameMode);
         setVideoMode(roomInfoRes.roomInfo.videoMode);
         setHostNickname(roomInfoRes.roomInfo.hostNickname);
+        setRoomName(roomInfoRes.roomInfo.roomName);
 
         setParticipants(playerInfoRes.data.participants);
 
@@ -825,6 +856,19 @@ const GameRoomPage = () => {
     }
   }, [speakingPlayer, isTimerReady, gameStarted]);
 
+  // 발언시간 skip 시 타이머
+  useEffect(() => {
+    if (!isTurnSkip) return;
+
+    pauseTimerRef.current?.startTimer(3);
+
+    const timeoutId = setTimeout(() => {
+      setIsTurnSkip(false);
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [isTurnSkip]);
+
   // 채팅 감지
   useEffect(() => {
     const latest = chatMessages.at(-1);
@@ -837,6 +881,9 @@ const GameRoomPage = () => {
     // 개인 발언
     if (latest.chatType === 'TURN_START') {
       console.log('💡TURN_START 수신 확인');
+
+      setIsTurnSkip(false);
+
       // 닉네임 파싱
       const nickname = latest.content.split('님의')[0]?.trim();
       if (nickname) {
@@ -876,6 +923,7 @@ const GameRoomPage = () => {
     // 턴 스킵
     if (latest.chatType === 'TURN_SKIP') {
       speechTimerRef.current?.pauseTimer();
+      setIsTurnSkip(true);
     }
 
     // 모든 발언 종료 후 투표 시작
@@ -890,7 +938,18 @@ const GameRoomPage = () => {
       }
 
       setSpeakingPlayer('');
-      setIsVoting(true);
+      console.log('라이어 플래그 2', isLiarDisconnectedRef.current);
+
+      setIsVoting(() => {
+        if (isLiarDisconnectedRef.current) {
+          console.log('라이어 퇴장, 투표 x', isLiarDisconnectedRef.current);
+          return false;
+        } else {
+          console.log('라이어 존재, 투표 o', isLiarDisconnectedRef.current);
+          return true;
+        }
+      });
+
       setSelectedTargetNickname(null);
       // STT 서비스 발언자 초기화
       sttService.clearSpeakingPlayer();
@@ -971,7 +1030,25 @@ const GameRoomPage = () => {
     if (latest.chatType === 'LIAR_DISCONNECT') {
       if (latest) {
         console.log(`${latest.chatType} 메시지 수신:`, latest);
+        console.log('💡라이어 퇴장으로 인한 현재 라운드 종료');
+
+        setIsLiarDisconnected(true);
+        isLiarDisconnectedRef.current = true;
+        // console.log(
+        //   '라이어 플래그',
+        //   isLiarDisconnected,
+        //   isLiarDisconnectedRef.current
+        // );
+
         setShowLiarLeaveModal(true);
+
+        Promise.all([onlyFetchGameInfo()])
+          .then(() => {
+            console.log('✅ LiarLeave 후 라운드 정보 업데이트 완료');
+          })
+          .catch((err) => {
+            console.log('❌ LiarLeave 후 라운드 정보 가져오기 실패:', err);
+          });
       }
     }
   }, [chatMessages, myUserName, publisher]);
@@ -1140,6 +1217,8 @@ const GameRoomPage = () => {
   const handleScoreTimeEnd = async () => {
     try {
       setShowScoreModal(false);
+      setIsLiarDisconnected(false);
+      isLiarDisconnectedRef.current = false;
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
@@ -1235,6 +1314,96 @@ const GameRoomPage = () => {
                   />
                 )}
                 {/* 발언 타이머는 모두에게 표시 */}
+                {/* speakingPlayer가 skip 버튼을 누르지 않은 경우 */}
+                {speakingPlayer && !isTurnSkip && (
+                  <div className="relative">
+                    <Timer
+                      ref={speechTimerRef}
+                      onTimeEnd={handleSpeechTimerEnd}
+                      size="medium"
+                      onMount={handleTimerMount}
+                    />
+                  </div>
+                )}
+
+                {/* speakingPlayer가 skip 버튼을 누른 경우 */}
+                {isTurnSkip && (
+                  <div className="relative">
+                    <Timer ref={pauseTimerRef} size="medium" />
+                  </div>
+                )}
+              </>
+              {/* --- 투표 시간 --- */}
+              {isVoting && (
+                <>
+                  {currentTurn < 3 ? (
+                    <>
+                      <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
+                        <p>플레이어를 선택해 투표를 해주세요.</p>
+                        <p>
+                          ※ 시간 내에 투표하지 않으면{' '}
+                          <span className="text-primary-600 font-bold">
+                            기권
+                          </span>
+                          으로 투표됩니다.
+                        </p>
+                      </div>
+                      <GameButton
+                        text="기권"
+                        size="small"
+                        variant={
+                          selectedTargetNickname === '__SKIP__'
+                            ? 'default'
+                            : 'gray'
+                        }
+                        onClick={handleVoteSkip}
+                      />
+                    </>
+                  ) : (
+                    <div className="text-gray-0 px-3 py-1 rounded-full bg-gray-800 border border-dashed border-gray-500 whitespace-nowrap flex-shrink">
+                      ※ 시간 내에 투표하지 않으면{' '}
+                      <span className="text-primary-600 font-bold">
+                        자기 자신
+                      </span>
+                      에게 투표됩니다
+                    </div>
+                  )}
+                  <div className="relative">
+                    <Timer
+                      ref={voteTimerRef}
+                      onTimeEnd={handleVotingEnd}
+                      size="medium"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="text-white w-full h-full grid grid-cols-7">
+              <GameInfo
+                round={roundNumber}
+                totalRoundNumber={totalRoundNumber}
+                turn={currentTurn}
+                // category={category}
+                topic={
+                  myWord
+                    ? myWord
+                    : '당신은 라이어입니다! 제시어를 추측해보세요.'
+                }
+                isLiar={playerState.isLiar} // 투표 결과 조회 때 받음
+              />
+              {/* --- 발언 시간 --- */}
+              <>
+                {/* 발언자만 skip 버튼 표시 */}
+                {myUserName === speakingPlayer && (
+                  <GameButton
+                    text="Skip"
+                    size="small"
+                    variant="neon"
+                    onClick={() => handleSkipTurn(roomCode)}
+                    disabled={isSkippingSpeech}
+                  />
+                )}
+                {/* 발언 타이머는 모두에게 표시 */}
                 {speakingPlayer && (
                   <div className="relative">
                     <Timer
@@ -1291,12 +1460,62 @@ const GameRoomPage = () => {
                 </>
               )}
             </div>
+            <div className="flex items-center justify-between mb-[1vh]">
+              <div className="flex items-end gap-4">
+                <div className="text-white headline-small font-bold bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-xl">
+                  {roomName || '게임방'}
+                </div>
+
+                {/* 화면 모드 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <img
+                    src={`/assets/${videoMode === 'VIDEO' ? 'videoMode' : 'blindMode'}.webp`}
+                    alt="video-mode"
+                    width={28}
+                    height={28}
+                    className="text-rose-600"
+                  />
+                  <span className="text-white text-base font-medium">
+                    {videoMode === 'VIDEO' ? '비디오 모드' : '블라인드 모드'}
+                  </span>
+                </div>
+                {/* 게임 모드 표시 */}
+                <div className="flex items-center bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <img
+                    src={`/assets/${gameMode === 'DEFAULT' ? 'defaultMode' : 'foolMode'}.webp`}
+                    alt="game-mode"
+                    width={28}
+                    height={28}
+                    className="text-rose-600"
+                  />
+                  <span className="text-white text-base font-medium">
+                    {gameMode === 'DEFAULT' ? '일반 모드' : '바보 모드'}
+                  </span>
+                </div>
+                {/* 라운드 정보 표시 */}
+                <div className="flex items-center gap-1 bg-gray-800/50 backdrop-blur-sm px-2 py-1 rounded-lg">
+                  <TimerIcon className="w-5 h-5 text-rose-600" />
+                  <span className="text-white text-base font-medium">
+                    {totalRoundNumber} 라운드
+                  </span>
+                </div>
+                {/* 제시어 카테고리 표시 */}
+                <div className="bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg">
+                  <div className="flex items-center gap-1">
+                    <span className="text-rose-500 text-sm">카테고리</span>
+                    <span className="text-rose-500 text-base font-bold">
+                      {category}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="text-white w-full h-full grid grid-cols-7">
               <GameInfo
                 round={roundNumber}
                 totalRoundNumber={totalRoundNumber}
                 turn={currentTurn}
-                category={category}
+                // category={category}
                 topic={
                   myWord
                     ? myWord
@@ -1316,8 +1535,7 @@ const GameRoomPage = () => {
                     key={sub.id || index}
                     onClick={() => isVoting && handleSelectTarget(sub.nickname)}
                     className={`relative ${getParticipantPosition(position!, subscribers.length)} 
-                    ${isVoting ? 'cursor-pointer' : ''}
-                    ${sub.nickname === speakingPlayer ? 'rounded animate-glow' : ''}`}
+                    ${isVoting ? 'cursor-pointer' : ''}`}
                   >
                     {/* 선택된 타겟에 과녁 이미지 */}
                     {selectedTargetNickname === sub.nickname && (
@@ -1327,8 +1545,11 @@ const GameRoomPage = () => {
                         className="absolute top-1/2 left-1/2 w-20 h-20 z-50 -translate-x-1/2 -translate-y-1/2"
                       />
                     )}
-                    <div className="flex flex-row justify-start items-center gap-2">
-                      <div className="w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl">
+                    <div className="flex flex-row justify-start items-center gap-2 mb-1">
+                      <div
+                        className={`w-full min-w-[200px] h-fit bg-gray-700 flex items-center justify-center overflow-hidden rounded-lg shadow-2xl
+                    ${sub.nickname === speakingPlayer ? 'animate-glow' : ''}`}
+                      >
                         <div className="w-full h-full relative">
                           <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
                             <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
@@ -1406,8 +1627,7 @@ const GameRoomPage = () => {
               <div
                 onClick={() => isVoting && handleSelectTarget(myUserName)}
                 className={`relative ${myPosition} 
-                ${isVoting ? 'cursor-pointer' : ''}
-                ${myUserName === speakingPlayer ? 'animate-glow' : ''}`}
+                ${isVoting ? 'cursor-pointer' : ''}`}
               >
                 {selectedTargetNickname === myUserName && (
                   <img
@@ -1417,7 +1637,10 @@ const GameRoomPage = () => {
                   />
                 )}
                 <div className="flex flex-row justify-start items-center gap-2">
-                  <div className="w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg">
+                  <div
+                    className={`w-full min-w-[200px] min-h-[150px] max-h-[170px] bg-pink-300 flex items-center justify-center overflow-hidden rounded-lg
+                ${myUserName === speakingPlayer ? 'animate-glow' : ''}`}
+                  >
                     <div className="w-full min-h-[150px] max-h-[170px] relative">
                       <div className="absolute flex flex-row gap-1 top-2 left-2 z-10">
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded text-sm">
@@ -1487,10 +1710,10 @@ const GameRoomPage = () => {
               </div>
             </div>
 
-            <div className="mb-2 mt-1 text-white">
-              <div className="z-10 justify-center">
-                <GameChat />
-              </div>
+            <div className="z-10 justify-center">
+              <GameChat />
+            </div>
+            <div className="text-white">
               <GameControls
                 isAudioEnabled={isAudioEnabled}
                 isVideoEnabled={isVideoEnabled}
@@ -1499,6 +1722,7 @@ const GameRoomPage = () => {
                 onToggleAudio={toggleAudio}
                 onToggleVideo={toggleVideo}
                 onLeaveSession={leaveSession}
+                videoMode={videoMode}
               />
             </div>
           </div>
@@ -1627,8 +1851,8 @@ const GameRoomPage = () => {
           roundNumber={roundNumber}
           totalRoundNumber={totalRoundNumber}
           onNext={async () => {
+            await handleScoreTimeEnd();
             setShowLiarLeaveModal(false);
-            await onlyFetchGameInfo();
           }}
         />
       )}
@@ -1671,7 +1895,6 @@ const GameRoomPage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <circle cx="12" cy="12" r="10"></circle>
                         <line x1="15" y1="9" x2="9" y2="15"></line>
                         <line x1="9" y1="9" x2="15" y2="15"></line>
                       </svg>

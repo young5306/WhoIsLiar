@@ -506,6 +506,8 @@ const WaitingRoomContent = (): JSX.Element => {
 
               // 약간의 지연 후 방 정보 갱신 (서버 데이터 업데이트 대기)
               setTimeout(async () => {
+                if (window.location.pathname.includes('game-room')) return;
+
                 try {
                   console.log('방 정보 갱신 시작');
                   const response = await getRoomData(contextRoomCode);
@@ -725,7 +727,7 @@ const WaitingRoomContent = (): JSX.Element => {
     }
   };
 
-  const handleLeaveRoom = async () => {
+  const handleOutRoom = async () => {
     try {
       if (contextRoomCode) {
         // 방 나가기 API 호출
@@ -753,7 +755,8 @@ const WaitingRoomContent = (): JSX.Element => {
           }
 
           notify({ type: 'success', text: '방을 나갔습니다.' });
-          navigate('/room-list');
+          // room-list로 이동하면서 state로 새로고침 필요 여부 전달
+          navigate('/room-list', { state: { shouldRefresh: true } });
         }
       }
     } catch (error) {
@@ -808,10 +811,20 @@ const WaitingRoomContent = (): JSX.Element => {
   };
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
       e.preventDefault();
+
+      // HTTP 퇴장 요청 보내기
+      const roomCode = useRoomStore.getState().roomCode;
+      if (roomCode) {
+        try {
+          await outRoom(roomCode);
+        } catch (error) {
+          console.error('퇴장 요청 실패:', error);
+        }
+      }
+
       clearRoomCode(); // roomCode 초기화
-      return (e.returnValue = '');
     };
 
     // 뒤로가기 버튼 클릭시 경고창 방지를 위함
@@ -826,12 +839,23 @@ const WaitingRoomContent = (): JSX.Element => {
   // 플레이어가 뒤로가기 버튼 누른 경우
   useEffect(() => {
     history.pushState(null, '', window.location.href);
-    const handlePopState = () => {
+    const handlePopState = async () => {
       const shouldLeave = window.confirm('대기방에서 나가시겠습니까?');
       if (shouldLeave) {
         if (beforeUnloadRef.current) {
           window.removeEventListener('beforeunload', beforeUnloadRef.current);
         }
+
+        // HTTP 퇴장 요청 보내기
+        const roomCode = useRoomStore.getState().roomCode;
+        if (roomCode) {
+          try {
+            await outRoom(roomCode);
+          } catch (error) {
+            console.error('퇴장 요청 실패:', error);
+          }
+        }
+
         clearRoomCode();
         window.location.href = '/room-list';
       }
@@ -1373,7 +1397,7 @@ const WaitingRoomContent = (): JSX.Element => {
       <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={handleLeaveRoom}
+        onConfirm={handleOutRoom}
         title="방 나가기"
         message="정말로 방을 나가시겠습니까?"
       />

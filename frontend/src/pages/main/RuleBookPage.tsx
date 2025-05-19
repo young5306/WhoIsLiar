@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CustomCursor from '../../components/CustomCursor';
 
 const pageImages = [
   '/bgImages/ruleBook/1.webp',
@@ -30,11 +31,12 @@ const RuleBookPage = () => {
   };
 
   const handleBack = () => {
-    navigate('/');
+    navigate(-1);
   };
 
   return (
     <div className="relative w-screen h-screen bg-black">
+      <CustomCursor />
       <img
         src={pageImages[pageIndex]}
         alt={`RuleBook Page ${pageIndex + 1}`}
@@ -44,7 +46,7 @@ const RuleBookPage = () => {
         onLoad={() => setImageLoaded(true)}
       />
 
-      <div className="absolute bottom-17 left-1/2 -translate-x-1/2 flex items-center gap-6 z-20">
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-6 z-20">
         <div className="w-[40px] flex justify-center">
           {pageIndex > 0 ? (
             <button onClick={handlePrev} className="cursor-pointer">
