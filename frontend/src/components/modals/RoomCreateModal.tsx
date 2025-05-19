@@ -93,7 +93,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             className="absolute top-3 left-3"
           >
             <img
-              src="assets/toolTip.png"
+              src="assets/toolTip.webp"
               alt="도움말"
               className="w-6 h-6 cursor-pointer"
             />
@@ -164,7 +164,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                 }`}
               >
                 <img
-                  src="assets/videoMode.png"
+                  src="assets/videoMode.webp"
                   alt="비디오 모드"
                   className="w-20 mx-auto"
                 />
@@ -179,7 +179,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                 }`}
               >
                 <img
-                  src="assets/blindMode.png"
+                  src="assets/blindMode.webp"
                   alt="블라인드 모드"
                   className="w-20 mx-auto"
                 />
@@ -202,7 +202,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                 }`}
               >
                 <img
-                  src="assets/defaultMode.png"
+                  src="assets/defaultMode.webp"
                   alt="일반 모드"
                   className="w-20 mx-auto"
                 />
@@ -217,7 +217,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
                 }`}
               >
                 <img
-                  src="assets/foolMode.png"
+                  src="assets/foolMode.webp"
                   alt="바보 모드"
                   className="w-20 mx-auto"
                 />
