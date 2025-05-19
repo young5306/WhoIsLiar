@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AnimatedCursor from 'react-animated-cursor';
 
 const CustomCursor = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isClickSoundEnabled, setIsClickSoundEnabled] = useState(true);
 
   useEffect(() => {
     // 오디오 요소 생성 및 설정
@@ -15,9 +16,15 @@ const CustomCursor = () => {
       audioRef.current = audio;
     });
 
+    // 클릭 소리 토글 이벤트 리스너
+    const handleToggleClickSound = (event: CustomEvent) => {
+      setIsClickSoundEnabled(event.detail);
+    };
+
     // 클릭 이벤트 리스너 추가
-    const handleClick = () => {
-      if (audioRef.current) {
+    const handleClick = (event: MouseEvent) => {
+      // 실제 마우스 클릭 이벤트이고 클릭 소리가 활성화된 경우에만 소리 재생
+      if (event.detail > 0 && audioRef.current && isClickSoundEnabled) {
         // 현재 재생 중인 오디오가 있다면 중지
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -40,9 +47,17 @@ const CustomCursor = () => {
     });
 
     document.addEventListener('click', handleClick);
+    document.addEventListener(
+      'toggleClickSound',
+      handleToggleClickSound as EventListener
+    );
 
     return () => {
       document.removeEventListener('click', handleClick);
+      document.removeEventListener(
+        'toggleClickSound',
+        handleToggleClickSound as EventListener
+      );
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -53,7 +68,7 @@ const CustomCursor = () => {
         (element as HTMLElement).style.cursor = 'auto';
       });
     };
-  }, []);
+  }, [isClickSoundEnabled]);
 
   return (
     <AnimatedCursor
