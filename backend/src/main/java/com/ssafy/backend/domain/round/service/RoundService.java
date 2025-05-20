@@ -609,8 +609,6 @@ public class RoundService {
 			return true;
 		} else if (skipCount >= maxCount) {
 			return true;
-		} else if (minCount == maxCount) {
-			return true;
 		} else if (topTieCount > 1) {
 			return true;
 		} else {
