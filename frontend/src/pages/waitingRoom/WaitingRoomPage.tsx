@@ -110,6 +110,9 @@ const WaitingRoomContent = (): JSX.Element => {
   const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const beforeUnloadRef = useRef<(e: BeforeUnloadEvent) => void>();
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isCopyingRef = useRef<boolean>(false);
+  const [gameStartDisabled, setGameStartDisabled] = useState(true);
 
   // 시스템 메시지에서 유저 이름 강조 처리하는 함수
   const highlightUsername = (content: string) => {
@@ -394,6 +397,7 @@ const WaitingRoomContent = (): JSX.Element => {
             if (message.chatType === 'ROOM_READY_STATUS') {
               // 이전 상태와 새 상태 비교
               const newReadyStatus = message.content === 'TRUE';
+              console.log('newReadyStatus:', newReadyStatus);
 
               // 방장에게만 상태 변화 알림 표시
               if (isHost) {
@@ -502,6 +506,34 @@ const WaitingRoomContent = (): JSX.Element => {
                   const response = await getRoomData(contextRoomCode);
                   console.log('방 정보 갱신 결과:', response);
                   setRoomData(response);
+
+                  // 방장인 경우 게임 시작 버튼 상태 업데이트
+                  if (response.roomInfo.hostNickname === userInfo?.nickname) {
+                    const readyCount = response.participants.filter(
+                      (player: { readyStatus?: boolean }) => player.readyStatus
+                    ).length;
+                    const totalPlayers = response.participants.length;
+
+                    if (totalPlayers < 3) {
+                      setGameStartDisabled(true);
+                      notify({
+                        type: 'warning',
+                        text: '게임을 시작하려면 최소 3명의 플레이어가 필요합니다.',
+                      });
+                    } else if (readyCount === totalPlayers) {
+                      setGameStartDisabled(false);
+                      notify({
+                        type: 'success',
+                        text: '모든 플레이어가 준비되었습니다. 게임을 시작할 수 있습니다.',
+                      });
+                    } else {
+                      setGameStartDisabled(true);
+                      notify({
+                        type: 'warning',
+                        text: '모든 플레이어가 준비되어야 게임을 시작할 수 있습니다.',
+                      });
+                    }
+                  }
 
                   // 채팅 메시지가 스크롤되도록 약간의 지연 후 스크롤
                   setTimeout(() => {
@@ -709,12 +741,32 @@ const WaitingRoomContent = (): JSX.Element => {
   };
 
   const copyRoomCode = () => {
+    if (isCopyingRef.current) return;
+
+    isCopyingRef.current = true;
     if (roomData?.roomInfo.roomCode) {
       navigator.clipboard.writeText(roomData.roomInfo.roomCode);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+        isCopyingRef.current = false;
+      }, 2000);
     }
   };
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOutRoom = async () => {
     try {
@@ -882,6 +934,57 @@ const WaitingRoomContent = (): JSX.Element => {
       }
     }
   };
+
+  // 게임 시작 버튼 활성화 여부를 결정하는 함수
+  const canStartGame = useCallback(() => {
+    if (!roomData || !userInfo) return false;
+
+    const isHost = roomData.roomInfo.hostNickname === userInfo.nickname;
+    if (!isHost) return false;
+
+    const readyCount = roomData.participants.filter(
+      (player: { readyStatus?: boolean }) => player.readyStatus
+    ).length;
+    const totalPlayers = roomData.participants.length;
+
+    // 3명 이상이고 모두 준비 완료 상태인 경우
+    if (totalPlayers >= 3 && readyCount === totalPlayers) {
+      return true;
+    }
+
+    return false;
+  }, [roomData, userInfo]);
+
+  // 게임 시작 버튼 상태 업데이트
+  useEffect(() => {
+    if (roomData && userInfo) {
+      const isHost = roomData.roomInfo.hostNickname === userInfo.nickname;
+      const readyCount = roomData.participants.filter(
+        (player: { readyStatus?: boolean }) => player.readyStatus
+      ).length;
+      const totalPlayers = roomData.participants.length;
+
+      console.log('게임 시작 조건 체크:', {
+        isHost,
+        readyCount,
+        totalPlayers,
+        canStart: canStartGame(),
+      });
+
+      // 방장이 변경되었거나 참가자 상태가 변경된 경우
+      if (isHost) {
+        if (totalPlayers < 3) {
+          setGameStartDisabled(true);
+        } else if (readyCount === totalPlayers) {
+          setGameStartDisabled(false);
+        } else {
+          setGameStartDisabled(true);
+        }
+      } else {
+        setGameStartDisabled(true);
+      }
+    }
+  }, [roomData, userInfo, canStartGame]);
 
   return (
     <div className="w-screen h-screen flex overflow-hidden px-[4%]">
@@ -1207,49 +1310,19 @@ const WaitingRoomContent = (): JSX.Element => {
                     text="게임시작"
                     size="small"
                     onClick={handleStartGame}
-                    disabled={
-                      !isRoomReady ||
-                      !roomData ||
-                      !roomData.participants ||
-                      roomData.participants.length < 3
-                    }
-                    variant={
-                      isRoomReady &&
-                      roomData &&
-                      roomData.participants &&
-                      roomData.participants.length >= 3
-                        ? 'default'
-                        : 'gray'
-                    }
+                    disabled={gameStartDisabled}
+                    variant={gameStartDisabled ? 'gray' : 'default'}
                   />{' '}
                   {/* 버튼이 비활성화된 경우에만 표시되는 툴팁 */}{' '}
-                  {(!isRoomReady ||
-                    !roomData ||
-                    !roomData.participants ||
-                    roomData.participants.length < 3) && (
+                  {!gameStartDisabled && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-3 py-2 bg-black/80 text-white text-xs rounded-lg shadow-lg invisible group-hover:visible transition-opacity opacity-0 group-hover:opacity-100 z-10">
                       {' '}
-                      {roomData &&
-                      roomData.participants &&
-                      roomData.participants.length < 3 ? (
-                        <div className="flex flex-col items-center">
-                          {' '}
-                          <span className="whitespace-nowrap">
-                            인원이 부족합니다!
-                          </span>{' '}
-                          <span className="whitespace-nowrap">
-                            최소 3명 이상 필요 (현재:{' '}
-                            {roomData.participants.length}명)
-                          </span>{' '}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center">
-                          {' '}
-                          <span className="whitespace-nowrap">
-                            모든 플레이어가 준비되어야 합니다!
-                          </span>{' '}
-                        </div>
-                      )}{' '}
+                      <div className="flex flex-col items-center">
+                        {' '}
+                        <span className="whitespace-nowrap">
+                          모든 플레이어가 준비되어야 합니다!
+                        </span>{' '}
+                      </div>
                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 rotate-45 bg-black/80"></div>{' '}
                     </div>
                   )}{' '}

@@ -553,11 +553,8 @@ public class RoundService {
 			.filter(v -> v == maxCount)
 			.count();
 
-		log.info("maxCount: {}, minCount: {}, topTieCount: {}", maxCount, minCount, topTieCount);
-
 		// 6) skipFlag 판정
 		boolean skipFlag = checkSkipFlag(nonSkipCounts, skipCount, minCount, maxCount, topTieCount);
-		log.info("skipFlag: {}", skipFlag);
 
 		// 7) topVotedId (지목된 시민)
 		final Long topVotedId = skipFlag
@@ -569,7 +566,6 @@ public class RoundService {
 
 		// 8) “시민이 라이어를 찾았는지”
 		boolean citizenFoundLiar = (topVotedId != null && topVotedId.equals(liarId));
-		log.info("citizenFoundLiar: {}, topVotedId: {}, liarId: {}", citizenFoundLiar, topVotedId, liarId);
 
 		// 9) 점수 부여
 		Winner winner = (citizenFoundLiar && !isCorrect) ? Winner.civil : Winner.liar;
@@ -625,28 +621,23 @@ public class RoundService {
 		if (winner == Winner.civil) {
 			// ▶ 시민 승리
 			civPRs.forEach(pr -> pr.addScore(100));
-			log.info("1. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 		} else {
 			// ▶ 라이어 승리
 			if (citizenFoundLiar && isCorrect) {
 				liarPR.addScore(100);
 				civPRs.forEach(pr -> pr.addScore(-100));
-				log.info("2. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 			} else if (!citizenFoundLiar && isCorrect) {
 				civPRs.forEach(pr -> pr.addScore(-100));
 				liarPR.addScore(200);
 				prList.stream()
 					.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
 					.forEach(pr -> pr.addScore(-100));
-				log.info("3. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 			} else {
 				civPRs.forEach(pr -> pr.addScore(-100));
 				liarPR.addScore(100);
 				prList.stream()
 					.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
 					.forEach(pr -> pr.addScore(-100));
-
-				log.info("4. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 			}
 		}
 	}

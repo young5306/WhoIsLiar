@@ -9,7 +9,7 @@ const useCustomCursor = () => {
       cursor.style.left = `${e.clientX}px`;
       cursor.style.top = `${e.clientY}px`;
       cursor.style.pointerEvents = 'none';
-      cursor.style.zIndex = '9999';
+      cursor.style.zIndex = '99999';
       document.body.appendChild(cursor);
 
       setTimeout(() => {
