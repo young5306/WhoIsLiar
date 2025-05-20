@@ -61,6 +61,7 @@ import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFo
 import { notify } from '../../components/common/Toast';
 import { useMessageStore } from '../../stores/useMessageStore';
 import GameStartCountdownModal from '../../components/modals/GameStartCountdownModal';
+import FinalScoreModal from '../../components/modals/FinalScoreModal';
 
 // STT 디버깅 모달 컴포넌트
 // const SttDebugModal = ({
@@ -673,6 +674,7 @@ const GameRoomPage = () => {
   );
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [showFinalScoreModal, setShowFinalScoreModal] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [answerWord, setAnswerWord] = useState<string | null>(null);
   const [foolLiarWord, setFoolLiarWord] = useState<string | null>(null);
@@ -1205,8 +1207,8 @@ const GameRoomPage = () => {
   };
 
   // 점수 모달 분기 처리
-  const getScoreModalType = (): 'liar-win' | 'civilian-win' | 'final-score' => {
-    if (roundNumber >= totalRoundNumber) return 'final-score';
+  const getScoreModalType = (): 'liar-win' | 'civilian-win' => {
+    // if (roundNumber >= totalRoundNumber) return 'final-score';
     if (voteResult?.detected) {
       if (isCorrect) return 'liar-win';
       else return 'civilian-win';
@@ -1236,10 +1238,9 @@ const GameRoomPage = () => {
           await startTurn(roomCode!, playerInfoRes.data.roundNumber);
         }
       }
-      // 마지막 라운드 종료 후 게임 종료
+      // 마지막 라운드 - final score 띄운 후 게임 종료
       else {
-        disconnectOpenVidu();
-        navigation('/waiting-room');
+        setShowFinalScoreModal(true);
       }
     } catch (error) {
       console.error('라운드 종료 처리 실패:', error);
@@ -1904,6 +1905,18 @@ const GameRoomPage = () => {
             scores={scoreData.scores}
             roundScores={roundScoreData?.scores}
             onNext={handleScoreTimeEnd}
+          />
+        </>
+      )}
+      {showFinalScoreModal && scoreData && (
+        <>
+          <FinalScoreModal
+            scores={scoreData.scores}
+            onNext={() => {
+              setShowFinalScoreModal(false);
+              disconnectOpenVidu();
+              navigation('/waiting-room');
+            }}
           />
         </>
       )}

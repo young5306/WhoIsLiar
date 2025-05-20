@@ -3,7 +3,7 @@ import { ScoreResponse } from '../../services/api/GameService';
 import Timer, { TimerRef } from '../common/Timer';
 
 interface ScoreModalProps {
-  type: 'liar-win' | 'civilian-win' | 'final-score';
+  type: 'liar-win' | 'civilian-win';
   roundNumber: number;
   totalRoundNumber: number;
   scores: ScoreResponse['scores']; // 누적 점수
@@ -14,7 +14,6 @@ interface ScoreModalProps {
 const titleImageMap = {
   'liar-win': 'assets/liar-win.webp',
   'civilian-win': 'assets/civilian-win.webp',
-  'final-score': 'assets/final-score.webp',
 };
 
 const medalIcons = ['assets/1st.webp', 'assets/2nd.webp', 'assets/3rd.webp'];
