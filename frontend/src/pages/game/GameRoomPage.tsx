@@ -62,6 +62,7 @@ import { notify } from '../../components/common/Toast';
 import { useMessageStore } from '../../stores/useMessageStore';
 import GameStartCountdownModal from '../../components/modals/GameStartCountdownModal';
 import FinalScoreModal from '../../components/modals/FinalScoreModal';
+import { round } from 'lodash';
 
 // STT 디버깅 모달 컴포넌트
 // const SttDebugModal = ({
@@ -662,7 +663,7 @@ const GameRoomPage = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   const [gameMode, setGameMode] = useState<string>('DEFAULT');
   const [videoMode, setVideoMode] = useState<string>('VIDEO');
-  const [numberOfPlayer, setNumberOfPlayer] = useState<number>(4);
+  const [numberOfPlayer, setNumberOfPlayer] = useState<number>();
 
   const [roomName, setRoomName] = useState<string>('');
   // 발언 진행 관련
@@ -688,6 +689,8 @@ const GameRoomPage = () => {
   const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
   const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
   const isLiarDisconnectedRef = useRef(isLiarDisconnected);
+  const isPlayerUpdateRef = useRef(false);
+  const isHostUpdateRef = useRef(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -702,7 +705,9 @@ const GameRoomPage = () => {
   const [answerWord, setAnswerWord] = useState<string | null>(null);
   const [foolLiarWord, setFoolLiarWord] = useState<string | null>(null);
 
-  // 플레이어가 중간에 퇴장하는 경우 감지
+  // << 플레이어가 중간에 퇴장하는 경우 감지>>
+
+  // 3. 비활성화 플레이어를 제외하고, 플레이어 업데이트
   const updateParticipants = (inactivaUser: string[]) => {
     console.log('현재 참가자 리스트', participants);
     const updateParticipants = participants.filter(
@@ -711,8 +716,17 @@ const GameRoomPage = () => {
 
     console.log('업데이트 플레이어 정보', updateParticipants);
     setParticipants(updateParticipants);
+
+    // 플레이어 업데이트 확인
+    isPlayerUpdateRef.current = true;
+    console.log('플레이어 업데이트 완료');
+
+    if (isLiarDisconnected) {
+      onlyFetchGameInfo();
+    }
   };
 
+  // 2. 비활성화 플레이어와 방장 정보 확인
   const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
     const inactiveUser = roomParticipants.participants
       .filter((p) => !p.isActive)
@@ -726,6 +740,10 @@ const GameRoomPage = () => {
       .map((p) => p.nickName);
     console.log('방장 플레이어', hostUserName);
     setHostNickname(hostUserName[0] ?? '');
+
+    // 호스트 업데이트 확인
+    isHostUpdateRef.current = true;
+    console.log('호스트 업데이트 완료');
   };
 
   // 방장 플레이어 변경 확인
@@ -737,16 +755,18 @@ const GameRoomPage = () => {
   useEffect(() => {
     console.log('현재 플레이어 수', numberOfPlayer);
 
-    // if (numberOfPlayer < 3) {
+    // if (numberOfPlayer && numberOfPlayer < 3) {
     //   console.log(
     //     '게임 진행을 위한 플레이어 수가 부족합니다. 게임을 종료합니다.'
     //   );
-    //   disconnectOpenVidu();
-    //   navigation('/waiting-room');
+    //   setTimeout(() => {
+    //     disconnectOpenVidu();
+    //     navigation('/waiting-room');
+    //   }, 3000);
     // }
   }, [numberOfPlayer]);
 
-  // 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
+  // 1. 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
   useEffect(() => {
     if (leaveMessageReceive) {
       console.log('플레이어가 퇴장했습니다. roomPlayerInfo 다시 받아오기');
@@ -777,7 +797,7 @@ const GameRoomPage = () => {
     Array<{ participantNickname: string; order: number }>
   >([]);
 
-  // '나'를 제외한 참가자 순서대로 재정렬
+  // '나'를 제외한 참가자 순서대로 재정렬 (participants에 따라 변경)
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
 
@@ -796,7 +816,7 @@ const GameRoomPage = () => {
     setSortedPraticipants(sorted);
   }, [participants]);
 
-  // 정렬된 순서에 따라 position 부여
+  // 정렬된 순서에 따라 position 부여 (플레이어 화면상 위치 지정용)
   useEffect(() => {
     if (
       !sortedParticipants ||
@@ -1068,13 +1088,47 @@ const GameRoomPage = () => {
 
         setShowLiarLeaveModal(true);
 
-        Promise.all([onlyFetchGameInfo()])
-          .then(() => {
-            console.log('✅ LiarLeave 후 라운드 정보 업데이트 완료');
-          })
-          .catch((err) => {
-            console.log('❌ LiarLeave 후 라운드 정보 가져오기 실패:', err);
-          });
+        // console.log(
+        //   'onlyFetchGameInfo 시작',
+        //   isHostUpdateRef.current,
+        //   isPlayerUpdateRef.current
+        // );
+
+        // const handleLiarLeave = async () => {
+        //   if (isHostUpdateRef.current && isPlayerUpdateRef.current) {
+        //     let attempts = 0;
+        //     const maxRetries = 3; // 최대 재시도 횟수
+        //     const delay = 1000; // 재시도 간 대기 시간 (1초)
+
+        //     while (attempts < maxRetries) {
+        //       try {
+        //         await onlyFetchGameInfo();
+        //         console.log('✅ LiarLeave 후 라운드 정보 업데이트 완료');
+
+        //         // 성공 시 플래그 리셋
+        //         isHostUpdateRef.current = false;
+        //         isLiarDisconnectedRef.current = false;
+        //         break; // 요청 성공 시 while문을 종료
+        //       } catch (error) {
+        //         attempts += 1;
+        //         console.log(
+        //           `❌ LiarLeave 후 라운드 정보 가져오기 실패. 시도 ${attempts}회:`,
+        //           error
+        //         );
+
+        //         if (attempts >= maxRetries) {
+        //           console.log('최대 재시도 횟수에 도달했습니다.');
+        //           break; // 최대 재시도 횟수에 도달하면 종료
+        //         }
+
+        //         // 재시도 전 대기
+        //         await new Promise((resolve) => setTimeout(resolve, delay));
+        //       }
+        //     }
+        //   }
+        // };
+
+        // handleLiarLeave();
       }
     }
   }, [chatMessages, myUserName, publisher]);
@@ -1216,13 +1270,25 @@ const GameRoomPage = () => {
   // 점수 조회 및 모달 표시
   const onlyFetchGameInfo = async () => {
     try {
+      if (roundNumber >= totalRoundNumber) {
+        await getScores(roomCode!);
+        console.log('✅ Scores 조회 완료');
+      }
+    } catch (error) {
+      console.error('라이어 퇴장시 getScores 호출 실패', error);
+    }
+
+    try {
       console.log('현재 라운드 끝', roundNumber);
       console.log('현재 호스트', hostNickname);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
+        console.log('✅ EndRound 완료');
+
         if (roundNumber < totalRoundNumber) {
           await setRound(roomCode!);
+          console.log('✅ Scores 조회 완료');
         }
       }
     } catch (error) {
@@ -1244,6 +1310,8 @@ const GameRoomPage = () => {
     try {
       setShowScoreModal(false);
       setIsLiarDisconnected(false);
+      isLiarDisconnectedRef.current = false;
+      isHostUpdateRef.current = false;
       isLiarDisconnectedRef.current = false;
 
       // 다음 라운드 세팅
@@ -1790,16 +1858,27 @@ const GameRoomPage = () => {
       )}
 
       {/* 4) LiarLeaveModal */}
-      {showLiarLeaveModal && (
-        <LiarLeaveModal
-          roundNumber={roundNumber}
-          totalRoundNumber={totalRoundNumber}
-          onNext={async () => {
-            await handleScoreTimeEnd();
-            setShowLiarLeaveModal(false);
-          }}
-        />
-      )}
+      {showLiarLeaveModal &&
+        (roundNumber < totalRoundNumber ? (
+          <LiarLeaveModal
+            roundNumber={roundNumber}
+            totalRoundNumber={totalRoundNumber}
+            onNext={async () => {
+              await handleScoreTimeEnd();
+              setShowLiarLeaveModal(false);
+            }}
+          />
+        ) : (
+          <LiarLeaveModal
+            roundNumber={roundNumber}
+            totalRoundNumber={totalRoundNumber}
+            onNext={async () => {
+              await handleScoreTimeEnd();
+              setShowLiarLeaveModal(false);
+              setShowFinalScoreModal(true);
+            }}
+          />
+        ))}
 
       {/* 라이어가 추측한 제시어 표시 모달 */}
       {showGuessedWord && (
