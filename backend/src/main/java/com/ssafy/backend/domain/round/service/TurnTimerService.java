@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TurnTimerService {
 
-	private static final int TURN_DURATION_SECONDS = 20;
+	private static final int TURN_DURATION_SECONDS = 5;
 	private static final int TURN_DELAY_SECONDS = 3;
 	private final RoomRepository roomRepository;
 	private final RoundRepository roundRepository;
