@@ -9,10 +9,12 @@ const BackgroundMusic = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // 오디오 요소 생성
-    audioRef.current = new Audio('/assets/background-music.mp3'); // 실제 음악 파일 경로로 수정 필요
-    audioRef.current.loop = true;
-    audioRef.current.volume = 0.5;
+    // 오디오 요소 생성 및 설정
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/assets/background-music.mp3');
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.5;
+    }
 
     // 8초 후에 툴팁 자동으로 숨기기
     const tooltipTimer = setTimeout(() => {
@@ -20,12 +22,7 @@ const BackgroundMusic = () => {
       setShowClickTooltip(false);
     }, 8000);
 
-    // 컴포넌트 언마운트 시 정리
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
       clearTimeout(tooltipTimer);
     };
   }, []);
@@ -36,22 +33,28 @@ const BackgroundMusic = () => {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch((error) => {
-        console.error('Failed to play audio:', error);
-      });
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error('Failed to play audio:', error);
+        });
+      }
     }
     setIsPlaying(!isPlaying);
-    setShowMusicTooltip(false); // 클릭 시 툴팁 숨기기
+    setShowMusicTooltip(false);
   };
 
   const toggleClickSound = () => {
     setIsClickSoundEnabled(!isClickSoundEnabled);
-    setShowClickTooltip(false); // 클릭 시 툴팁 숨기기
-    // 커스텀 커서의 클릭 소리 상태를 전역 상태로 관리하거나 이벤트를 발생시켜 전달
-    const event = new CustomEvent('toggleClickSound', {
-      detail: !isClickSoundEnabled,
+    setShowClickTooltip(false);
+
+    // 이벤트 디스패치를 requestAnimationFrame으로 감싸서 성능 최적화
+    requestAnimationFrame(() => {
+      const event = new CustomEvent('toggleClickSound', {
+        detail: !isClickSoundEnabled,
+      });
+      document.dispatchEvent(event);
     });
-    document.dispatchEvent(event);
   };
 
   return (
@@ -60,7 +63,7 @@ const BackgroundMusic = () => {
       <div className="relative">
         <button
           onClick={toggleClickSound}
-          className={`bg-gray-600/80 hover:bg-gray-800/80 p-3 rounded-full transition-all duration-200 cursor-pointer ${
+          className={`bg-gray-600/80 hover:bg-gray-800/80 p-3 rounded-full transition-all duration-200 ${
             showClickTooltip ? 'animate-bounce' : ''
           } ${!isClickSoundEnabled ? 'opacity-50' : ''}`}
           aria-label={isClickSoundEnabled ? '클릭 소리 끄기' : '클릭 소리 켜기'}
@@ -85,7 +88,7 @@ const BackgroundMusic = () => {
       <div className="relative">
         <button
           onClick={toggleMusic}
-          className={`bg-gray-600/80 hover:bg-gray-800/80 p-3 rounded-full transition-all duration-200 cursor-pointer ${
+          className={`bg-gray-600/80 hover:bg-gray-800/80 p-3 rounded-full transition-all duration-200 ${
             showMusicTooltip ? 'animate-bounce' : ''
           }`}
           aria-label={isPlaying ? '배경음악 끄기' : '배경음악 켜기'}

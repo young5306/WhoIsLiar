@@ -110,6 +110,8 @@ const WaitingRoomContent = (): JSX.Element => {
   const [showNewMessageAlert, setShowNewMessageAlert] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const beforeUnloadRef = useRef<(e: BeforeUnloadEvent) => void>();
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isCopyingRef = useRef<boolean>(false);
 
   // 시스템 메시지에서 유저 이름 강조 처리하는 함수
   const highlightUsername = (content: string) => {
@@ -709,12 +711,32 @@ const WaitingRoomContent = (): JSX.Element => {
   };
 
   const copyRoomCode = () => {
+    if (isCopyingRef.current) return;
+
+    isCopyingRef.current = true;
     if (roomData?.roomInfo.roomCode) {
       navigator.clipboard.writeText(roomData.roomInfo.roomCode);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+        isCopyingRef.current = false;
+      }, 2000);
     }
   };
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOutRoom = async () => {
     try {
