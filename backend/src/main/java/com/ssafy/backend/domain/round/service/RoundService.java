@@ -623,7 +623,6 @@ public class RoundService {
 		if (winner == Winner.civil) {
 			// ▶ 시민 승리
 			civPRs.forEach(pr -> pr.addScore(100));
-			liarPR.addScore(-100);
 		} else {
 			// ▶ 라이어 승리
 			if (citizenFoundLiar && isCorrect) {
