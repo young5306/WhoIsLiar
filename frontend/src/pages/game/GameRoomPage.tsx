@@ -848,7 +848,8 @@ const GameRoomPage = () => {
 
     if (speakingPlayer && isTimerReady && gameStarted) {
       console.log('🎮 타이머 시작:', speakingPlayer);
-      speechTimerRef.current?.startTimer(20);
+      // speechTimerRef.current?.startTimer(20);
+      speechTimerRef.current?.startTimer(5);
     } else {
       console.log('🎮 타이머 시작 조건 미충족:', {
         speakingPlayer: Boolean(speakingPlayer),
