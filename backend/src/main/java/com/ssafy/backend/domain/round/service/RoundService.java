@@ -553,8 +553,11 @@ public class RoundService {
 			.filter(v -> v == maxCount)
 			.count();
 
+		log.info("maxCount: {}, minCount: {}, topTieCount: {}", maxCount, minCount, topTieCount);
+
 		// 6) skipFlag 판정
 		boolean skipFlag = checkSkipFlag(nonSkipCounts, skipCount, minCount, maxCount, topTieCount);
+		log.info("skipFlag: {}", skipFlag);
 
 		// 7) topVotedId (지목된 시민)
 		final Long topVotedId = skipFlag
