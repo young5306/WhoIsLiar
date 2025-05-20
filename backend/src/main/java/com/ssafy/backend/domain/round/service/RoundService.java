@@ -623,23 +623,28 @@ public class RoundService {
 		if (winner == Winner.civil) {
 			// ▶ 시민 승리
 			civPRs.forEach(pr -> pr.addScore(100));
+			log.info("1. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 		} else {
 			// ▶ 라이어 승리
 			if (citizenFoundLiar && isCorrect) {
 				liarPR.addScore(100);
 				civPRs.forEach(pr -> pr.addScore(-100));
+				log.info("2. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 			} else if (!citizenFoundLiar && isCorrect) {
 				civPRs.forEach(pr -> pr.addScore(-100));
 				liarPR.addScore(200);
 				prList.stream()
 					.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
 					.forEach(pr -> pr.addScore(-100));
+				log.info("3. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 			} else {
 				civPRs.forEach(pr -> pr.addScore(-100));
 				liarPR.addScore(100);
 				prList.stream()
 					.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
 					.forEach(pr -> pr.addScore(-100));
+
+				log.info("4. Winner: {}, citizenFoundLiar: {}, isCorrent: {}", winner, citizenFoundLiar, isCorrect);
 			}
 		}
 	}
