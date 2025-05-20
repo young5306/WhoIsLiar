@@ -3,7 +3,7 @@ import { useAuthStore } from '../../../stores/useAuthStore';
 import GameButton2 from '../../common/GameButton2';
 import Timer, { TimerRef } from '../../common/Timer';
 import { notify } from '../../common/Toast';
-import { Brain, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface Props {
   roundNumber: number;
