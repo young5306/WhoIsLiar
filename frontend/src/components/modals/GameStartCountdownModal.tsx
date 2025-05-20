@@ -29,7 +29,7 @@ const GameStartCountdownModal = ({
 
     // 시작 시 값 설정
     // setCountdown(5);
-    setCountdown(5);
+    setCountdown(10);
 
     // 매 초마다 카운트다운 감소
     const timer = setInterval(() => {
