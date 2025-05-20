@@ -68,16 +68,12 @@ const LiarFoundModal = ({
           </div>
           <div className="flex flex-col items-center gap-2 mt-4">
             <div className="flex items-center gap-3">
-              <Brain className="w-8 h-8 text-primary-600 animate-bounce" />
               <div className="text-primary-600 body-medium">
                 라이어가 제시어를 추측하여 작성중입니다.
               </div>
-              <Brain className="w-8 h-8 text-primary-600 animate-bounce [animation-delay:500ms]" />
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
-              <Loader2 className="w-5 h-5 text-primary-600 animate-spin [animation-delay:200ms]" />
-              <Loader2 className="w-5 h-5 text-primary-600 animate-spin [animation-delay:400ms]" />
+              <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
             </div>
           </div>
           <div className="display-medium text-primary-600 mt-3">
