@@ -65,7 +65,7 @@ public class OpenViduService {
 
 			long lockStart = System.currentTimeMillis();
 			try {
-				boolean isLocked = lock.tryLock(2000, 1000, TimeUnit.MILLISECONDS);
+				boolean isLocked = lock.tryLock(1200, 600, TimeUnit.MILLISECONDS);
 				if (!isLocked) {
 					log.warn("Redisson 락 획득 실패 - roomCode: {}, 남은 시도: {}", roomCode, retryAttempts);
 					Thread.sleep(delayTime);
