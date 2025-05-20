@@ -58,11 +58,11 @@ import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
+import GameStopModal from '../../components/modals/GameStopModal';
 import { notify } from '../../components/common/Toast';
 import { useMessageStore } from '../../stores/useMessageStore';
 import GameStartCountdownModal from '../../components/modals/GameStartCountdownModal';
 import FinalScoreModal from '../../components/modals/FinalScoreModal';
-import { round } from 'lodash';
 
 // STT 디버깅 모달 컴포넌트
 // const SttDebugModal = ({
@@ -691,6 +691,7 @@ const GameRoomPage = () => {
   const isLiarDisconnectedRef = useRef(isLiarDisconnected);
   const isPlayerUpdateRef = useRef(false);
   const [liarUpdateTrigger, setLiarUpdateTrigger] = useState(false);
+  const [showGameStopModal, setShowGameStopModal] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -772,15 +773,9 @@ const GameRoomPage = () => {
   useEffect(() => {
     console.log('현재 플레이어 수', numberOfPlayer);
 
-    // if (numberOfPlayer && numberOfPlayer < 3) {
-    //   console.log(
-    //     '게임 진행을 위한 플레이어 수가 부족합니다. 게임을 종료합니다.'
-    //   );
-    //   setTimeout(() => {
-    //     disconnectOpenVidu();
-    //     navigation('/waiting-room');
-    //   }, 3000);
-    // }
+    if (numberOfPlayer && numberOfPlayer < 3) {
+      setShowGameStopModal(true);
+    }
   }, [numberOfPlayer]);
 
   // 1. 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
@@ -1396,7 +1391,9 @@ const GameRoomPage = () => {
 
   return (
     <>
-      {session !== undefined && sortedParticipants.length > 0 ? (
+      {session !== undefined &&
+      sortedParticipants.length > 0 &&
+      !showGameStopModal ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-3 z-100">
@@ -1874,6 +1871,8 @@ const GameRoomPage = () => {
 
       {/* 4) LiarLeaveModal */}
       {showLiarLeaveModal &&
+        numberOfPlayer &&
+        numberOfPlayer > 2 &&
         (roundNumber < totalRoundNumber ? (
           <LiarLeaveModal
             roundNumber={roundNumber}
@@ -1896,6 +1895,24 @@ const GameRoomPage = () => {
             // }}
           />
         ))}
+
+      {/* 게임중 인원 수 미달시 표시 모달 */}
+      {showGameStopModal && (
+        <GameStopModal
+          onNext={async () => {
+            setShowGameStopModal(false);
+            window.location.href = '/room-list';
+            // await getScores(roomCode!)
+
+            // setTimeout(() => {
+            //   setShowFinalScoreModal(true);
+            //   setTimeout(() => {
+            //     setShowFinalScoreModal(false);
+            //   }, 5000);
+            // }, 300);
+          }}
+        />
+      )}
 
       {/* 라이어가 추측한 제시어 표시 모달 */}
       {showGuessedWord && (
