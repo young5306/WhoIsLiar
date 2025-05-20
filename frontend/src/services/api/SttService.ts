@@ -145,8 +145,16 @@ class SttService {
           `✅ 음성 인식 결과 이벤트 발생: ${event.results.length}개 결과`
         );
 
+        console.log('STT Debug - 음성 인식 결과 이벤트:', {
+          resultsCount: event.results.length,
+          resultIndex: event.resultIndex,
+          timestamp: new Date().toISOString(),
+          debugState: this.getDebugState(),
+        });
+
         if (!this.onResultCallback) {
           this.addDebugLog('❌ 콜백이 없어서 결과 처리 불가');
+          console.error('STT Debug - 콜백 없음');
           return;
         }
 
@@ -155,6 +163,10 @@ class SttService {
           this.addDebugLog(
             `🚷 현재 발언자가 아니어서 결과 무시 (나: ${this.myUserName}, 발언자: ${this.currentSpeakingPlayer})`
           );
+          console.log('STT Debug - 발언자 불일치:', {
+            myUserName: this.myUserName,
+            currentSpeakingPlayer: this.currentSpeakingPlayer,
+          });
           return;
         }
 
@@ -165,6 +177,14 @@ class SttService {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           const confidence = event.results[i][0].confidence;
+
+          console.log('STT Debug - 개별 결과:', {
+            index: i,
+            transcript,
+            isFinal: event.results[i].isFinal,
+            confidence: Math.round(confidence * 100),
+            timestamp: new Date().toISOString(),
+          });
 
           this.addDebugLog(
             `🔤 결과 #${i}: "${transcript}" (확정: ${event.results[i].isFinal}, 신뢰도: ${Math.round(confidence * 100)}%)`
@@ -611,15 +631,33 @@ class SttService {
     // 빈 문자열이면 API 호출하지 않음
     if (!speech || speech.trim() === '') {
       this.addDebugLog('빈 문자열은 요약 API에 전송할 수 없습니다');
+      console.error('STT Debug - 빈 문자열 요약 시도:', speech);
       return;
     }
 
     try {
       this.addDebugLog(`요약 API 직접 호출, 발언 내용: "${speech}"`);
+      console.log('STT Debug - 요약 API 호출 시작:', {
+        speech,
+        timestamp: new Date().toISOString(),
+        debugState: this.getDebugState(),
+      });
+
       const response = await sttSummary(speech);
+
+      console.log('STT Debug - 요약 API 응답:', {
+        response,
+        timestamp: new Date().toISOString(),
+      });
+
       this.addDebugLog(`요약 API 응답: ${JSON.stringify(response)}`);
-      // 응답은 웹소켓으로 HINT 메시지를 통해 돌아옵니다
     } catch (error) {
+      console.error('STT Debug - 요약 API 호출 실패:', {
+        error,
+        speech,
+        timestamp: new Date().toISOString(),
+        debugState: this.getDebugState(),
+      });
       this.addDebugLog(`요약 API 호출 실패: ${error}`);
     }
   }
