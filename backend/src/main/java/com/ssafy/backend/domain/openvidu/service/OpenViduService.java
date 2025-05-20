@@ -54,76 +54,85 @@ public class OpenViduService {
 
 	public OpenViduTokenResponse joinSession(String roomCode) {
 
-		String nickname = sessionRepository.findByNickname(SecurityUtils.getCurrentNickname())
-			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND))
-			.getNickname();
+		String nickname = SecurityUtils.getCurrentNickname();
 
 		RLock lock = redissonClient.getLock("openvidu:lock:" + roomCode);
 
-		try {
-			boolean isLocked = lock.tryLock(5, 10, TimeUnit.SECONDS);
-			if (!isLocked) {
-				log.warn("Redisson 락 획득 실패 - roomCode: {}", roomCode);
-				throw new CustomException(ResponseCode.SESSION_CREATING);
-			}
+		int retryAttempts = 20;
+		int delayTime = 100;
 
-			Session session = openVidu.getActiveSession(roomCode);
-			boolean needNewSession = (session == null);
+		while (retryAttempts-- > 0) {
 
-			/**
-			 * 세션 객체는 있지만, 실제 OpenVidu 서버에선 존재하지 않을 수 있음
-			 * 참가자가 모두 나가면 OpenVidu는 알아서 세션 정리
-			 * getActiveSession은 참가자가 모두 나간 경우에도 존재한다고 뜸
-			 */
-			if (!needNewSession && !sessionExists(roomCode)) {
-				needNewSession = true;
-			}
+			long lockStart = System.currentTimeMillis();
+			try {
+				boolean isLocked = lock.tryLock(1200, 600, TimeUnit.MILLISECONDS);
+				if (!isLocked) {
+					log.warn("Redisson 락 획득 실패 - roomCode: {}, 남은 시도: {}", roomCode, retryAttempts);
+					Thread.sleep(delayTime);
+					continue;
+				}
 
-			if (!needNewSession && isNicknameDuplicated(roomCode, nickname)) {
-				throw new CustomException(ResponseCode.OPENVIDU_CONFLICT);
-			}
+				long lockDuration = System.currentTimeMillis() - lockStart;
+				log.info("유저: {}, 락 획득 성공 - roomCode: {}, 시도 횟수: {}, 대기 시간: {}ms", nickname,roomCode, (20 - retryAttempts), lockDuration);
+				Session session = openVidu.getActiveSession(roomCode);
+				boolean needNewSession = (session == null);
 
-			if (needNewSession) {
+				/**
+				 * 세션 객체는 있지만, 실제 OpenVidu 서버에선 존재하지 않을 수 있음
+				 * 참가자가 모두 나가면 OpenVidu는 알아서 세션 정리
+				 * getActiveSession은 참가자가 모두 나간 경우에도 존재한다고 뜸
+				 */
+				if (!needNewSession && !sessionExists(roomCode)) {
+					needNewSession = true;
+				}
+
+				if (!needNewSession && isNicknameDuplicated(roomCode, nickname)) {
+					throw new CustomException(ResponseCode.OPENVIDU_CONFLICT);
+				}
+
+				if (needNewSession) {
+					try {
+						session = createNewSession(roomCode);
+						log.info("새 세션 생성 완료 - roomCode: {}", roomCode);
+					} catch (OpenViduJavaClientException | OpenViduHttpException e) {
+						log.error("OpenVidu 세션 생성 실패 - roomCode: {}, error: {}", roomCode, e.getMessage(), e);
+						throw new CustomException(ResponseCode.OPENVIDU_SESSION_ERROR);
+					}
+				}
+
 				try {
-					session = createNewSession(roomCode);
-					log.info("새 세션 생성 완료 - roomCode: {}", roomCode);
+					Connection connection = session.createConnection(
+							new ConnectionProperties.Builder()
+									.type(ConnectionType.WEBRTC)
+									.role(OpenViduRole.PUBLISHER)
+									.build()
+					);
+
+					return OpenViduTokenResponse.builder()
+							.sessionId(roomCode)
+							.token(connection.getToken())
+							.build();
+
 				} catch (OpenViduJavaClientException | OpenViduHttpException e) {
-					log.error("OpenVidu 세션 생성 실패 - roomCode: {}, error: {}", roomCode, e.getMessage(), e);
+					log.error("세션 토큰 생성 실패 - sessionId: {}, error: {}", session.getSessionId(), e.getMessage(), e);
 					throw new CustomException(ResponseCode.OPENVIDU_SESSION_ERROR);
 				}
-			}
 
-			try {
-				Connection connection = session.createConnection(
-					new ConnectionProperties.Builder()
-						.type(ConnectionType.WEBRTC)
-						.role(OpenViduRole.PUBLISHER)
-						.build()
-				);
-
-				return OpenViduTokenResponse.builder()
-					.sessionId(roomCode)
-					.token(connection.getToken())
-					.build();
-
-			} catch (OpenViduJavaClientException | OpenViduHttpException e) {
-				log.error("세션 토큰 생성 실패 - sessionId: {}, error: {}", session.getSessionId(), e.getMessage(), e);
-				throw new CustomException(ResponseCode.OPENVIDU_SESSION_ERROR);
-			}
-
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			log.error("Redisson 락 인터럽트 - roomCode: {}", roomCode, e);
-			throw new CustomException(ResponseCode.SERVER_ERROR);
-		} finally {
-			try {
-				if (lock.isHeldByCurrentThread()) {
-					lock.unlock();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				log.error("Redisson 락 인터럽트 - roomCode: {}", roomCode, e);
+				throw new CustomException(ResponseCode.SERVER_ERROR);
+			} finally {
+				try {
+					if (lock.isHeldByCurrentThread()) {
+						lock.unlock();
+					}
+				} catch (Exception e) {
+					log.error("Redisson 락 해제 실패 - roomCode: {}, error: {}", roomCode, e.getMessage(), e);
 				}
-			} catch (Exception e) {
-				log.error("Redisson 락 해제 실패 - roomCode: {}, error: {}", roomCode, e.getMessage(), e);
 			}
 		}
+		throw new CustomException(ResponseCode.SESSION_CREATING);
 	}
 
 	private Session createNewSession(String roomId)

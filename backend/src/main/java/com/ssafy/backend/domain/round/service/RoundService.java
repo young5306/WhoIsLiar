@@ -526,25 +526,18 @@ public class RoundService {
 		boolean isCorrect = normalizedInput.equals(normalizedAnswer);
 
 		if (!isCorrect) {
-			if (room.getGameMode() == GameMode.DEFAULT) {
-				Optional<CategoryWord> cwOpt = categoryWordRepository.findByWordIgnoreCase(targetWord);
-				if (cwOpt.isPresent()) {
-					List<Synonym> syns = synonymRepository.findByMainWord(cwOpt.get());
-					for (Synonym s : syns) {
-						String normSyn = s.getSynonym().replaceAll("\\s+", "").toLowerCase();
-						if (normalizedInput.equals(normSyn)) {
-							isCorrect = true;
-							break;
-						}
+			Optional<CategoryWord> cwOpt = categoryWordRepository.findByWordIgnoreCase(targetWord);
+			if (cwOpt.isPresent()) {
+				List<Synonym> syns = synonymRepository.findByMainWord(cwOpt.get());
+				for (Synonym s : syns) {
+					String normSyn = s.getSynonym().replaceAll("\\s+", "").toLowerCase();
+					if (normalizedInput.equals(normSyn)) {
+						isCorrect = true;
+						break;
 					}
 				}
-			} else {
-				String categoryName = room.getCategory().name();
-				isCorrect = gptService.isSynonym(targetWord, req.guessText(), categoryName);
 			}
 		}
-
-		Winner winner = isCorrect ? Winner.liar : Winner.civil;
 
 		// 3) ParticipantRound 목록
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
@@ -555,7 +548,7 @@ public class RoundService {
 		long liarId = liarPR.getParticipant().getId();
 		List<ParticipantRound> civPRs = prList.stream()
 			.filter(pr -> !pr.isLiar())
-			.collect(Collectors.toList());
+			.toList();
 
 		int skipCount = 0;
 		Map<Long,Integer> voteCounts = new HashMap<>();
@@ -603,50 +596,33 @@ public class RoundService {
 		boolean citizenFoundLiar = (topVotedId != null && topVotedId.equals(liarId));
 
 		// 9) 점수 부여
+		Winner winner = (citizenFoundLiar && !isCorrect) ? Winner.civil : Winner.liar;
+
 		if (winner == Winner.civil) {
 			// ▶ 시민 승리
-			if (citizenFoundLiar) {
-				// 1) 시민이 라이어를 찾고 + 라이어 오답
-				civPRs.forEach(pr -> pr.addScore(100));
-			} else {
-				// 2) 시민이 못 찾고 + 라이어 오답
-				liarPR.addScore(100);
-				if (!skipFlag && topVotedId != null) {
-					// 지목된 시민에만 페널티
-					prList.stream()
-						.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
-						.forEach(pr -> pr.addScore(-100));
-				}
-				// 나머지 시민
-				civPRs.forEach(pr -> pr.addScore(-100));
-			}
+			civPRs.forEach(pr -> pr.addScore(100));
 		} else {
 			// ▶ 라이어 승리
-			if (citizenFoundLiar) {
-				// 1) 시민이 라이어 찾았으나 라이어 정답
+			if (citizenFoundLiar && isCorrect) {
 				liarPR.addScore(100);
 				civPRs.forEach(pr -> pr.addScore(-100));
-			} else {
-				// 시민이 못 찾았을 때
-				if (isCorrect) {
-					// 3) 라이어 정답
-					liarPR.addScore(200);
-				} else {
-					// 2) 라이어 오답
-					liarPR.addScore(100);
-				}
-				if (!skipFlag && topVotedId != null) {
-					prList.stream()
-						.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
-						.forEach(pr -> pr.addScore(-100));
-				}
-				// 나머지 시민
+			} else if (!citizenFoundLiar && isCorrect) {
 				civPRs.forEach(pr -> pr.addScore(-100));
+				liarPR.addScore(200);
+				prList.stream()
+					.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
+					.forEach(pr -> pr.addScore(-100));
+			} else {
+				civPRs.forEach(pr -> pr.addScore(-100));
+				liarPR.addScore(100);
+				prList.stream()
+					.filter(pr -> pr.getParticipant().getId().equals(topVotedId))
+					.forEach(pr -> pr.addScore(-100));
 			}
 		}
 
 		round.setWinner(winner);
-		prList.forEach(participantRoundRepository::save);
+		participantRoundRepository.saveAll(prList);
 
 		String nickname = SecurityUtils.getCurrentNickname();
 		String socketMessage = formatGuessMessage(nickname, req.guessText(), isCorrect);

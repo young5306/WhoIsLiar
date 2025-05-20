@@ -17,15 +17,18 @@ const GameStartCountdownModal = ({
   category,
   totalRounds,
 }: GameStartCountdownModalProps) => {
-  const [countdown, setCountdown] = useState(5);
+  // const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(10);
 
   // 첫 마운트 시에만 실행되는 효과
   useEffect(() => {
     if (!isOpen) return;
 
-    console.log('카운트다운 시작! 초기값:', 5);
+    // console.log('카운트다운 시작! 초기값:', 5);
+    console.log('카운트다운 시작! 초기값:', 10);
 
     // 시작 시 값 설정
+    // setCountdown(5);
     setCountdown(5);
 
     // 매 초마다 카운트다운 감소
