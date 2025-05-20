@@ -816,7 +816,7 @@ const WaitingRoomContent = (): JSX.Element => {
         }
       }
 
-      clearRoomCode(); // roomCode 초기화
+      // roomCode는 실제로 페이지를 나갈 때만 초기화되어야 하므로 여기서는 제거
       return message;
     };
 
@@ -826,6 +826,18 @@ const WaitingRoomContent = (): JSX.Element => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [clearRoomCode]);
+
+  // 실제로 페이지를 나갈 때 실행되는 이벤트 핸들러 추가
+  useEffect(() => {
+    const handleUnload = () => {
+      clearRoomCode();
+    };
+
+    window.addEventListener('unload', handleUnload);
+    return () => {
+      window.removeEventListener('unload', handleUnload);
     };
   }, [clearRoomCode]);
 
