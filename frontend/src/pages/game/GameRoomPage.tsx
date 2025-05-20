@@ -690,7 +690,7 @@ const GameRoomPage = () => {
   const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
   const isLiarDisconnectedRef = useRef(isLiarDisconnected);
   const isPlayerUpdateRef = useRef(false);
-  const isHostUpdateRef = useRef(false);
+  const [liarUpdateTrigger, setLiarUpdateTrigger] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -720,10 +720,6 @@ const GameRoomPage = () => {
     // 플레이어 업데이트 확인
     isPlayerUpdateRef.current = true;
     console.log('플레이어 업데이트 완료');
-
-    if (isLiarDisconnected) {
-      onlyFetchGameInfo();
-    }
   };
 
   // 2. 비활성화 플레이어와 방장 정보 확인
@@ -742,9 +738,30 @@ const GameRoomPage = () => {
     setHostNickname(hostUserName[0] ?? '');
 
     // 호스트 업데이트 확인
-    isHostUpdateRef.current = true;
+    // isHostUpdateRef.current = true;
     console.log('호스트 업데이트 완료');
   };
+
+  // 게임 중 라이어 퇴장 후 로직
+  useEffect(() => {
+    console.log('라이어 퇴장 후 업데이트 로직 접속1');
+    if (isLiarDisconnectedRef.current) {
+      console.log('라이어 퇴장 후 업데이트 로직 접속2');
+      const AfterLiarLeave = async () => {
+        await onlyFetchGameInfo();
+        await handleScoreTimeEnd();
+
+        setShowLiarLeaveModal(false);
+
+        if (roundNumber === totalRoundNumber) {
+          setShowFinalScoreModal(true);
+        }
+      };
+
+      AfterLiarLeave();
+      setLiarUpdateTrigger(false);
+    }
+  }, [liarUpdateTrigger, isLiarDisconnected]);
 
   // 방장 플레이어 변경 확인
   useEffect(() => {
@@ -1311,8 +1328,6 @@ const GameRoomPage = () => {
       setShowScoreModal(false);
       setIsLiarDisconnected(false);
       isLiarDisconnectedRef.current = false;
-      isHostUpdateRef.current = false;
-      isLiarDisconnectedRef.current = false;
 
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
@@ -1864,8 +1879,7 @@ const GameRoomPage = () => {
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             onNext={async () => {
-              await handleScoreTimeEnd();
-              setShowLiarLeaveModal(false);
+              setLiarUpdateTrigger(true);
             }}
           />
         ) : (
@@ -1873,10 +1887,13 @@ const GameRoomPage = () => {
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             onNext={async () => {
-              await handleScoreTimeEnd();
-              setShowLiarLeaveModal(false);
-              setShowFinalScoreModal(true);
+              setLiarUpdateTrigger(true);
             }}
+            // onNext={async () => {
+            //   await handleScoreTimeEnd();
+            //   setShowLiarLeaveModal(false);
+            //   setShowFinalScoreModal(true);
+            // }}
           />
         ))}
 
