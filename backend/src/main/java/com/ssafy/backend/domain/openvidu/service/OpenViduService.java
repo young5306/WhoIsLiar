@@ -58,19 +58,22 @@ public class OpenViduService {
 
 		RLock lock = redissonClient.getLock("openvidu:lock:" + roomCode);
 
-		int retryAttempts = 10;
-		int delayTime = 200;
+		int retryAttempts = 20;
+		int delayTime = 100;
 
 		while (retryAttempts-- > 0) {
 
+			long lockStart = System.currentTimeMillis();
 			try {
-				boolean isLocked = lock.tryLock(2, 1, TimeUnit.SECONDS);
+				boolean isLocked = lock.tryLock(2000, 1000, TimeUnit.MILLISECONDS);
 				if (!isLocked) {
 					log.warn("Redisson 락 획득 실패 - roomCode: {}, 남은 시도: {}", roomCode, retryAttempts);
 					Thread.sleep(delayTime);
 					continue;
 				}
 
+				long lockDuration = System.currentTimeMillis() - lockStart;
+				log.info("유저: {}, 락 획득 성공 - roomCode: {}, 시도 횟수: {}, 대기 시간: {}ms", nickname,roomCode, (20 - retryAttempts), lockDuration);
 				Session session = openVidu.getActiveSession(roomCode);
 				boolean needNewSession = (session == null);
 

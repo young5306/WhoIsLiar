@@ -46,7 +46,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const connect = useCallback((roomCode: string) => {
     if (!roomCode) {
-      console.error('roomCode가 없습니다.');
       return;
     }
 
@@ -93,7 +92,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const send = useCallback(
     (content: string, sender: string, chatType: string) => {
       if (!clientRef.current?.connected || !currentRoomCodeRef.current) {
-        console.warn('WebSocket이 연결되지 않았습니다.');
         return;
       }
 
@@ -113,7 +111,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const sendEmotion = useCallback((payload: EmotionLogMessage) => {
     if (!clientRef.current?.connected || !currentRoomCodeRef.current) {
-      console.warn('WebSocket이 연결되지 않았습니다.');
       return;
     }
 
@@ -146,7 +143,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         currentRoomCodeRef.current &&
         (!isConnected || !clientRef.current?.connected)
       ) {
-        console.log('연결 상태 확인: 재연결 시도');
         connect(currentRoomCodeRef.current);
       }
     };

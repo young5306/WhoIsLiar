@@ -236,24 +236,15 @@ const WaitingRoomContent = (): JSX.Element => {
 
   const checkMediaDevices = async () => {
     try {
-      // 카메라와 마이크를 개별적으로 요청
-      const videoStream = await navigator.mediaDevices.getUserMedia({
+      // 카메라와 마이크를 한 번에 요청
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: 'user',
         },
-      });
-
-      const audioStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
-
-      // 스트림 병합
-      const stream = new MediaStream([
-        ...videoStream.getVideoTracks(),
-        ...audioStream.getAudioTracks(),
-      ]);
 
       // 카메라 설정
       if (videoRef.current) {
@@ -396,16 +387,11 @@ const WaitingRoomContent = (): JSX.Element => {
             // 게임 시작 메시지 처리
             if (message.chatType === 'GAME_START') {
               if (contextRoomCode && !isHost) {
-                // 참가자는 1초 후에 이동
-                setTimeout(() => {
-                  navigate('/game-room');
-                }, 1000);
+                navigate('/game-room');
               }
             }
 
             if (message.chatType === 'ROOM_READY_STATUS') {
-              console.log('방 준비 상태 메시지 수신:', message.content);
-
               // 이전 상태와 새 상태 비교
               const newReadyStatus = message.content === 'TRUE';
 
@@ -814,20 +800,12 @@ const WaitingRoomContent = (): JSX.Element => {
   };
 
   useEffect(() => {
-    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // 기본 메시지 설정
+      const message = '정말로 페이지를 나가시겠습니까?';
       e.preventDefault();
-
-      // HTTP 퇴장 요청 보내기
-      const roomCode = useRoomStore.getState().roomCode;
-      if (roomCode) {
-        try {
-          await outRoom(roomCode);
-        } catch (error) {
-          console.error('퇴장 요청 실패:', error);
-        }
-      }
-
-      clearRoomCode(); // roomCode 초기화
+      e.returnValue = message;
+      return message;
     };
 
     // 뒤로가기 버튼 클릭시 경고창 방지를 위함
@@ -836,6 +814,26 @@ const WaitingRoomContent = (): JSX.Element => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  // 실제로 페이지를 나갈 때 실행되는 이벤트 핸들러 추가
+  useEffect(() => {
+    const handleUnload = async () => {
+      const roomCode = useRoomStore.getState().roomCode;
+      if (roomCode) {
+        try {
+          await outRoom(roomCode);
+        } catch (error) {
+          console.error('퇴장 요청 실패:', error);
+        }
+      }
+      clearRoomCode();
+    };
+
+    window.addEventListener('unload', handleUnload);
+    return () => {
+      window.removeEventListener('unload', handleUnload);
     };
   }, [clearRoomCode]);
 
