@@ -746,7 +746,7 @@ const GameRoomPage = () => {
   // 게임 중 라이어 퇴장 후 로직
   useEffect(() => {
     console.log('라이어 퇴장 후 업데이트 로직 접속1');
-    if (isLiarDisconnectedRef.current) {
+    if (isLiarDisconnectedRef.current && numberOfPlayer && numberOfPlayer > 2) {
       console.log('라이어 퇴장 후 업데이트 로직 접속2');
       const AfterLiarLeave = async () => {
         await onlyFetchGameInfo();
@@ -762,7 +762,7 @@ const GameRoomPage = () => {
       AfterLiarLeave();
       setLiarUpdateTrigger(false);
     }
-  }, [liarUpdateTrigger, isLiarDisconnected]);
+  }, [liarUpdateTrigger, isLiarDisconnected, numberOfPlayer]);
 
   // 방장 플레이어 변경 확인
   useEffect(() => {
