@@ -800,23 +800,11 @@ const WaitingRoomContent = (): JSX.Element => {
   };
 
   useEffect(() => {
-    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       // 기본 메시지 설정
       const message = '정말로 페이지를 나가시겠습니까?';
       e.preventDefault();
       e.returnValue = message;
-
-      // HTTP 퇴장 요청 보내기
-      const roomCode = useRoomStore.getState().roomCode;
-      if (roomCode) {
-        try {
-          await outRoom(roomCode);
-        } catch (error) {
-          console.error('퇴장 요청 실패:', error);
-        }
-      }
-
-      // roomCode는 실제로 페이지를 나갈 때만 초기화되어야 하므로 여기서는 제거
       return message;
     };
 
@@ -827,11 +815,19 @@ const WaitingRoomContent = (): JSX.Element => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [clearRoomCode]);
+  }, []);
 
   // 실제로 페이지를 나갈 때 실행되는 이벤트 핸들러 추가
   useEffect(() => {
-    const handleUnload = () => {
+    const handleUnload = async () => {
+      const roomCode = useRoomStore.getState().roomCode;
+      if (roomCode) {
+        try {
+          await outRoom(roomCode);
+        } catch (error) {
+          console.error('퇴장 요청 실패:', error);
+        }
+      }
       clearRoomCode();
     };
 
