@@ -566,6 +566,7 @@ public class RoundService {
 
 		// 8) “시민이 라이어를 찾았는지”
 		boolean citizenFoundLiar = (topVotedId != null && topVotedId.equals(liarId));
+		log.info("citizenFoundLiar: {}, topVotedId: {}, liarId: {}", citizenFoundLiar, topVotedId, liarId);
 
 		// 9) 점수 부여
 		Winner winner = (citizenFoundLiar && !isCorrect) ? Winner.civil : Winner.liar;
