@@ -520,24 +520,7 @@ public class RoundService {
 			.orElseThrow(() -> new CustomException(ResponseCode.NOT_FOUND));
 
 		// 2) 단어 정답 여부 판정
-		String targetWord = round.getWord1();
-		String normalizedInput  = req.guessText().replaceAll("\\s+", "").toLowerCase();
-		String normalizedAnswer  = targetWord.replaceAll("\\s+", "").toLowerCase();
-		boolean isCorrect = normalizedInput.equals(normalizedAnswer);
-
-		if (!isCorrect) {
-			Optional<CategoryWord> cwOpt = categoryWordRepository.findByWordIgnoreCase(targetWord);
-			if (cwOpt.isPresent()) {
-				List<Synonym> syns = synonymRepository.findByMainWord(cwOpt.get());
-				for (Synonym s : syns) {
-					String normSyn = s.getSynonym().replaceAll("\\s+", "").toLowerCase();
-					if (normalizedInput.equals(normSyn)) {
-						isCorrect = true;
-						break;
-					}
-				}
-			}
-		}
+		boolean isCorrect = checkAnswer(round, req);
 
 		// 3) ParticipantRound 목록
 		List<ParticipantRound> prList = participantRoundRepository.findByRound(round);
@@ -571,18 +554,7 @@ public class RoundService {
 			.count();
 
 		// 6) skipFlag 판정
-		boolean skipFlag;
-		if (nonSkipCounts.isEmpty()) {
-			skipFlag = true;
-		} else if (skipCount >= maxCount) {
-			skipFlag = true;
-		} else if (minCount == maxCount) {
-			skipFlag = true;
-		} else if (topTieCount > 1) {
-			skipFlag = true;
-		} else {
-			skipFlag = false;
-		}
+		boolean skipFlag = checkSkipFlag(nonSkipCounts, skipCount, minCount, maxCount, topTieCount);
 
 		// 7) topVotedId (지목된 시민)
 		final Long topVotedId = skipFlag
@@ -597,7 +569,57 @@ public class RoundService {
 
 		// 9) 점수 부여
 		Winner winner = (citizenFoundLiar && !isCorrect) ? Winner.civil : Winner.liar;
+		applyScores(winner, citizenFoundLiar, isCorrect, civPRs, liarPR, prList, topVotedId);
 
+		round.setWinner(winner);
+		participantRoundRepository.saveAll(prList);
+
+		String nickname = SecurityUtils.getCurrentNickname();
+		String socketMessage = formatGuessMessage(nickname, req.guessText(), isCorrect);
+		chatSocketService.guessSubmitted(roomCode, socketMessage);
+
+		return new GuessResponseDto(isCorrect, winner.name());
+	}
+
+	private boolean checkAnswer(Round round, GuessRequestDto req) {
+		String targetWord = round.getWord1();
+		String normalizedInput  = req.guessText().replaceAll("\\s+", "").toLowerCase();
+		String normalizedAnswer  = targetWord.replaceAll("\\s+", "").toLowerCase();
+		boolean isCorrect = normalizedInput.equals(normalizedAnswer);
+
+		if (!isCorrect) {
+			Optional<CategoryWord> cwOpt = categoryWordRepository.findByWordIgnoreCase(targetWord);
+			if (cwOpt.isPresent()) {
+				List<Synonym> syns = synonymRepository.findByMainWord(cwOpt.get());
+				for (Synonym s : syns) {
+					String normSyn = s.getSynonym().replaceAll("\\s+", "").toLowerCase();
+					if (normalizedInput.equals(normSyn)) {
+						isCorrect = true;
+						break;
+					}
+				}
+			}
+		}
+
+		return isCorrect;
+	}
+
+	private boolean checkSkipFlag(List<Integer> nonSkipCounts, int skipCount, int minCount, int maxCount, long topTieCount) {
+		if (nonSkipCounts.isEmpty()) {
+			return true;
+		} else if (skipCount >= maxCount) {
+			return true;
+		} else if (minCount == maxCount) {
+			return true;
+		} else if (topTieCount > 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private void applyScores(Winner winner, boolean citizenFoundLiar, boolean isCorrect,
+		List<ParticipantRound> civPRs, ParticipantRound liarPR, List<ParticipantRound> prList, Long topVotedId) {
 		if (winner == Winner.civil) {
 			// ▶ 시민 승리
 			civPRs.forEach(pr -> pr.addScore(100));
@@ -620,15 +642,6 @@ public class RoundService {
 					.forEach(pr -> pr.addScore(-100));
 			}
 		}
-
-		round.setWinner(winner);
-		participantRoundRepository.saveAll(prList);
-
-		String nickname = SecurityUtils.getCurrentNickname();
-		String socketMessage = formatGuessMessage(nickname, req.guessText(), isCorrect);
-		chatSocketService.guessSubmitted(roomCode, socketMessage);
-
-		return new GuessResponseDto(isCorrect, winner.name());
 	}
 
 	private String formatGuessMessage(String nickname, String guessText, boolean isCorrect) {
