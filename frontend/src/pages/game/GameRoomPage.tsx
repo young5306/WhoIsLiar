@@ -58,6 +58,7 @@ import SkipModal from '../../components/modals/liarResultModal/SkipModal';
 import LiarFoundModal from '../../components/modals/liarResultModal/LiarFoundModal';
 import LiarLeaveModal from '../../components/modals/liarResultModal/LiarLeaveModal';
 import LiarNotFoundModal from '../../components/modals/liarResultModal/LiarNotFoundModal';
+import GameStopModal from '../../components/modals/GameStopModal';
 import { notify } from '../../components/common/Toast';
 import { useMessageStore } from '../../stores/useMessageStore';
 import GameStartCountdownModal from '../../components/modals/GameStartCountdownModal';
@@ -320,8 +321,19 @@ const GameRoomPage = () => {
   };
 
   // 세션 참가
-  const joinSession = async (e?: React.FormEvent) => {
+  const joinSession = async (
+    e?: React.FormEvent,
+    retryCount = 0,
+    delay = 500
+  ) => {
     if (e) e.preventDefault();
+
+    // openvidu 연결 재시도
+    const MAX_RETRIES = 5;
+
+    if (retryCount > 0) {
+      console.log(`세션 연결 재시도 중... (${retryCount}/${MAX_RETRIES})`);
+    }
 
     OV.current = new OpenVidu();
     const mySession = OV.current.initSession();
@@ -407,6 +419,18 @@ const GameRoomPage = () => {
       setCurrentMicDevice(currentMicDevice);
     } catch (error) {
       console.error('세션 연결 중 오류 발생:', error);
+
+      if (String(error).includes('423') && retryCount < MAX_RETRIES) {
+        console.warn(
+          `세션 잠금 상태: ${delay}ms 후 재시도 (${retryCount + 1}/${MAX_RETRIES})`
+        );
+
+        const nextDelay = Math.min(delay * 1.5, 3000);
+
+        setTimeout(() => joinSession(e, retryCount + 1, nextDelay), delay);
+      } else if (retryCount >= MAX_RETRIES) {
+        console.error('최대 재시도 횟수를 초과했습니다.');
+      }
     }
   };
 
@@ -639,7 +663,7 @@ const GameRoomPage = () => {
   const [hostNickname, setHostNickname] = useState<string>('');
   const [gameMode, setGameMode] = useState<string>('DEFAULT');
   const [videoMode, setVideoMode] = useState<string>('VIDEO');
-  const [numberOfPlayer, setNumberOfPlayer] = useState<number>(4);
+  const [numberOfPlayer, setNumberOfPlayer] = useState<number>();
 
   const [roomName, setRoomName] = useState<string>('');
   // 발언 진행 관련
@@ -665,6 +689,11 @@ const GameRoomPage = () => {
   const [showLiarLeaveModal, setShowLiarLeaveModal] = useState(false);
   const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
   const isLiarDisconnectedRef = useRef(isLiarDisconnected);
+  const isPlayerUpdateRef = useRef(false);
+  const [nextStepTrigger, setNextStepTrigger] = useState(false);
+  const [showGameStopModal, setShowGameStopModal] = useState(false);
+  const [recordRoundNumber, setRecordRoundNumber] = useState<number>();
+  const [updateGameInfo, setUpdateGameInfo] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -679,7 +708,9 @@ const GameRoomPage = () => {
   const [answerWord, setAnswerWord] = useState<string | null>(null);
   const [foolLiarWord, setFoolLiarWord] = useState<string | null>(null);
 
-  // 플레이어가 중간에 퇴장하는 경우 감지
+  // << 플레이어가 중간에 퇴장하는 경우 감지>>
+
+  // 3. 비활성화 플레이어를 제외하고, 플레이어 업데이트
   const updateParticipants = (inactivaUser: string[]) => {
     console.log('현재 참가자 리스트', participants);
     const updateParticipants = participants.filter(
@@ -688,8 +719,13 @@ const GameRoomPage = () => {
 
     console.log('업데이트 플레이어 정보', updateParticipants);
     setParticipants(updateParticipants);
+
+    // 플레이어 업데이트 확인
+    isPlayerUpdateRef.current = true;
+    console.log('플레이어 업데이트 완료');
   };
 
+  // 2. 비활성화 플레이어와 방장 정보 확인
   const inactiveNickNames = (roomParticipants: RoomParticipantsWrapper) => {
     const inactiveUser = roomParticipants.participants
       .filter((p) => !p.isActive)
@@ -703,7 +739,36 @@ const GameRoomPage = () => {
       .map((p) => p.nickName);
     console.log('방장 플레이어', hostUserName);
     setHostNickname(hostUserName[0] ?? '');
+
+    // 호스트 업데이트 확인
+    // isHostUpdateRef.current = true;
+    console.log('호스트 업데이트 완료');
   };
+
+  // 게임 중 라이어 퇴장 후 로직1
+  useEffect(() => {
+    if (roundNumber === recordRoundNumber && !updateGameInfo) {
+      (async () => {
+        await onlyFetchGameInfo();
+        setNextStepTrigger(true);
+        console.log('게임 중 라이어 퇴장 후 로직1 완료');
+      })();
+    }
+  }, [hostNickname]);
+
+  // 게임 중 라이어 퇴장 후 로직2
+  useEffect(() => {
+    console.log('라이어 퇴장 후 업데이트 로직2 접속');
+    if (isLiarDisconnectedRef.current && numberOfPlayer && numberOfPlayer > 2) {
+      (async () => {
+        await handleScoreTimeEnd();
+        console.log('게임 중 라이어 퇴장 후 로직2 완료');
+        setTimeout(() => {
+          setShowLiarLeaveModal(false);
+        }, 3000);
+      })();
+    }
+  }, [nextStepTrigger]);
 
   // 방장 플레이어 변경 확인
   useEffect(() => {
@@ -714,16 +779,12 @@ const GameRoomPage = () => {
   useEffect(() => {
     console.log('현재 플레이어 수', numberOfPlayer);
 
-    // if (numberOfPlayer < 3) {
-    //   console.log(
-    //     '게임 진행을 위한 플레이어 수가 부족합니다. 게임을 종료합니다.'
-    //   );
-    //   disconnectOpenVidu();
-    //   navigation('/waiting-room');
-    // }
+    if (numberOfPlayer && numberOfPlayer < 3) {
+      setShowGameStopModal(true);
+    }
   }, [numberOfPlayer]);
 
-  // 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
+  // 1. 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
   useEffect(() => {
     if (leaveMessageReceive) {
       console.log('플레이어가 퇴장했습니다. roomPlayerInfo 다시 받아오기');
@@ -754,7 +815,7 @@ const GameRoomPage = () => {
     Array<{ participantNickname: string; order: number }>
   >([]);
 
-  // '나'를 제외한 참가자 순서대로 재정렬
+  // '나'를 제외한 참가자 순서대로 재정렬 (participants에 따라 변경)
   useEffect(() => {
     if (!myUserName || participants.length === 0) return;
 
@@ -773,7 +834,7 @@ const GameRoomPage = () => {
     setSortedPraticipants(sorted);
   }, [participants]);
 
-  // 정렬된 순서에 따라 position 부여
+  // 정렬된 순서에 따라 position 부여 (플레이어 화면상 위치 지정용)
   useEffect(() => {
     if (
       !sortedParticipants ||
@@ -1035,23 +1096,24 @@ const GameRoomPage = () => {
         console.log(`${latest.chatType} 메시지 수신:`, latest);
         console.log('💡라이어 퇴장으로 인한 현재 라운드 종료');
 
+        setRecordRoundNumber(roundNumber);
         setIsLiarDisconnected(true);
         isLiarDisconnectedRef.current = true;
-        // console.log(
-        //   '라이어 플래그',
-        //   isLiarDisconnected,
-        //   isLiarDisconnectedRef.current
-        // );
 
         setShowLiarLeaveModal(true);
-
-        Promise.all([onlyFetchGameInfo()])
-          .then(() => {
-            console.log('✅ LiarLeave 후 라운드 정보 업데이트 완료');
-          })
-          .catch((err) => {
-            console.log('❌ LiarLeave 후 라운드 정보 가져오기 실패:', err);
-          });
+        (async () => {
+          try {
+            await onlyFetchGameInfo();
+            console.log(
+              '라이어 퇴장시 현재 라운드 끝 - 내부 실행',
+              roundNumber
+            );
+            setUpdateGameInfo(true);
+            setNextStepTrigger(true);
+          } catch (error) {
+            console.log('라이어 퇴장시 endGame error', error);
+          }
+        })();
       }
     }
   }, [chatMessages, myUserName, publisher]);
@@ -1193,13 +1255,24 @@ const GameRoomPage = () => {
   // 점수 조회 및 모달 표시
   const onlyFetchGameInfo = async () => {
     try {
-      console.log('현재 라운드 끝', roundNumber);
+      if (roundNumber >= totalRoundNumber) {
+        await getScores(roomCode!);
+        console.log('✅ Scores 조회 완료');
+      }
+    } catch (error) {
+      console.error('라이어 퇴장시 getScores 호출 실패', error);
+    }
+
+    try {
       console.log('현재 호스트', hostNickname);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
+        console.log('✅ EndRound 완료');
+
         if (roundNumber < totalRoundNumber) {
           await setRound(roomCode!);
+          console.log('✅ setRound 완료');
         }
       }
     } catch (error) {
@@ -1290,7 +1363,9 @@ const GameRoomPage = () => {
 
   return (
     <>
-      {session !== undefined && sortedParticipants.length > 0 ? (
+      {session !== undefined &&
+      sortedParticipants.length > 0 &&
+      !showGameStopModal ? (
         <>
           <div className="w-full h-full flex flex-col px-8">
             <div className="absolute top-6 right-6 flex items-center gap-3 z-100">
@@ -1483,7 +1558,7 @@ const GameRoomPage = () => {
                             )}
                             {/* </div> */}
                           </div>
-                          <SttText
+                          {/* <SttText
                             sttResult={
                               sttResults[(sub as Subscriber).nickname || ''] ||
                               null
@@ -1492,7 +1567,7 @@ const GameRoomPage = () => {
                             hintMessage={
                               hintMessages[(sub as Subscriber).nickname || '']
                             }
-                          />
+                          /> */}
                           <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                             {sub.stream.videoActive ? (
                               videoMode === 'BLIND' ? (
@@ -1513,10 +1588,20 @@ const GameRoomPage = () => {
                         </div>
                       </div>
                       <div>
-                        <EmotionLog
+                        {/* <EmotionLog
                           name={sub.nickname!}
                           emotion={emotionLogs[sub.nickname!] || undefined}
                           isLogReady={isLogReady}
+                        /> */}
+                        <SttText
+                          sttResult={
+                            sttResults[(sub as Subscriber).nickname || ''] ||
+                            null
+                          }
+                          speaker={(sub as Subscriber).nickname || 'unknown'}
+                          hintMessage={
+                            hintMessages[(sub as Subscriber).nickname || '']
+                          }
                         />
                       </div>
                     </div>
@@ -1767,13 +1852,50 @@ const GameRoomPage = () => {
       )}
 
       {/* 4) LiarLeaveModal */}
-      {showLiarLeaveModal && (
-        <LiarLeaveModal
-          roundNumber={roundNumber}
-          totalRoundNumber={totalRoundNumber}
+      {showLiarLeaveModal &&
+        (roundNumber < totalRoundNumber ? (
+          <LiarLeaveModal
+            roundNumber={roundNumber}
+            totalRoundNumber={totalRoundNumber}
+            onNext={async () => {
+              // setLiarUpdateTrigger(true);
+              // setTimeout(() => {
+              //   setShowLiarLeaveModal(false);
+              // }, 3000);
+            }}
+          />
+        ) : (
+          <LiarLeaveModal
+            roundNumber={roundNumber}
+            totalRoundNumber={totalRoundNumber}
+            onNext={async () => {
+              // setLiarUpdateTrigger(true);
+              // setTimeout(() => {
+              //   setShowLiarLeaveModal(false);
+              // }, 3000);
+            }}
+            // onNext={async () => {
+            //   await handleScoreTimeEnd();
+            //   setShowLiarLeaveModal(false);
+            //   setShowFinalScoreModal(true);
+            // }}
+          />
+        ))}
+
+      {/* 게임중 인원 수 미달시 표시 모달 */}
+      {showGameStopModal && (
+        <GameStopModal
           onNext={async () => {
-            await handleScoreTimeEnd();
-            setShowLiarLeaveModal(false);
+            setShowGameStopModal(false);
+            window.location.href = '/room-list';
+            // await getScores(roomCode!)
+
+            // setTimeout(() => {
+            //   setShowFinalScoreModal(true);
+            //   setTimeout(() => {
+            //     setShowFinalScoreModal(false);
+            //   }, 5000);
+            // }, 300);
           }}
         />
       )}

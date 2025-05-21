@@ -823,8 +823,16 @@ const WaitingRoomContent = (): JSX.Element => {
     const handleUnload = async () => {
       const roomCode = useRoomStore.getState().roomCode;
       if (roomCode) {
+        if (isConnected && stompClient && subscription) {
+          subscription.unsubscribe();
+          useSocketStore.getState().clearSubscription();
+        }
+
         try {
-          await outRoom(roomCode);
+          navigator.sendBeacon(
+            `/rooms/${roomCode}/out`,
+            JSON.stringify({ roomCode })
+          );
         } catch (error) {
           console.error('퇴장 요청 실패:', error);
         }
@@ -1298,10 +1306,22 @@ const WaitingRoomContent = (): JSX.Element => {
                 </div>
               ) : (
                 <GameButton
-                  text={isUserReady ? '준비완료' : '게임준비'}
+                  text={
+                    roomData?.participants.find(
+                      (p) => p.nickName === userInfo?.nickname
+                    )?.readyStatus
+                      ? '준비완료'
+                      : '게임준비'
+                  }
                   size="small"
                   onClick={handleReady}
-                  variant={isUserReady ? 'success' : 'primary'}
+                  variant={
+                    roomData?.participants.find(
+                      (p) => p.nickName === userInfo?.nickname
+                    )?.readyStatus
+                      ? 'success'
+                      : 'primary'
+                  }
                 />
               )}
             </div>

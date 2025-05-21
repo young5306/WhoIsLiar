@@ -143,6 +143,11 @@
   }
 
   /* Custom Scrollbar Styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 45, 85, 0.5) rgba(255, 255, 255, 0.1);
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
   }
@@ -161,10 +166,75 @@
     background: rgba(255, 45, 85, 0.7);
   }
 
-  /* Firefox */
+  /* Hide cursor on scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .custom-scrollbar::-webkit-scrollbar-track {
+    cursor: none !important;
+  }
+
+  /* Firefox scrollbar cursor */
   .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 45, 85, 0.5) rgba(255, 255, 255, 0.1);
+    cursor: none !important;
+  }
+
+  /* Force custom cursor on scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .custom-scrollbar::-webkit-scrollbar-track:hover,
+  .custom-scrollbar::-webkit-scrollbar-thumb:active,
+  .custom-scrollbar::-webkit-scrollbar-track:active {
+    cursor: none !important;
+  }
+
+  /* Additional specificity for scrollbar elements */
+  .custom-scrollbar::-webkit-scrollbar-thumb *,
+  .custom-scrollbar::-webkit-scrollbar-track * {
+    cursor: none !important;
+  }
+
+  /* Force cursor style on scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .custom-scrollbar::-webkit-scrollbar-track {
+    cursor: none !important;
+    pointer-events: auto !important;
+  }
+
+  /* Override any other cursor styles */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .custom-scrollbar::-webkit-scrollbar-track:hover {
+    cursor: none !important;
+    pointer-events: auto !important;
+  }
+
+  /* SimpleBar Custom Styles */
+  .simplebar-scrollbar::before {
+    background-color: rgba(255, 45, 85, 0.8) !important;
+    border-radius: 4px !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  .simplebar-scrollbar.simplebar-visible::before {
+    background-color: rgba(255, 45, 85, 1) !important;
+  }
+
+  .simplebar-track.simplebar-vertical {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important;
+    width: 8px !important;
+    right: 8px !important;
+    top: 4px !important;
+    bottom: 4px !important;
+  }
+
+  .simplebar-track.simplebar-vertical .simplebar-scrollbar {
+    width: 8px !important;
+    min-height: 40px !important;
+  }
+
+  .simplebar-content {
+    padding-right: 16px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 }
 
