@@ -15,6 +15,9 @@ import { Crown } from 'lucide-react';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { logoutApi } from '../../services/api/AuthService';
+// @ts-ignore
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 
 const RoomListPage = () => {
   const location = useLocation();
@@ -81,6 +84,32 @@ const RoomListPage = () => {
       isMounted = false;
     };
   }, [location]);
+
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('custom-scrollbar')) {
+        document.body.style.cursor = 'none';
+      }
+    };
+
+    const scrollContainer = document.querySelector('.custom-scrollbar');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      scrollContainer.addEventListener('mouseover', () => {
+        document.body.style.cursor = 'none';
+      });
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+        scrollContainer.removeEventListener('mouseover', () => {
+          document.body.style.cursor = 'none';
+        });
+      }
+    };
+  }, []);
 
   const handleSearch = () => {
     fetchRooms(search);
@@ -243,7 +272,7 @@ const RoomListPage = () => {
         </div>
       </div>
 
-      <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+      <SimpleBar className="max-h-[350px]" style={{ cursor: 'none' }}>
         {rooms.length === 0 ? (
           <div className="text-center text-gray-400  headline-medium px-4 py-4 my-3 bg-gray-0/20 rounded-lg">
             아직 생성된 방이 없습니다.
@@ -301,7 +330,7 @@ const RoomListPage = () => {
             </div>
           ))
         )}
-      </div>
+      </SimpleBar>
 
       <div className="flex justify-end mt-6 gap-6">
         <GameButton
