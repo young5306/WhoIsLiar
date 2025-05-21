@@ -52,7 +52,6 @@ const WaitingRoomContent = (): JSX.Element => {
   } | null>(null);
 
   // 게임 시작 활성화 상태와 참가자 준비 상태 관리
-  const [isRoomReady, setIsRoomReady] = useState<boolean>(false);
   const [isUserReady, setIsUserReady] = useState<boolean>(false);
 
   // isUserReady 상태 변화 추적
@@ -407,14 +406,14 @@ const WaitingRoomContent = (): JSX.Element => {
               // 방장에게만 상태 변화 알림 표시
               if (isHost) {
                 // 인원 조건 (3명 이상)도 함께 확인
-                const hasEnoughPlayers =
-                  roomData &&
-                  roomData.participants &&
-                  roomData.participants.length >= 3;
+                // const hasEnoughPlayers =
+                //   roomData &&
+                //   roomData.participants &&
+                //   roomData.participants.length >= 3;
               }
 
               // 상태 업데이트
-              setIsRoomReady(newReadyStatus);
+              setIsUserReady(newReadyStatus);
             }
 
             // 사용자 준비 상태 메시지 처리
