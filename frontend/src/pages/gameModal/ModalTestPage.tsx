@@ -126,7 +126,7 @@ const ModalTestPage = () => {
 
       {openModal === 'new-liar-leave' && (
         <LiarLeaveModal
-          roundNumber={2}
+          roundNumber={3}
           totalRoundNumber={3}
           onNext={() => setOpenModal(null)}
         />
