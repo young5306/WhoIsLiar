@@ -1298,12 +1298,22 @@ const WaitingRoomContent = (): JSX.Element => {
                 </div>
               ) : (
                 <GameButton
-                  // text={isUserReady ? '준비완료' : '게임준비'}
-                  text={'게임준비'}
+                  text={
+                    roomData?.participants.find(
+                      (p) => p.nickName === userInfo?.nickname
+                    )?.readyStatus
+                      ? '준비완료'
+                      : '게임준비'
+                  }
                   size="small"
                   onClick={handleReady}
-                  // variant={isUserReady ? 'success' : 'primary'}
-                  variant={'success'}
+                  variant={
+                    roomData?.participants.find(
+                      (p) => p.nickName === userInfo?.nickname
+                    )?.readyStatus
+                      ? 'success'
+                      : 'primary'
+                  }
                 />
               )}
             </div>
