@@ -1558,7 +1558,7 @@ const GameRoomPage = () => {
                             )}
                             {/* </div> */}
                           </div>
-                          {/* <SttText
+                          <SttText
                             sttResult={
                               sttResults[(sub as Subscriber).nickname || ''] ||
                               null
@@ -1567,7 +1567,7 @@ const GameRoomPage = () => {
                             hintMessage={
                               hintMessages[(sub as Subscriber).nickname || '']
                             }
-                          /> */}
+                          />
                           <div className="w-full min-h-[150px] max-h-[170px] flex items-center justify-center">
                             {sub.stream.videoActive ? (
                               videoMode === 'BLIND' ? (
@@ -1588,12 +1588,12 @@ const GameRoomPage = () => {
                         </div>
                       </div>
                       <div>
-                        {/* <EmotionLog
+                        <EmotionLog
                           name={sub.nickname!}
                           emotion={emotionLogs[sub.nickname!] || undefined}
                           isLogReady={isLogReady}
-                        /> */}
-                        <SttText
+                        />
+                        {/* <SttText
                           sttResult={
                             sttResults[(sub as Subscriber).nickname || ''] ||
                             null
@@ -1602,7 +1602,7 @@ const GameRoomPage = () => {
                           hintMessage={
                             hintMessages[(sub as Subscriber).nickname || '']
                           }
-                        />
+                        /> */}
                       </div>
                     </div>
                     {/* 👉 발언자 표시 포인팅 이모지 */}
