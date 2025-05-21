@@ -690,8 +690,10 @@ const GameRoomPage = () => {
   const [isLiarDisconnected, setIsLiarDisconnected] = useState(false);
   const isLiarDisconnectedRef = useRef(isLiarDisconnected);
   const isPlayerUpdateRef = useRef(false);
-  const [liarUpdateTrigger, setLiarUpdateTrigger] = useState(false);
+  const [nextStepTrigger, setNextStepTrigger] = useState(false);
   const [showGameStopModal, setShowGameStopModal] = useState(false);
+  const [recordRoundNumber, setRecordRoundNumber] = useState<number>();
+  const [updateGameInfo, setUpdateGameInfo] = useState(false);
   // liar found 관련
   const [guessedWord, setGuessedWord] = useState<string | null>(null);
   const [showGuessedWord, setShowGuessedWord] = useState(false);
@@ -743,26 +745,30 @@ const GameRoomPage = () => {
     console.log('호스트 업데이트 완료');
   };
 
-  // 게임 중 라이어 퇴장 후 로직
+  // 게임 중 라이어 퇴장 후 로직1
   useEffect(() => {
-    console.log('라이어 퇴장 후 업데이트 로직 접속1');
-    if (isLiarDisconnectedRef.current && numberOfPlayer && numberOfPlayer > 2) {
-      console.log('라이어 퇴장 후 업데이트 로직 접속2');
-      const AfterLiarLeave = async () => {
+    if (roundNumber === recordRoundNumber && !updateGameInfo) {
+      (async () => {
         await onlyFetchGameInfo();
-        await handleScoreTimeEnd();
-
-        setShowLiarLeaveModal(false);
-
-        if (roundNumber === totalRoundNumber) {
-          setShowFinalScoreModal(true);
-        }
-      };
-
-      AfterLiarLeave();
-      setLiarUpdateTrigger(false);
+        setNextStepTrigger(true);
+        console.log('게임 중 라이어 퇴장 후 로직1 완료');
+      })();
     }
-  }, [liarUpdateTrigger, isLiarDisconnected, numberOfPlayer]);
+  }, [hostNickname]);
+
+  // 게임 중 라이어 퇴장 후 로직2
+  useEffect(() => {
+    console.log('라이어 퇴장 후 업데이트 로직2 접속');
+    if (isLiarDisconnectedRef.current && numberOfPlayer && numberOfPlayer > 2) {
+      (async () => {
+        await handleScoreTimeEnd();
+        console.log('게임 중 라이어 퇴장 후 로직2 완료');
+        setTimeout(() => {
+          setShowLiarLeaveModal(false);
+        }, 3000);
+      })();
+    }
+  }, [nextStepTrigger]);
 
   // 방장 플레이어 변경 확인
   useEffect(() => {
@@ -1090,57 +1096,24 @@ const GameRoomPage = () => {
         console.log(`${latest.chatType} 메시지 수신:`, latest);
         console.log('💡라이어 퇴장으로 인한 현재 라운드 종료');
 
+        setRecordRoundNumber(roundNumber);
         setIsLiarDisconnected(true);
         isLiarDisconnectedRef.current = true;
-        // console.log(
-        //   '라이어 플래그',
-        //   isLiarDisconnected,
-        //   isLiarDisconnectedRef.current
-        // );
 
         setShowLiarLeaveModal(true);
-
-        // console.log(
-        //   'onlyFetchGameInfo 시작',
-        //   isHostUpdateRef.current,
-        //   isPlayerUpdateRef.current
-        // );
-
-        // const handleLiarLeave = async () => {
-        //   if (isHostUpdateRef.current && isPlayerUpdateRef.current) {
-        //     let attempts = 0;
-        //     const maxRetries = 3; // 최대 재시도 횟수
-        //     const delay = 1000; // 재시도 간 대기 시간 (1초)
-
-        //     while (attempts < maxRetries) {
-        //       try {
-        //         await onlyFetchGameInfo();
-        //         console.log('✅ LiarLeave 후 라운드 정보 업데이트 완료');
-
-        //         // 성공 시 플래그 리셋
-        //         isHostUpdateRef.current = false;
-        //         isLiarDisconnectedRef.current = false;
-        //         break; // 요청 성공 시 while문을 종료
-        //       } catch (error) {
-        //         attempts += 1;
-        //         console.log(
-        //           `❌ LiarLeave 후 라운드 정보 가져오기 실패. 시도 ${attempts}회:`,
-        //           error
-        //         );
-
-        //         if (attempts >= maxRetries) {
-        //           console.log('최대 재시도 횟수에 도달했습니다.');
-        //           break; // 최대 재시도 횟수에 도달하면 종료
-        //         }
-
-        //         // 재시도 전 대기
-        //         await new Promise((resolve) => setTimeout(resolve, delay));
-        //       }
-        //     }
-        //   }
-        // };
-
-        // handleLiarLeave();
+        (async () => {
+          try {
+            await onlyFetchGameInfo();
+            console.log(
+              '라이어 퇴장시 현재 라운드 끝 - 내부 실행',
+              roundNumber
+            );
+            setUpdateGameInfo(true);
+            setNextStepTrigger(true);
+          } catch (error) {
+            console.log('라이어 퇴장시 endGame error', error);
+          }
+        })();
       }
     }
   }, [chatMessages, myUserName, publisher]);
@@ -1291,7 +1264,6 @@ const GameRoomPage = () => {
     }
 
     try {
-      console.log('현재 라운드 끝', roundNumber);
       console.log('현재 호스트', hostNickname);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
@@ -1300,7 +1272,7 @@ const GameRoomPage = () => {
 
         if (roundNumber < totalRoundNumber) {
           await setRound(roomCode!);
-          console.log('✅ Scores 조회 완료');
+          console.log('✅ setRound 완료');
         }
       }
     } catch (error) {
@@ -1871,14 +1843,15 @@ const GameRoomPage = () => {
 
       {/* 4) LiarLeaveModal */}
       {showLiarLeaveModal &&
-        numberOfPlayer &&
-        numberOfPlayer > 2 &&
         (roundNumber < totalRoundNumber ? (
           <LiarLeaveModal
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             onNext={async () => {
-              setLiarUpdateTrigger(true);
+              // setLiarUpdateTrigger(true);
+              // setTimeout(() => {
+              //   setShowLiarLeaveModal(false);
+              // }, 3000);
             }}
           />
         ) : (
@@ -1886,7 +1859,10 @@ const GameRoomPage = () => {
             roundNumber={roundNumber}
             totalRoundNumber={totalRoundNumber}
             onNext={async () => {
-              setLiarUpdateTrigger(true);
+              // setLiarUpdateTrigger(true);
+              // setTimeout(() => {
+              //   setShowLiarLeaveModal(false);
+              // }, 3000);
             }}
             // onNext={async () => {
             //   await handleScoreTimeEnd();

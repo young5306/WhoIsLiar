@@ -14,13 +14,12 @@ const LiarLeaveModal = ({
 }: LiarLeaveModalProps) => {
   useEffect(() => {
     console.log('LiarLeaveModal onNext 접속');
-
     const timeout = setTimeout(() => {
       onNext();
     }, 5000); // 3초 후 onNext 실행
 
     return () => clearTimeout(timeout); // 컴포넌트 언마운트 시 타이머 정리
-  }, [onNext]);
+  }, []);
 
   return (
     <>
