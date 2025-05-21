@@ -1298,10 +1298,12 @@ const WaitingRoomContent = (): JSX.Element => {
                 </div>
               ) : (
                 <GameButton
-                  text={isUserReady ? '준비완료' : '게임준비'}
+                  // text={isUserReady ? '준비완료' : '게임준비'}
+                  text={'게임준비'}
                   size="small"
                   onClick={handleReady}
-                  variant={isUserReady ? 'success' : 'primary'}
+                  // variant={isUserReady ? 'success' : 'primary'}
+                  variant={'success'}
                 />
               )}
             </div>
