@@ -945,7 +945,7 @@ const WaitingRoomContent = (): JSX.Element => {
     const readyCount = roomData.participants.filter(
       (player: { readyStatus?: boolean }) => player.readyStatus
     ).length;
-    const totalPlayers = roomData.participants.length;
+    const totalPlayers = roomData.participants.length - 1;
 
     // 3명 이상이고 모두 준비 완료 상태인 경우
     if (totalPlayers >= 3 && readyCount === totalPlayers) {
