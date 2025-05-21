@@ -90,6 +90,7 @@ export const startGame = async (roomCode: string) => {
 export const setRound = async (roomCode: string) => {
   const res = await api.post(`/rounds/setting`, { roomCode });
   return res.data;
+  console.log('setRound res 출력', res);
 };
 
 // 라운드 세팅 개인 정보 가져오기

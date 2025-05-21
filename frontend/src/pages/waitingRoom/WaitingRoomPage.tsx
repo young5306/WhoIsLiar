@@ -823,8 +823,16 @@ const WaitingRoomContent = (): JSX.Element => {
     const handleUnload = async () => {
       const roomCode = useRoomStore.getState().roomCode;
       if (roomCode) {
+        if (isConnected && stompClient && subscription) {
+          subscription.unsubscribe();
+          useSocketStore.getState().clearSubscription();
+        }
+
         try {
-          await outRoom(roomCode);
+          navigator.sendBeacon(
+            `/rooms/${roomCode}/out`,
+            JSON.stringify({ roomCode })
+          );
         } catch (error) {
           console.error('퇴장 요청 실패:', error);
         }
