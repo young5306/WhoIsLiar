@@ -63,8 +63,8 @@ const GameStartCountdownModal = ({
 
   if (!isOpen) return null;
 
-  // 프로그레스바 너비 계산 (0~5초)
-  const progressWidth = `${Math.max(0, Math.min(100, (countdown / 5) * 100))}%`;
+  // 프로그레스바 너비 계산 (0~10초)
+  const progressWidth = `${Math.max(0, Math.min(100, (countdown / 10) * 100))}%`;
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 backdrop-blur-sm">
