@@ -1,0 +1,51 @@
+spring:
+  config:
+    import:
+      - optional:file:./.env
+      - optional:file:./.env.${spring.profiles.active}[.properties]
+  application:
+    name: backend
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+
+cors:
+  allowed-origins:
+    - http://localhost:5173
+    - http://localhost:3000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,httptrace
+  metrics:
+    enable:
+      all: true
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+openvidu:
+  url:
+  secret:
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+
+app:
+  stopwords-file: classpath:stopwords.txt
