@@ -35,7 +35,7 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 + 다양한 모드 선택 지원 : 화면 모드(블라인드, 비디오), 게임 모드(일반, 바보)
 + 비번, 라운드수 설정 가능
 <p align="center">
-    <img src="./readme/RoomCreate.gif"/>
+    <img src="./readme/RoomCreate.gif" width="35%"/>
 </p>
 
 ### 5. 대기방 - 채팅, 카테고리 선택
