@@ -284,7 +284,7 @@ const RoomCreateModal = ({ onClose }: RoomCreateModalProps) => {
             <div className="flex items-center gap-4">
               <label className="w-25">라운드</label>
               <div className="flex justify-between flex-1">
-                {[3, 4, 5].map((num) => (
+                {[1, 4, 5].map((num) => (
                   <button
                     key={num}
                     onClick={() => setRoundCount(num)}
