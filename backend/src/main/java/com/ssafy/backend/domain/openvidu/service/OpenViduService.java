@@ -44,7 +44,6 @@ public class OpenViduService {
 
 	private final OpenVidu openVidu;
 	private final RedissonClient redissonClient;
-	private final SessionRepository sessionRepository;
 
 	@Value("${openvidu.url}")
 	private String openviduUrl;
