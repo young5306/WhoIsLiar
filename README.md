@@ -35,7 +35,7 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 + 다양한 모드 선택 지원 : 화면 모드(블라인드, 비디오), 게임 모드(일반, 바보)
 + 비번, 라운드수 설정 가능
 <p align="center">
-    <img src="./readme/RoomCreate.gif"/>
+    <img src="./readme/RoomCreate.gif" width="35%"/>
 </p>
 
 ### 5. 대기방 - 채팅, 카테고리 선택
@@ -57,18 +57,25 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 
 ### 9. 제한 시간 내 토론 후 직관적인 투표 UI 제공
 <p align="center">
-    <img src="./readme/LiarGuessResultModal.gif"/>
-    <img src="./readme/VoteResultModal.gif"/>
-    <img src="./readme/LiarFoundModal.gif"/>
-    <img src="./readme/LiarNotFoundModal.gif"/>
+    <img src="./readme/LiarGuessResultModal.gif" width="40%"/>
 </p>
+<p align="center">
+    <img src="./readme/VoteResultModal.gif" width="45%"/>
+    <img src="./readme/SkipModal.gif" width="50%"/>
+</p>
+<p align="center">
+    <img src="./readme/LiarFoundModal.gif" width="45%"/>
+    <img src="./readme/LiarNotFoundModal.gif" width="50%"/>
+</p>
+
 
 ### 10. 게임 결과에 따른 점수 집계 및 MVP 선정
 <p align="center">
-    <img src="./readme/SkipModal.gif"/>
-    <img src="./readme/LiarWinModal.gif"/>
-    <img src="./readme/CivilianWinModal.gif"/>
-    <img src="./readme/FinalScoreModal.gif"/>
+    <img src="./readme/LiarWinModal.gif" width="45%"/>
+    <img src="./readme/CivilianWinModal.gif" width="45%"/>
+</p>
+<p align="center">
+    <img src="./readme/FinalScoreModal.gif" width="50%"/>
 </p>
 
 ### 11. ai 활용 - stt 요약, 제시어 수집, 바보모드 유사 제시어 수집 
