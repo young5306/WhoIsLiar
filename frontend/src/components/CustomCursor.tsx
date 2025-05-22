@@ -33,9 +33,6 @@ const CustomCursor = () => {
         const playPromise = audioRef.current.play();
 
         if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.log('Audio play failed:', error);
-          });
         }
       }
     };

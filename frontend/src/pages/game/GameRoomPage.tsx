@@ -200,7 +200,6 @@ const GameRoomPage = () => {
         [name]: emotion,
       }));
     } else {
-      console.log('이름이 존재하지 않습니다.', emotion);
     }
   };
 
@@ -266,7 +265,6 @@ const GameRoomPage = () => {
   // emotion 메시지 처리
   useEffect(() => {
     if (emotionSubscription) {
-      console.log('GameRoom - Using existing emotion subscription');
     }
   }, [emotionSubscription]);
 
@@ -299,7 +297,6 @@ const GameRoomPage = () => {
     const modelLoad = async () => {
       try {
         await loadModels('/models');
-        console.log('✅ face-api models loaded');
       } catch (error) {
         console.error('load error: ', error);
       }
@@ -332,7 +329,6 @@ const GameRoomPage = () => {
     const MAX_RETRIES = 5;
 
     if (retryCount > 0) {
-      console.log(`세션 연결 재시도 중... (${retryCount}/${MAX_RETRIES})`);
     }
 
     OV.current = new OpenVidu();
@@ -577,13 +573,11 @@ const GameRoomPage = () => {
 
   // STT 결과 처리 함수
   const handleSttResult = (result: SttResult) => {
-    console.log('GameRoom received STT result:', result); // 디버깅 로그 추가
     setSttResults((prev) => {
       const newResults = {
         ...prev,
         [result.speaker]: result,
       };
-      console.log('Updated STT results:', newResults); // 디버깅 로그 추가
 
       // 현재 발언자의 발언 내용을 직접 저장 (서비스에서도 저장되지만 확실히 하기 위해)
       if (
@@ -592,7 +586,6 @@ const GameRoomPage = () => {
         speakingPlayer === myUserName &&
         result.text.trim() !== ''
       ) {
-        console.log('최종 발언 내용 직접 저장:', result.text);
         // 강제로 텍스트 추가
         sttService.forceAddText(result.text);
       }
@@ -607,7 +600,6 @@ const GameRoomPage = () => {
   // 세션 참가 시 STT 시작
   useEffect(() => {
     if (session && publisher && !sttServiceStarted.current) {
-      console.log('Starting STT service...');
       try {
         sttService.start(handleSttResult);
         sttServiceStarted.current = true;
@@ -618,7 +610,6 @@ const GameRoomPage = () => {
 
     return () => {
       if (sttServiceStarted.current) {
-        console.log('Cleaning up STT service...');
         try {
           sttService.stop();
           sttServiceStarted.current = false;
@@ -712,17 +703,14 @@ const GameRoomPage = () => {
 
   // 3. 비활성화 플레이어를 제외하고, 플레이어 업데이트
   const updateParticipants = (inactivaUser: string[]) => {
-    console.log('현재 참가자 리스트', participants);
     const updateParticipants = participants.filter(
       (p) => !inactivaUser.includes(p.participantNickname)
     );
 
-    console.log('업데이트 플레이어 정보', updateParticipants);
     setParticipants(updateParticipants);
 
     // 플레이어 업데이트 확인
     isPlayerUpdateRef.current = true;
-    console.log('플레이어 업데이트 완료');
   };
 
   // 2. 비활성화 플레이어와 방장 정보 확인
@@ -731,18 +719,15 @@ const GameRoomPage = () => {
       .filter((p) => !p.isActive)
       .map((p) => p.nickName);
 
-    console.log('비활성화 플레이어', inactiveUser);
     updateParticipants(inactiveUser);
 
     const hostUserName = roomParticipants.participants
       .filter((p) => p.isHost)
       .map((p) => p.nickName);
-    console.log('방장 플레이어', hostUserName);
     setHostNickname(hostUserName[0] ?? '');
 
     // 호스트 업데이트 확인
     // isHostUpdateRef.current = true;
-    console.log('호스트 업데이트 완료');
   };
 
   // 게임 중 라이어 퇴장 후 로직1
@@ -751,18 +736,15 @@ const GameRoomPage = () => {
       (async () => {
         await onlyFetchGameInfo();
         setNextStepTrigger(true);
-        console.log('게임 중 라이어 퇴장 후 로직1 완료');
       })();
     }
   }, [hostNickname]);
 
   // 게임 중 라이어 퇴장 후 로직2
   useEffect(() => {
-    console.log('라이어 퇴장 후 업데이트 로직2 접속');
     if (isLiarDisconnectedRef.current && numberOfPlayer && numberOfPlayer > 2) {
       (async () => {
         await handleScoreTimeEnd();
-        console.log('게임 중 라이어 퇴장 후 로직2 완료');
         setTimeout(() => {
           setShowLiarLeaveModal(false);
         }, 3000);
@@ -771,14 +753,10 @@ const GameRoomPage = () => {
   }, [nextStepTrigger]);
 
   // 방장 플레이어 변경 확인
-  useEffect(() => {
-    console.log('방장 플레이어 이름 출력', hostNickname);
-  }, [hostNickname]);
+  useEffect(() => {}, [hostNickname]);
 
   // 플레이어 수 변경 확인
   useEffect(() => {
-    console.log('현재 플레이어 수', numberOfPlayer);
-
     if (numberOfPlayer && numberOfPlayer < 3) {
       setShowGameStopModal(true);
     }
@@ -787,11 +765,9 @@ const GameRoomPage = () => {
   // 1. 플레이어 정보 변경시, room에 참가중인 player 정보 갱신
   useEffect(() => {
     if (leaveMessageReceive) {
-      console.log('플레이어가 퇴장했습니다. roomPlayerInfo 다시 받아오기');
       const newPlayerInfo = async () => {
         try {
           const roomParticipants = await getRoomParticipants(roomCode!);
-          console.log('✅newRoomParticipants', roomParticipants);
           if (roomParticipants && roomParticipants.participants) {
             inactiveNickNames(roomParticipants);
           } else {
@@ -830,7 +806,6 @@ const GameRoomPage = () => {
       .sort((a, b) => a.order - b.order)
       .map((p, index) => ({ ...p, order: index + 1 }));
 
-    console.log('participants 정렬 순서 ', sorted);
     setSortedPraticipants(sorted);
   }, [participants]);
 
@@ -875,17 +850,6 @@ const GameRoomPage = () => {
         setRoomName(roomInfoRes.roomInfo.roomName);
 
         setParticipants(playerInfoRes.data.participants);
-
-        console.log('✅playerInfoRes', playerInfoRes);
-        console.log('✅roomInfoRes', roomInfoRes);
-        console.log('✅세팅 끝');
-        console.log('roundNumber', playerInfoRes.data.roundNumber);
-        console.log('totalRoundNumber', playerInfoRes.data.totalRoundNumber);
-        console.log('word', playerInfoRes.data.word);
-        console.log('category', roomInfoRes.roomInfo.category);
-        console.log('hostNickname', roomInfoRes.roomInfo.hostNickname);
-        console.log('myUserName', myUserName);
-
         // 라운드 시작 및 턴 시작 API 순차 호출은 모달이 닫힐 때 실행
       } catch (error) {
         console.error('게임 정보 세팅 중 오류:', error);
@@ -901,22 +865,10 @@ const GameRoomPage = () => {
 
   // 발언자와 타이머 관련 로직
   useEffect(() => {
-    console.log('발언자 타이머 useEffect 실행: ', {
-      speakingPlayer,
-      isTimerReady,
-      gameStarted,
-    });
-
     if (speakingPlayer && isTimerReady && gameStarted) {
-      console.log('🎮 타이머 시작:', speakingPlayer);
       speechTimerRef.current?.startTimer(20);
       // speechTimerRef.current?.startTimer(5);
     } else {
-      console.log('🎮 타이머 시작 조건 미충족:', {
-        speakingPlayer: Boolean(speakingPlayer),
-        isTimerReady,
-        gameStarted,
-      });
     }
   }, [speakingPlayer, isTimerReady, gameStarted]);
 
@@ -944,14 +896,11 @@ const GameRoomPage = () => {
 
     // 개인 발언
     if (latest.chatType === 'TURN_START') {
-      console.log('💡TURN_START 수신 확인');
-
       setIsTurnSkip(false);
 
       // 닉네임 파싱
       const nickname = latest.content.split('님의')[0]?.trim();
       if (nickname) {
-        console.log('🎤 발언자:', nickname);
         setSpeakingPlayer(nickname);
 
         // STT 서비스에 현재 발언자 설정
@@ -959,24 +908,11 @@ const GameRoomPage = () => {
 
         // 내가 발언자인 경우 마이크 강제 활성화, 아니면 비활성화
         if (nickname === myUserName && publisher) {
-          console.log('🎤 내가 발언자입니다. 마이크 강제 켜기');
           // 강제로 마이크 켜기 (상태와 관계없이)
           publisher.publishAudio(true);
           setIsAudioEnabled(true);
           // 로그 추가로 마이크 상태 확인
-          setTimeout(() => {
-            const audioTrack = publisher.stream
-              .getMediaStream()
-              .getAudioTracks()[0];
-            console.log(
-              '🎤 내 마이크 상태:',
-              audioTrack?.enabled,
-              '활성화:',
-              publisher.stream.audioActive
-            );
-          }, 500);
         } else if (publisher) {
-          console.log('🎤 내가 발언자가 아닙니다. 마이크 강제 끄기');
           // 강제로 마이크 끄기 (상태와 관계없이)
           publisher.publishAudio(false);
           setIsAudioEnabled(false);
@@ -992,24 +928,18 @@ const GameRoomPage = () => {
 
     // 모든 발언 종료 후 투표 시작
     if (latest.chatType === 'ROUND_END') {
-      console.log('💡투표 시작');
-
       // 내가 마지막 발언자였으면 녹음 종료 및 요약 요청
       if (myUserName === speakingPlayer) {
-        console.log('라운드 종료: 내가 마지막 발언자였으므로 마이크 종료');
         // 요약 처리 제거 - 타이머에서만 처리
         // sttService.finishSpeechRecording();
       }
 
       setSpeakingPlayer('');
-      console.log('라이어 플래그 2', isLiarDisconnectedRef.current);
 
       setIsVoting(() => {
         if (isLiarDisconnectedRef.current) {
-          console.log('라이어 퇴장, 투표 x', isLiarDisconnectedRef.current);
           return false;
         } else {
-          console.log('라이어 존재, 투표 o', isLiarDisconnectedRef.current);
           return true;
         }
       });
@@ -1020,7 +950,6 @@ const GameRoomPage = () => {
 
       // 투표 시작 시 마이크 끄기
       if (isAudioEnabled && publisher) {
-        console.log('🎤 투표 시작. 마이크 끄기');
         // 마이크 직접 제어
         publisher.publishAudio(false);
         setIsAudioEnabled(false);
@@ -1029,9 +958,6 @@ const GameRoomPage = () => {
 
     // HINT 메시지 처리
     if (latest.chatType === 'HINT') {
-      console.log('💡HINT 메시지 수신:', latest);
-      console.log('💡발신자:', latest.sender, '내용:', latest.content);
-
       // HINT 메시지는 sttSummary API의 결과로 WebSocket을 통해 받습니다
       // sender는 발언자의 닉네임, content는 요약된 내용입니다
       setHintMessages((prev) => ({
@@ -1042,9 +968,6 @@ const GameRoomPage = () => {
 
     // 모든 플레이어 투표 종료 후 (VoteResultModal 열기)
     if (latest.chatType === 'VOTE_SUBMITTED') {
-      console.log('🔥🔥🔥모든 플레이어 투표 완료');
-      console.log(latest);
-
       (async () => {
         try {
           // 초기화
@@ -1053,14 +976,10 @@ const GameRoomPage = () => {
           setIsVoting(false);
 
           const result = await getVoteResult(roomCode!, roundNumber);
-          console.log('✅투표 결과 조회 api', result);
 
           setVoteResult(result);
           setShowVoteResultModal(true);
-        } catch (error) {
-          console.error('투표 결과 조회 실패:', error);
-          console.log('투표 결과 조회 실패시 (호스트)', hostNickname);
-        }
+        } catch (error) {}
       })();
     }
 
@@ -1070,9 +989,6 @@ const GameRoomPage = () => {
         setIsCorrect(latest.content.startsWith('정답!') ? true : false);
         const match = latest.content.match(/님이 (.+?)\(을\)를 제출했습니다/);
         const word = match?.[1] || null;
-        console.log('guess submitted: ', word);
-
-        console.log('💡라이어가 추측한 제시어', word);
         setGuessedWord(word);
         setShowGuessedWord(true);
 
@@ -1093,9 +1009,6 @@ const GameRoomPage = () => {
 
     if (latest.chatType === 'LIAR_DISCONNECT') {
       if (latest) {
-        console.log(`${latest.chatType} 메시지 수신:`, latest);
-        console.log('💡라이어 퇴장으로 인한 현재 라운드 종료');
-
         setRecordRoundNumber(roundNumber);
         setIsLiarDisconnected(true);
         isLiarDisconnectedRef.current = true;
@@ -1104,15 +1017,9 @@ const GameRoomPage = () => {
         (async () => {
           try {
             await onlyFetchGameInfo();
-            console.log(
-              '라이어 퇴장시 현재 라운드 끝 - 내부 실행',
-              roundNumber
-            );
             setUpdateGameInfo(true);
             setNextStepTrigger(true);
-          } catch (error) {
-            console.log('라이어 퇴장시 endGame error', error);
-          }
+          } catch (error) {}
         })();
       }
     }
@@ -1133,14 +1040,11 @@ const GameRoomPage = () => {
     try {
       // 발언 종료 및 요약 처리
       if (myUserName === speakingPlayer) {
-        console.log('발언 스킵: 내 턴이므로 녹음 종료 및 요약 요청');
-
         // 즉시 녹음 종료 및 요약 처리
         sttService.finishSpeechRecording();
       }
 
       await skipTurn(roomCode);
-      console.log('턴이 스킵되었습니다.');
     } catch (error) {
       console.error('턴 스킵 실패:', error);
     } finally {
@@ -1150,16 +1054,13 @@ const GameRoomPage = () => {
 
   // Timer 컴포넌트가 마운트되었는지 확인
   const handleTimerMount = useCallback(() => {
-    console.log('Timer mounted');
     setIsTimerReady(true);
   }, []);
 
   // 발언 타이머 종료 시 처리
   const handleSpeechTimerEnd = useCallback(() => {
-    console.log('⏰ 발언 타이머 종료');
     // 내가 발언자인 경우 녹음 종료 및 요약 처리
     if (myUserName === speakingPlayer) {
-      console.log('내 턴이 끝났으므로 녹음 종료 및 요약 요청');
       sttService.finishSpeechRecording();
     }
   }, [myUserName, speakingPlayer]);
@@ -1194,7 +1095,6 @@ const GameRoomPage = () => {
   const handleSelectTarget = (nickname: string | undefined) => {
     if (nickname) {
       setSelectedTargetNickname(nickname);
-      console.log('선택 : ', nickname);
     }
   };
 
@@ -1210,7 +1110,6 @@ const GameRoomPage = () => {
 
   // 투표 타이머 종료 시 최종 투표 제출
   const handleVotingEnd = async () => {
-    console.log('투표 제출', currentTurn, selectedTargetRef.current);
     try {
       let target: string | null = selectedTargetRef.current;
 
@@ -1221,7 +1120,6 @@ const GameRoomPage = () => {
       if (target === '__SKIP__') target = null;
 
       await submitVotes(roomCode!, roundNumber, target);
-      console.log('투표 완료:', target);
     } catch (err) {
       console.error('투표 제출 실패:', err);
     }
@@ -1239,7 +1137,6 @@ const GameRoomPage = () => {
       setScoreData(totalResult);
       setShowScoreModal(true);
 
-      console.log('현재 라운드 끝', roundNumber);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
@@ -1257,22 +1154,18 @@ const GameRoomPage = () => {
     try {
       if (roundNumber >= totalRoundNumber) {
         await getScores(roomCode!);
-        console.log('✅ Scores 조회 완료');
       }
     } catch (error) {
       console.error('라이어 퇴장시 getScores 호출 실패', error);
     }
 
     try {
-      console.log('현재 호스트', hostNickname);
       setCurrentTurn(1); // 초기화
       if (myUserName === hostNickname) {
         await endRound(roomCode!, roundNumber);
-        console.log('✅ EndRound 완료');
 
         if (roundNumber < totalRoundNumber) {
           await setRound(roomCode!);
-          console.log('✅ setRound 완료');
         }
       }
     } catch (error) {
@@ -1299,14 +1192,11 @@ const GameRoomPage = () => {
       // 다음 라운드 세팅
       if (roundNumber < totalRoundNumber) {
         const playerInfoRes = await getPlayerInfo(roomCode!);
-        console.log('✅playerInfoRes', playerInfoRes);
-        console.log('✅세팅 끝');
 
         setRoundNumber(playerInfoRes.data.roundNumber);
         setMyWord(playerInfoRes.data.word);
         setParticipants(playerInfoRes.data.participants);
 
-        console.log('다음 라운드', playerInfoRes.data.roundNumber);
         if (myUserName === hostNickname) {
           await startRound(roomCode!, playerInfoRes.data.roundNumber);
           await startTurn(roomCode!, playerInfoRes.data.roundNumber);
@@ -1323,8 +1213,6 @@ const GameRoomPage = () => {
 
   // 게임 시작 모달 닫힐 때 게임 시작
   const handleGameStart = useCallback(async () => {
-    console.log('🚀 handleGameStart 함수 시작!');
-
     if (!roomCode) {
       console.error('❌ 방 코드가 없습니다:', roomCode);
       return;
@@ -1336,25 +1224,16 @@ const GameRoomPage = () => {
     }
 
     // 게임 시작 상태 설정
-    console.log('⚙️ 게임 시작 상태 변경 전:', gameStarted);
     setGameStarted(true);
-    console.log('✅ 게임 시작 상태 변경 후:', true);
 
     // 게임 시작 로직 실행
-    console.log('👥 방장 여부 확인:', myUserName === hostNickname);
-
     try {
       if (myUserName === hostNickname) {
-        console.log('🎲 방장이 게임 시작 API 호출 시작');
         // startRound 먼저 실행
-        const roundResult = await startRound(roomCode, roundNumber);
-        console.log('✅ startRound 호출 완료', roundResult);
-
-        // startRound 성공 후 startTurn 실행
-        const turnResult = await startTurn(roomCode, roundNumber);
-        console.log('✅ startTurn 호출 완료', turnResult);
+        // const roundResult = await startRound(roomCode, roundNumber);
+        // // startRound 성공 후 startTurn 실행
+        // const turnResult = await startTurn(roomCode, roundNumber);
       } else {
-        console.log('👤 방장이 아닌 유저는 API 호출하지 않음');
       }
     } catch (error) {
       console.error('❌ 라운드/턴 시작 중 오류:', error);
@@ -1786,7 +1665,6 @@ const GameRoomPage = () => {
               try {
                 await updateTurn(roomCode!, roundNumber);
                 await startTurn(roomCode!, roundNumber);
-                console.log('SKIP 이후 다음 턴 시작');
               } catch (e) {
                 console.error('다음 턴 시작 실패', e);
               }
@@ -1809,7 +1687,6 @@ const GameRoomPage = () => {
             async (word: string) => {
               if (myUserName === voteResult.liarNickname) {
                 try {
-                  console.log('라이어가 입력한 제시어: ', word);
                   await submitWordGuess(roomCode!, roundNumber, word);
                 } catch (err: any) {
                   const msg =
@@ -1836,7 +1713,6 @@ const GameRoomPage = () => {
             async (word: string) => {
               if (myUserName === voteResult.liarNickname) {
                 try {
-                  console.log('라이어가 입력한 제시어: ', word);
                   await submitWordGuess(roomCode!, roundNumber, word);
                 } catch (err: any) {
                   const msg =
@@ -2053,7 +1929,6 @@ const GameRoomPage = () => {
       <GameStartCountdownModal
         isOpen={showGameStartModal}
         onClose={() => {
-          console.log('모달 닫기 함수 실행');
           setShowGameStartModal(false);
           handleGameStart();
         }}

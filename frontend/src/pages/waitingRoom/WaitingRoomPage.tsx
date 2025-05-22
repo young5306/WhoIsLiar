@@ -55,9 +55,7 @@ const WaitingRoomContent = (): JSX.Element => {
   const [isUserReady, setIsUserReady] = useState<boolean>(false);
 
   // isUserReady 상태 변화 추적
-  useEffect(() => {
-    console.log('isUserReady 상태 변경됨:', isUserReady);
-  }, [isUserReady]);
+  useEffect(() => {}, [isUserReady]);
 
   const categories = [
     { label: '랜덤', id: '랜덤' },
@@ -360,9 +358,7 @@ const WaitingRoomContent = (): JSX.Element => {
             let message;
             try {
               message = JSON.parse(frame.body);
-              console.log('웹소켓 메시지 수신:', message);
             } catch (error) {
-              console.log('JSON 파싱 실패, 원본 사용:', frame.body);
               // 단순 문자열인 경우 content 필드에 원본 값 설정
               message = {
                 chatType: 'SIMPLE_MESSAGE',
@@ -401,7 +397,6 @@ const WaitingRoomContent = (): JSX.Element => {
             if (message.chatType === 'ROOM_READY_STATUS') {
               // 이전 상태와 새 상태 비교
               const newReadyStatus = message.content === 'TRUE';
-              console.log('newReadyStatus:', newReadyStatus);
 
               // 방장에게만 상태 변화 알림 표시
               if (isHost) {
@@ -419,26 +414,16 @@ const WaitingRoomContent = (): JSX.Element => {
             // 사용자 준비 상태 메시지 처리
             if (message.chatType === 'READY_STATUS') {
               // 메시지 로그 추가
-              console.log('READY_STATUS 메시지 원본:', message);
-              console.log('sender:', message.sender);
-              console.log('content:', message.content);
 
               const nickname = message.sender;
               const status = message.content;
 
               // 현재 사용자의 준비 상태일 경우만 UI 업데이트
               if (nickname === userInfo?.nickname) {
-                console.log(`내 준비 상태 변경 전: ${isUserReady}`);
-
                 // 서버에서 온 메시지로 준비 상태 설정 - "준비 완료" 또는 "준비 취소"
                 const newReadyStatus = status === '준비 완료';
                 setIsUserReady(newReadyStatus);
-
-                console.log(`내 준비 상태 변경 후, 상태값: ${status}`);
               } else {
-                console.log(
-                  `다른 사용자 준비 상태 변경: ${nickname}, ${status}`
-                );
               }
 
               // 다른 사용자 포함한 모든 참가자 정보 업데이트
@@ -455,11 +440,8 @@ const WaitingRoomContent = (): JSX.Element => {
               message.chatType === 'PLAYER_JOIN' ||
               message.chatType === 'PLAYER_LEAVE'
             ) {
-              console.log(`${message.chatType} 메시지 수신:`, message);
-
               if (message.chatType === 'PLAYER_LEAVE') {
                 leaveMessageState(true);
-                console.log('플레이어 퇴장 감지:', Date.now());
               }
 
               // 즉시 방 정보 갱신
@@ -782,11 +764,9 @@ const WaitingRoomContent = (): JSX.Element => {
       if (contextRoomCode) {
         // setRound 먼저 실행하고 응답 대기
         await setRound(contextRoomCode);
-        console.log('✅setRound 완료');
 
         // setRound 성공 후 startGame 실행
         await startGame(contextRoomCode);
-        console.log('✅startGame 완료');
 
         // 방장은 즉시 이동
         navigate('/game-room');
@@ -933,13 +913,6 @@ const WaitingRoomContent = (): JSX.Element => {
           (player: { readyStatus?: boolean }) => player.readyStatus
         ).length;
         const totalParticipants = participants.length;
-
-        console.log('게임 시작 조건 체크:', {
-          isHost,
-          readyCount,
-          totalParticipants,
-          canStart: canStartGame(),
-        });
 
         if (totalParticipants < 2) {
           setGameStartDisabled(true);
