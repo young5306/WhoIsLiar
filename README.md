@@ -72,11 +72,14 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 </table>
 
 ## ⚙️아키텍쳐
-
+![image](/readme/whoisliar_architecture.png)
 
 ## ⚙️명세서
+- [기능명세서 (notion)](https://sudsy-scene-feb.notion.site/1d3e9e0919b981c3976afdcacee9a285?pvs=143)  
+- [API 명세서 (notion)](https://sudsy-scene-feb.notion.site/API-1d3e9e0919b9810a85f8ec513e564b4e?pvs=143)
 
 ## ⚙️ERD
+![image](/readme/whoisliar_erd.png)
 
 ## 👥팀원
 **TEAM 낭만**
