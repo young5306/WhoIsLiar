@@ -24,6 +24,9 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 </p>
 
 ### 2. 룰북 
+<p align="center">
+    <img src="./readme/RuleBook.gif"/>
+</p>
 
 ### 3. 방목록 조회 및 검색 
 + 비밀번호/코드 입장
@@ -31,22 +34,28 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 ### 4. 간편한 방 생성 및 초대 링크로 친구 초대
 + 다양한 모드 선택 지원 : 화면 모드(블라인드, 비디오), 게임 모드(일반, 바보)
 + 비번, 라운드수 설정 가능
+<p align="center">
+    <img src="./readme/RoomCreate.gif"/>
+</p>
 
 ### 5. 대기방 - 채팅, 카테고리 선택
 + 비디오/오디오 체크 (파동효과)
 + 준비완료(준비상태 활성화) 버튼
+<p align="center">
+    <img src="./readme/Waiting-room.gif"/>
+</p>
 
-### 6. 자동 역할 배정과 개인별 제시어 전달 (GameInfo 부분)
+### 6. 자동 역할 배정과 개인별 제시어 전달
 ### 7. 채팅 진행 도움
 + 게임 진행 사회자 제공 (웹소켓)
 + 발언 턴 타이머
 
-### 8. 실시간 표정·음성 분석(개인별 행동 로그)로 라이어 단서 제공 (openvidu)
+### 8. 실시간 표정·음성 분석(개인별 행동 로그)로 라이어 단서 제공
 + openvidu
 + 표정 : face-api 
 + 음성 : stt
 
-### 9. 제한 시간 내 토론 후 직관적인 투표 UI 제공 (투표 화면, voteresult모달, liarfound/notfound모달, showguess모달)
+### 9. 제한 시간 내 토론 후 직관적인 투표 UI 제공
 <p align="center">
     <img src="./readme/LiarGuessResultModal.gif"/>
     <img src="./readme/VoteResultModal.gif"/>
@@ -54,7 +63,7 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
     <img src="./readme/LiarNotFoundModal.gif"/>
 </p>
 
-### 10. 게임 결과에 따른 점수 집계 및 MVP 선정 (score모달, finalscore모달)
+### 10. 게임 결과에 따른 점수 집계 및 MVP 선정
 <p align="center">
     <img src="./readme/SkipModal.gif"/>
     <img src="./readme/LiarWinModal.gif"/>
