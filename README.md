@@ -20,7 +20,7 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 ## 🚀기능 소개
 ### 1. 로그인 
 <p align="center">
-    <img src="./readme/login.gif" width="30%"/>
+    <img src="./readme/login.gif"/>
 </p>
 
 ### 2. 룰북 
@@ -47,8 +47,20 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 + 음성 : stt
 
 ### 9. 제한 시간 내 토론 후 직관적인 투표 UI 제공 (투표 화면, voteresult모달, liarfound/notfound모달, showguess모달)
+<p align="center">
+    <img src="./readme/LiarGuessResultModal.gif"/>
+    <img src="./readme/VoteResultModal.gif"/>
+    <img src="./readme/LiarFoundModal.gif"/>
+    <img src="./readme/LiarNotFoundModal.gif"/>
+</p>
 
 ### 10. 게임 결과에 따른 점수 집계 및 MVP 선정 (score모달, finalscore모달)
+<p align="center">
+    <img src="./readme/SkipModal.gif"/>
+    <img src="./readme/LiarWinModal.gif"/>
+    <img src="./readme/CivilianWinModal.gif"/>
+    <img src="./readme/FinalScoreModal.gif"/>
+</p>
 
 ### 11. ai 활용 - stt 요약, 제시어 수집, 바보모드 유사 제시어 수집 
 
