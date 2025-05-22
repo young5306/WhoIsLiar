@@ -1,0 +1,337 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Primary Colors */
+  --color-primary-50: #fff0f2;
+  --color-primary-100: #ffe1e7;
+  --color-primary-200: #ffcbd5;
+  --color-primary-300: #ff9cb1;
+  --color-primary-400: #ff489b;
+  --color-primary-500: #ff2e65;
+  --color-primary-600: #f5185b;
+  --color-primary-700: #ce0245;
+  --color-primary-800: #ac0541;
+  --color-primary-900: #93083f;
+  --color-primary-950: #53001d;
+
+  /* Gray Colors */
+  --color-gray-0: #ffffff;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e0e0e0;
+  --color-gray-300: #cccccc;
+  --color-gray-400: #afafaf;
+  --color-gray-500: #8c8c8c;
+  --color-gray-600: #6b6b6b;
+  --color-gray-700: #4e4e4e;
+  --color-gray-800: #2c2c2c;
+  --color-gray-900: #000000;
+
+  /* System Colors */
+  --color-system-danger: #c22b20;
+  --color-system-warning: #ffe949;
+  --color-system-info: #4fa5ff;
+  --color-system-success: #00c380;
+
+  /* Point Colors */
+  --color-point-neon: #7bf518;
+  --color-point-button1: #1f112f;
+  --color-point-button2: #9e9e9e;
+  --color-point-rulebook1: #2f0606;
+  --color-point-rulebook2: #671010;
+  --color-point-logbox: #320000;
+}
+
+/* Hide system cursor globally */
+* {
+  cursor: none !important;
+}
+
+@layer utilities {
+  /* Display */
+  .display-xlarge {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 72px;
+    line-height: 74px;
+  }
+
+  .display-large {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 70px;
+  }
+
+  .display-medium {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 48px;
+    line-height: 54px;
+  }
+
+  .display-small {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 44px;
+  }
+
+  /* Headline */
+  .headline-xlarge {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  .headline-large {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 30px;
+  }
+
+  .headline-medium {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 26px;
+  }
+
+  .headline-small {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  /* Body */
+  .body-medium {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .body-small {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  /* Caption */
+  .caption-medium {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .caption-small {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 12px;
+  }
+
+  .caption-xsmall {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+    font-weight: 400;
+    font-size: 8px;
+    line-height: 10px;
+  }
+
+  /* Custom Scrollbar Styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 45, 85, 0.5) rgba(255, 255, 255, 0.1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 45, 85, 0.5);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 45, 85, 0.7);
+  }
+
+  /* Hide cursor on scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .custom-scrollbar::-webkit-scrollbar-track {
+    cursor: none !important;
+  }
+
+  /* Firefox scrollbar cursor */
+  .custom-scrollbar {
+    cursor: none !important;
+  }
+
+  /* Force custom cursor on scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .custom-scrollbar::-webkit-scrollbar-track:hover,
+  .custom-scrollbar::-webkit-scrollbar-thumb:active,
+  .custom-scrollbar::-webkit-scrollbar-track:active {
+    cursor: none !important;
+  }
+
+  /* Additional specificity for scrollbar elements */
+  .custom-scrollbar::-webkit-scrollbar-thumb *,
+  .custom-scrollbar::-webkit-scrollbar-track * {
+    cursor: none !important;
+  }
+
+  /* Force cursor style on scrollbar */
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .custom-scrollbar::-webkit-scrollbar-track {
+    cursor: none !important;
+    pointer-events: auto !important;
+  }
+
+  /* Override any other cursor styles */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .custom-scrollbar::-webkit-scrollbar-track:hover {
+    cursor: none !important;
+    pointer-events: auto !important;
+  }
+
+  /* SimpleBar Custom Styles */
+  .simplebar-scrollbar::before {
+    background-color: rgba(255, 45, 85, 0.8) !important;
+    border-radius: 4px !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  .simplebar-scrollbar.simplebar-visible::before {
+    background-color: rgba(255, 45, 85, 1) !important;
+  }
+
+  .simplebar-track.simplebar-vertical {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important;
+    width: 8px !important;
+    right: 8px !important;
+    top: 4px !important;
+    bottom: 4px !important;
+  }
+
+  .simplebar-track.simplebar-vertical .simplebar-scrollbar {
+    width: 8px !important;
+    min-height: 40px !important;
+  }
+
+  .simplebar-content {
+    padding-right: 16px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'FUNFLOWSURVIVORKR', sans-serif;
+  }
+}
+
+@font-face {
+  font-family: 'FUNFLOWSURVIVORKR';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-2@1.0/FUNFLOWSURVIVORKR.woff2')
+    format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@keyframes spin-once-counter {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-once-counter {
+  animation: spin-once-counter 0.5s ease-in-out;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 6px var(--color-point-neon),
+      0 0 12px var(--color-point-neon);
+  }
+  50% {
+    box-shadow:
+      0 0 15px var(--color-point-neon),
+      0 0 30px var(--color-point-neon);
+  }
+}
+
+.animate-glow {
+  animation: glow 1.2s ease-in-out infinite;
+}
+
+@keyframes bounce-horizontal-right {
+  0%,
+  100% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateX(25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-x-right {
+  animation: bounce-horizontal-right 1s infinite;
+}
+
+@keyframes bounce-horizontal-left {
+  0%,
+  100% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateX(-25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-x-left {
+  animation: bounce-horizontal-left 1s infinite;
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* 느리게 시작 */
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(4px);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1); /* 가속 */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}

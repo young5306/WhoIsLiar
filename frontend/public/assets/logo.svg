@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="100" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 그라데이션 -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF2D55;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF6B6B;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- 마스크 실루엣 -->
+  <path d="M120 30 L180 30 L200 70 L100 70 Z" 
+        fill="url(#grad1)" 
+        opacity="0.1"/>
+  
+  <!-- 로고 텍스트 -->
+  <text x="150" y="60" 
+        font-family="'FUNFLOW_SURVIVOR_KR', sans-serif" 
+        font-size="40" 
+        font-weight="bold" 
+        fill="url(#grad1)" 
+        text-anchor="middle"
+        filter="url(#shadow)">
+    믿지마
+  </text>
+
+  <!-- 장식 요소 - 마스크 실루엣 -->
+  <path d="M130 35 Q 150 25, 170 35" 
+        stroke="url(#grad1)" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round"/>
+  <path d="M125 45 Q 150 55, 175 45" 
+        stroke="url(#grad1)" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round"/>
+  <path d="M120 55 Q 150 65, 180 55" 
+        stroke="url(#grad1)" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round"/>
+
+  <!-- 장식 요소 - 화살표 -->
+  <path d="M80 50 L95 35 L110 50" 
+        stroke="url(#grad1)" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round"/>
+  <path d="M190 50 L205 35 L220 50" 
+        stroke="url(#grad1)" 
+        stroke-width="2" 
+        fill="none" 
+        stroke-linecap="round"/>
+</svg> 
