@@ -1230,9 +1230,9 @@ const GameRoomPage = () => {
     try {
       if (myUserName === hostNickname) {
         // startRound 먼저 실행
-        // const roundResult = await startRound(roomCode, roundNumber);
-        // // startRound 성공 후 startTurn 실행
-        // const turnResult = await startTurn(roomCode, roundNumber);
+        await startRound(roomCode, roundNumber);
+        // startRound 성공 후 startTurn 실행
+        await startTurn(roomCode, roundNumber);
       } else {
       }
     } catch (error) {
