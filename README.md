@@ -20,12 +20,12 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 ## 🚀기능 소개
 ### 1. 로그인 
 <p align="center">
-    <img src="./readme/login.gif"/>
+    <img src="./readme/login.gif" width="70%"/>
 </p>
 
 ### 2. 룰북 
 <p align="center">
-    <img src="./readme/RuleBook.gif"/>
+    <img src="./readme/RuleBook.gif" width="70%"/>
 </p>
 
 ### 3. 방목록 조회 및 검색 
@@ -35,14 +35,14 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 + 다양한 모드 선택 지원 : 화면 모드(블라인드, 비디오), 게임 모드(일반, 바보)
 + 비번, 라운드수 설정 가능
 <p align="center">
-    <img src="./readme/RoomCreate.gif" width="35%"/>
+    <img src="./readme/RoomCreate.gif" width="30%"/>
 </p>
 
 ### 5. 대기방 - 채팅, 카테고리 선택
 + 비디오/오디오 체크 (파동효과)
 + 준비완료(준비상태 활성화) 버튼
 <p align="center">
-    <img src="./readme/Waiting-room.gif"/>
+    <img src="./readme/Waiting-room.gif" width="70%"/>
 </p>
 
 ### 6. 자동 역할 배정과 개인별 제시어 전달
@@ -57,15 +57,15 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 
 ### 9. 제한 시간 내 토론 후 직관적인 투표 UI 제공
 <p align="center">
-    <img src="./readme/LiarGuessResultModal.gif" width="40%"/>
+    <img src="./readme/LiarGuessResultModal.gif" width="45%"/>
 </p>
 <p align="center">
     <img src="./readme/VoteResultModal.gif" width="45%"/>
-    <img src="./readme/SkipModal.gif" width="50%"/>
+    <img src="./readme/SkipModal.gif" width="45%"/>
 </p>
 <p align="center">
     <img src="./readme/LiarFoundModal.gif" width="45%"/>
-    <img src="./readme/LiarNotFoundModal.gif" width="50%"/>
+    <img src="./readme/LiarNotFoundModal.gif" width="45%"/>
 </p>
 
 
@@ -75,7 +75,7 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
     <img src="./readme/CivilianWinModal.gif" width="45%"/>
 </p>
 <p align="center">
-    <img src="./readme/FinalScoreModal.gif" width="50%"/>
+    <img src="./readme/FinalScoreModal.gif" width="45%"/>
 </p>
 
 ### 11. ai 활용 - stt 요약, 제시어 수집, 바보모드 유사 제시어 수집 
@@ -134,7 +134,9 @@ Who Is Liar는 실시간 얼굴·음성 분석으로 라이어를 찾아내는 �
 </table>
 
 ## ⚙️아키텍쳐
-![image](/readme/whoisliar_architecture.png)
+<p align="center">
+    <img src="./readme/whoisliar_architecture.png" width="70%"/>
+</p>
 
 ## ⚙️명세서
 - [기능명세서 (notion)](https://sudsy-scene-feb.notion.site/1d3e9e0919b981c3976afdcacee9a285?pvs=143)  
