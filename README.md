@@ -123,7 +123,8 @@ AI는 다음 기능에 활용되었습니다.<br/>
 <img src="https://img.shields.io/badge/MySql-4479A1?style=flat-square&logo=mysql&logoColor=white">
 <img src="https://img.shields.io/badge/JPA-59666C?style=flat-square&logo=Hibernate&logoColor=white"/>
 <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=Redis&logoColor=white"/>
-<br>
+<img src="https://img.shields.io/badge/WebSocket-4E8CEF?style=flat-square&logoColor=white"/>
+      <img src="https://img.shields.io/badge/STOMP-6F42C1?style=flat-square&logoColor=white"/>
 
 </td>
     </tr>
@@ -136,10 +137,14 @@ AI는 다음 기능에 활용되었습니다.<br/>
 <img src="https://img.shields.io/badge/Zustand-000000?style=flat-square&logo=react&logoColor=white&labelColor=black" alt="Zustand Badge"/>
 <img src="https://img.shields.io/badge/tailwindcss-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/>
 <br>
-<img src="https://img.shields.io/badge/JSON-000000?style=flat-square&logo=json&logoColor=white"/>
 <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white"/>
 <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white"/>
 <img src="https://img.shields.io/badge/typescript-3178C6?style=flat-square&logo=typescript&logoColor=white"/>
+<br>
+      <img src="https://img.shields.io/badge/face-api.js-4472C4?style=flat-square&logoColor=white" alt="face-api.js Badge"/>
+      <img src="https://img.shields.io/badge/OpenVidu-008CFF?style=flat-square&logo=openvidu&logoColor=white"/>
+      <img src="https://img.shields.io/badge/WebSocket-4E8CEF?style=flat-square&logoColor=white"/>
+      <img src="https://img.shields.io/badge/STOMP-6F42C1?style=flat-square&logoColor=white"/>
     </td>
     </tr>
     <tr>
@@ -148,7 +153,6 @@ AI는 다음 기능에 활용되었습니다.<br/>
 <img src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonwebservices&logoColor=white"/>
 <img src="https://img.shields.io/badge/Docker-4479A1?style=flat-square&logo=Docker&logoColor=white"/>
 <img src="https://img.shields.io/badge/NGINX-009639?style=flat-square&logo=NGINX&logoColor=white"/>
-
 </td>
     <tr>
     <td><b>Tools</b></td>
